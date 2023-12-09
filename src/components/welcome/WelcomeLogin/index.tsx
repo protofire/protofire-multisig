@@ -27,7 +27,7 @@ const WelcomeLogin = () => {
   return (
     <Paper className={css.loginCard} data-testid="welcome-login">
       <Box className={css.loginContent}>
-        <SvgIcon component={SafeLogo} inheritViewBox sx={{ height: '24px', width: '80px' }} />
+        <SvgIcon component={SafeLogo} inheritViewBox sx={{ height: '40px', width: '140px' }} />
         <Typography variant="h6" mt={6} fontWeight={700}>
           Create Account
         </Typography>
