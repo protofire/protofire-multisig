@@ -74,9 +74,7 @@ const Footer = (): ReactElement | null => {
               </ExternalLink>
             </li>
           </>
-        ) : (
-          <li>{'This is an unofficial distribution of Safe{Wallet}'}</li>
-        )}
+        ) : null}
 
         <li>
           <ExternalLink href={`${packageJson.homepage}/releases/tag/v${packageJson.version}`} noIcon>
