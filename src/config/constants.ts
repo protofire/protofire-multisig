@@ -5,7 +5,8 @@ export const IS_DEV = process.env.NODE_ENV === 'development'
 
 export const GATEWAY_URL_PRODUCTION =
   process.env.NEXT_PUBLIC_GATEWAY_URL_PRODUCTION || 'https://gateway.immutable-staging.safe.protofire.io'
-export const GATEWAY_URL_STAGING = process.env.NEXT_PUBLIC_GATEWAY_URL_STAGING || 'https://gateway.immutable-staging.safe.protofire.io'
+export const GATEWAY_URL_STAGING =
+  process.env.NEXT_PUBLIC_GATEWAY_URL_STAGING || 'https://gateway.immutable-staging.safe.protofire.io'
 
 // Magic numbers
 export const POLLING_INTERVAL = 15_000

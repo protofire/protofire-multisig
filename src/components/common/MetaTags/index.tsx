@@ -2,8 +2,7 @@ import { IS_PRODUCTION } from '@/config/constants'
 import { ContentSecurityPolicy, StrictTransportSecurity } from '@/config/securityHeaders'
 import { lightPalette, darkPalette } from '@safe-global/safe-react-components'
 
-const descriptionText =
-  'Immutable Safe is the most trusted platform to manage digital assets on Immutable.'
+const descriptionText = 'Immutable Safe is the most trusted platform to manage digital assets on Immutable.'
 const titleText = 'Immutable Safe'
 
 const MetaTags = ({ prefetchUrl }: { prefetchUrl: string }) => (

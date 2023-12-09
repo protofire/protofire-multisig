@@ -1,4 +1,4 @@
-import useRehydrateSocialWallet from '@/hooks/wallets/mpc/useRehydrateSocialWallet'
+//import useRehydrateSocialWallet from '@/hooks/wallets/mpc/useRehydrateSocialWallet'
 import PasswordRecoveryModal from '@/services/mpc/PasswordRecoveryModal'
 import Sentry from '@/services/sentry' // needs to be imported first
 import type { ReactNode } from 'react'
