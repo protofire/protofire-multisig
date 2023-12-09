@@ -64,7 +64,7 @@ const InitApp = (): null => {
   useTxTracking()
   useSafeMsgTracking()
   useBeamer()
-  useRehydrateSocialWallet()
+  //useRehydrateSocialWallet()
   useABTesting(AbTest.HUMAN_DESCRIPTION)
 
   return null
