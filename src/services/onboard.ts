@@ -49,9 +49,9 @@ export const createOnboard = (
     },
 
     appMetadata: {
-      name: 'Safe{Wallet}',
+      name: 'Immutable Safe',
       icon: location.origin + '/images/logo-round.svg',
-      description: 'Safe{Wallet} – smart contract wallet for Ethereum (ex-Gnosis Safe multisig)',
+      description: 'Immutable Safe – smart contract wallet for Immutable',
       recommendedInjectedWallets: getRecommendedInjectedWallets(),
     },
 

@@ -3,8 +3,8 @@ import { ContentSecurityPolicy, StrictTransportSecurity } from '@/config/securit
 import { lightPalette, darkPalette } from '@safe-global/safe-react-components'
 
 const descriptionText =
-  'Safe (prev. Gnosis Safe) is the most trusted platform to manage digital assets on Ethereum and multiple EVMs. Over $40B secured.'
-const titleText = 'Safe{Wallet}'
+  'Immutable Safe is the most trusted platform to manage digital assets on Immutable.'
+const titleText = 'Immutable Safe'
 
 const MetaTags = ({ prefetchUrl }: { prefetchUrl: string }) => (
   <>

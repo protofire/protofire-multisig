@@ -1,7 +1,7 @@
 {
-  "name": "Safe",
-  "short_name": "Safe",
-  "description": "Safe (prev. Gnosis Safe) is the most trusted platform to manage digital assets on Ethereum and multiple EVMs. Over $40B secured.",
+  "name": "Immutable Safe",
+  "short_name": "Immutable Safe",
+  "description": "Immutable Safe is the most trusted platform to manage digital assets on Immutable.",
   "icons": [
     {
       "src": "/favicons/android-chrome-192x192.png",
