@@ -29,7 +29,7 @@ const NewSafe = () => {
             </Box>
 
             <Typography variant="h1" fontSize={[44, null, 52]} lineHeight={1} letterSpacing={-1.5} color="static.main">
-              Unlock a new way of ownership
+              Unlock a new form of ownership
             </Typography>
 
             <Typography mb={1} color="static.main">
