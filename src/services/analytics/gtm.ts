@@ -90,7 +90,7 @@ type ActionGtmEvent = GtmEvent & {
   eventCategory: string
   eventAction: string
   eventLabel?: EventLabel
-  eventType?: EventType
+  eventType?: string
 }
 
 type PageviewGtmEvent = GtmEvent & {
@@ -138,11 +138,11 @@ export const gtmTrack = (eventData: AnalyticsEvent): void => {
   gtmSend(gtmEvent)
 }
 
-export const gtmTrackPageview = (pagePath: string): void => {
+export const gtmTrackPageview = (pagePath: string, pathWithQuery: string): void => {
   const gtmEvent: PageviewGtmEvent = {
     ...commonEventParams,
     event: EventType.PAGEVIEW,
-    pageLocation: `${location.origin}${pagePath}`,
+    pageLocation: `${location.origin}${pathWithQuery}`,
     pagePath,
   }
 
