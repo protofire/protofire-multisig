@@ -39,7 +39,7 @@ const NoAssets = () => {
           </Typography>
 
           <Typography>
-            Add funds directly from your bank account or copy your address to send tokens from a different account.
+            You can add funds by copying your address to send tokens from a different account.
           </Typography>
 
           <Box bgcolor="background.main" p={2} borderRadius="6px" alignSelf="flex-start" fontSize="14px">

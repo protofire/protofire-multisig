@@ -33,6 +33,9 @@ const ChainLogos = {
   [chains.arb1]: '/images/networks/arb.svg',
   [chains.avax]: '/images/networks/avax.svg',
   [chains.sep]: '/images/networks/sep.png',
+  [chains['imx-devnet']]: '/images/networks/imx.png',
+  [chains['imx-testnet']]: '/images/networks/imx.png',
+  [chains['imx']]: '/images/networks/imx.png',
 }
 
 export const getChainLogo = (chainId: string) => {
