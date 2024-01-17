@@ -38,9 +38,7 @@ const NoAssets = () => {
             Add funds to get started
           </Typography>
 
-          <Typography>
-            You can add funds by copying your address to send tokens from a different account.
-          </Typography>
+          <Typography>You can add funds by copying your address to send tokens from a different account.</Typography>
 
           <Box bgcolor="background.main" p={2} borderRadius="6px" alignSelf="flex-start" fontSize="14px">
             <EthHashInfo address={safeAddress} shortAddress={false} showCopyButton hasExplorer avatarSize={24} />
