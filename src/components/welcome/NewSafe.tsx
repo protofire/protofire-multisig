@@ -39,7 +39,7 @@ const NewSafe = () => {
             <ul className={css.bulletList}>
               <BulletListItem text="Stealth security with multiple owners" />
               <BulletListItem text="Make it yours with modules and guards" />
-              <BulletListItem text="Access 130+ ecosystem apps" />
+              {/* <BulletListItem text="Access 130+ ecosystem apps" /> */}
             </ul>
           </div>
         </Grid>
