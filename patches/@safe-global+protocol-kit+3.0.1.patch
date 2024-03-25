@@ -1,0 +1,14 @@
+diff --git a/node_modules/@safe-global/protocol-kit/dist/src/utils/eip-3770/config.js b/node_modules/@safe-global/protocol-kit/dist/src/utils/eip-3770/config.js
+index cfc40d8..12b9f68 100644
+--- a/node_modules/@safe-global/protocol-kit/dist/src/utils/eip-3770/config.js
++++ b/node_modules/@safe-global/protocol-kit/dist/src/utils/eip-3770/config.js
+@@ -133,6 +133,9 @@ exports.networks = [
+     { chainId: 11891n, shortName: 'Arianee' },
+     { chainId: 12357n, shortName: 'rei-testnet' },
+     { chainId: 13337n, shortName: 'beam-testnet' },
++    { chainId: 13371n, shortName: 'imx' },
++    { chainId: 13473n, shortName: 'imx-testnet' },
++    { chainId: 15003n, shortName: 'imx-devnet' },
+     { chainId: 17000n, shortName: 'holesky' },
+     { chainId: 17172n, shortName: 'eclipse' },
+     { chainId: 18231n, shortName: 'unreal' },
