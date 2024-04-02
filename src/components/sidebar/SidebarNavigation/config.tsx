@@ -118,7 +118,7 @@ export const generalSettingsNavItems = [
     label: 'Appearance',
     href: AppRoutes.settings.appearance,
   },
-/*   {
+  /*   {
     label: 'Notifications',
     href: AppRoutes.settings.notifications,
   }, */
