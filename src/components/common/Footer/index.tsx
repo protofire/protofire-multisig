@@ -9,7 +9,7 @@ import packageJson from '../../../../package.json'
 //import AppstoreButton from '../AppStoreButton'
 import ExternalLink from '../ExternalLink'
 import MUILink from '@mui/material/Link'
-import { /* HELP_CENTER_URL, */ IS_DEV, IS_OFFICIAL_HOST } from '@/config/constants'
+import { HELP_CENTER_URL, IS_DEV, IS_OFFICIAL_HOST } from '@/config/constants'
 
 const footerPages = [
   AppRoutes.welcome.index,
@@ -74,7 +74,15 @@ const Footer = (): ReactElement | null => {
               </ExternalLink>
             </li> */}
           </>
-        ) : null}
+        ) : (
+          <>
+            <li>
+              <ExternalLink href={HELP_CENTER_URL} noIcon sx={{ span: { textDecoration: 'underline' } }}>
+                Help
+              </ExternalLink>
+            </li>
+          </>
+        )}
 
         <li>
           <ExternalLink href={`${packageJson.homepage}/releases/tag/v${packageJson.version}`} noIcon>
