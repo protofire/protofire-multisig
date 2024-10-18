@@ -7,10 +7,10 @@ import {
   SidebarListItemIcon,
   SidebarListItemText,
 } from '@/components/sidebar/SidebarList'
-import { loadBeamer } from '@/services/beamer'
-import { useAppSelector } from '@/store'
+import { BEAMER_SELECTOR, loadBeamer } from '@/services/beamer'
+import { useAppDispatch, useAppSelector } from '@/store'
 import { selectCookies, CookieAndTermType } from '@/store/cookiesAndTermsSlice'
-// import { openCookieBanner } from '@/store/popupSlice'
+import { openCookieBanner } from '@/store/popupSlice'
 // import BeamerIcon from '@/public/images/sidebar/whats-new.svg'
 import HelpCenterIcon from '@/public/images/sidebar/help-center.svg'
 import { Link, ListItem, SvgIcon, Typography } from '@mui/material'
@@ -24,7 +24,7 @@ import ProtofireLogo from '@/public/images/protofire-logo.svg'
 import SuggestionIcon from '@/public/images/sidebar/lightbulb_icon.svg'
 
 const SidebarFooter = (): ReactElement => {
-  // const dispatch = useAppDispatch()
+  const dispatch = useAppDispatch()
   const cookies = useAppSelector(selectCookies)
   const chain = useCurrentChain()
 
@@ -37,11 +37,11 @@ const SidebarFooter = (): ReactElement => {
     }
   }, [hasBeamerConsent, chain?.shortName])
 
-  // const handleBeamer = () => {
-  //   if (!hasBeamerConsent()) {
-  //     dispatch(openCookieBanner({ warningKey: CookieAndTermType.UPDATES }))
-  //   }
-  // }
+  const handleBeamer = () => {
+    if (!hasBeamerConsent()) {
+      dispatch(openCookieBanner({ warningKey: CookieAndTermType.UPDATES }))
+    }
+  }
 
   return (
     <SidebarList>
@@ -111,7 +111,7 @@ const SidebarFooter = (): ReactElement => {
           </Typography>
         </SidebarListItemText>
       </ListItem>
-    </SidebarList >
+    </SidebarList>
   )
 }
 

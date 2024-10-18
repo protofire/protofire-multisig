@@ -109,7 +109,7 @@ const Footer = (): ReactElement | null => {
           </Typography>
         </li>
       </ul>
-    </footer >
+    </footer>
   )
 }
 
