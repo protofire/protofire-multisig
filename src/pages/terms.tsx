@@ -1,10 +1,5 @@
 import type { NextPage } from 'next'
 import Head from 'next/head'
-import { Typography } from '@mui/material'
-import Link from 'next/link'
-import MUILink from '@mui/material/Link'
-import { AppRoutes } from '@/config/routes'
-import { DISCORD_URL, HELP_CENTER_URL, TWITTER_URL } from '@/config/constants'
 import { IS_OFFICIAL_HOST } from '@/config/constants'
 
 const SafeTerms = () => (
@@ -834,7 +829,7 @@ const Terms: NextPage = () => {
         <title>{'Immutable Safe – Terms'}</title>
       </Head>
 
-      <main>{IS_OFFICIAL_HOST && <SafeTerms />}</main>
+      <main>{IS_OFFICIAL_HOST && <SafeTerms components={overrideComponents} />}</main>
     </>
   )
 }
