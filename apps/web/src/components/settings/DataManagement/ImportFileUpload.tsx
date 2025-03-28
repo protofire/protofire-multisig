@@ -53,11 +53,7 @@ export const ImportFileUpload = ({
 
   return (
     <>
-<<<<<<< HEAD:src/components/settings/DataManagement/ImportFileUpload.tsx
-      <Typography>Import {'Immutable Safe'} data by uploading a file in the area below.</Typography>
-=======
       <Typography>Import {BRAND_NAME} data by uploading a file in the area below.</Typography>
->>>>>>> upstream:apps/web/src/components/settings/DataManagement/ImportFileUpload.tsx
 
       <FileUpload
         fileType={FileTypes.JSON}

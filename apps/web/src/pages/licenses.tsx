@@ -542,11 +542,7 @@ const Licenses: NextPage = () => {
   return (
     <>
       <Head>
-<<<<<<< HEAD:src/pages/licenses.tsx
-        <title>{'Immutable Safe – Licenses'}</title>
-=======
         <title>{`${BRAND_NAME} – Licenses`}</title>
->>>>>>> upstream:apps/web/src/pages/licenses.tsx
       </Head>
 
       <main>{isOfficialHost && <SafeLicenses />}</main>

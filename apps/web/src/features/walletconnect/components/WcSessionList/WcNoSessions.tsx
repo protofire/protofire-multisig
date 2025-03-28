@@ -1,3 +1,5 @@
+import ExternalLink from '@/components/common/ExternalLink'
+import { useIsOfficialHost } from '@/hooks/useIsOfficialHost'
 import useSafeInfo from '@/hooks/useSafeInfo'
 import useLocalStorage from '@/services/local-storage/useLocalStorage'
 import { Typography } from '@mui/material'
@@ -12,6 +14,7 @@ const SAMPLE_DAPPS = [
 const LS_KEY = 'native_wc_dapps'
 
 const WcSampleDapps = ({ onUnload }: { onUnload: () => void }) => {
+  const isOfficialHost = useIsOfficialHost()
   // Only show the sample dApps list once
   useEffect(() => {
     return onUnload
@@ -26,14 +29,15 @@ const WcSampleDapps = ({ onUnload }: { onUnload: () => void }) => {
       mt={3}
       component="div"
     >
-      {/* {SAMPLE_DAPPS.map((item) => (
-        <Typography variant="body2" key={item.url}>
-          <ExternalLink href={item.url} noIcon px={1}>
-            <img src={item.icon} alt={item.name} width={32} height={32} style={{ marginRight: '0.5em' }} />
-            {item.name}
-          </ExternalLink>
-        </Typography>
-      ))} */}
+      {isOfficialHost &&
+        SAMPLE_DAPPS.map((item) => (
+          <Typography variant="body2" key={item.url}>
+            <ExternalLink href={item.url} noIcon px={1}>
+              <img src={item.icon} alt={item.name} width={32} height={32} style={{ marginRight: '0.5em' }} />
+              {item.name}
+            </ExternalLink>
+          </Typography>
+        ))}
     </Typography>
   )
 }
