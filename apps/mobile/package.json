@@ -59,7 +59,7 @@
     "@react-navigation/material-top-tabs": "^7.1.0",
     "@react-navigation/native": "^7.0.14",
     "@reduxjs/toolkit": "^2.4.0",
-    "@safe-global/protocol-kit": "^5.2.1",
+    "@safe-global/protocol-kit": "4.1.7",
     "@safe-global/store": "workspace:^",
     "@safe-global/utils": "workspace:^",
     "@shopify/flash-list": "1.7.3",

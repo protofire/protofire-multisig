@@ -1,0 +1,30 @@
+diff --git a/dist/assets/allowance-module/v0.1.0/allowance-module.json b/dist/assets/allowance-module/v0.1.0/allowance-module.json
+index a4fe2e54016c024afb0f83648b1a68712659c94f..e57588347255157e1c607b2f0a879706332e54b2 100644
+--- a/dist/assets/allowance-module/v0.1.0/allowance-module.json
++++ b/dist/assets/allowance-module/v0.1.0/allowance-module.json
+@@ -16,7 +16,9 @@
+         "43114": "0x1Fb403834C911eB98d56E74F5182b0d64C3b3b4D",
+         "73799": "0xCFbFaC74C26F8647cBDb8c5caf80BB5b32E43134",
+         "80094": "0xCFbFaC74C26F8647cBDb8c5caf80BB5b32E43134",
+-        "11155111": "0xCFbFaC74C26F8647cBDb8c5caf80BB5b32E43134"
++        "11155111": "0xCFbFaC74C26F8647cBDb8c5caf80BB5b32E43134",
++        "13473": "0xE46FE78DBfCa5E835667Ba9dCd3F3315E7623F8a",
++        "13371": "0xE46FE78DBfCa5E835667Ba9dCd3F3315E7623F8a"
+     },
+     "abi": [
+         {
+diff --git a/src/assets/allowance-module/v0.1.0/allowance-module.json b/src/assets/allowance-module/v0.1.0/allowance-module.json
+index 96e1d6f60c9be8e852b9d5f95ec04d3bbd9d7251..7cfa1ed48d27f0ccbdd017ebe634694954a046ac 100644
+--- a/src/assets/allowance-module/v0.1.0/allowance-module.json
++++ b/src/assets/allowance-module/v0.1.0/allowance-module.json
+@@ -16,7 +16,9 @@
+     "43114": "0x1Fb403834C911eB98d56E74F5182b0d64C3b3b4D",
+     "73799": "0xCFbFaC74C26F8647cBDb8c5caf80BB5b32E43134",
+     "80094": "0xCFbFaC74C26F8647cBDb8c5caf80BB5b32E43134",
+-    "11155111": "0xCFbFaC74C26F8647cBDb8c5caf80BB5b32E43134"
++    "11155111": "0xCFbFaC74C26F8647cBDb8c5caf80BB5b32E43134",
++    "13473": "0xE46FE78DBfCa5E835667Ba9dCd3F3315E7623F8a",
++    "13371": "0xE46FE78DBfCa5E835667Ba9dCd3F3315E7623F8a"
+   },
+   "abi": [
+     {
