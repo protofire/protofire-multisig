@@ -7619,8 +7619,8 @@ __metadata:
 
 "@safe-global/safe-modules-deployments@patch:@safe-global/safe-modules-deployments@npm%3A2.2.6#~/.yarn/patches/@safe-global-safe-modules-deployments-npm-2.2.6-78a093615c.patch":
   version: 2.2.6
-  resolution: "@safe-global/safe-modules-deployments@patch:@safe-global/safe-modules-deployments@npm%3A2.2.6#~/.yarn/patches/@safe-global-safe-modules-deployments-npm-2.2.6-78a093615c.patch::version=2.2.6&hash=15c409"
-  checksum: 10/63e349db6c591220e48262d86ddea7275e272f14983c2c086a2a53cec31aa264f7fbedea196b8de4dab7a0596bebb7794710f4c9ba68627ce053a335dce722ec
+  resolution: "@safe-global/safe-modules-deployments@patch:@safe-global/safe-modules-deployments@npm%3A2.2.6#~/.yarn/patches/@safe-global-safe-modules-deployments-npm-2.2.6-78a093615c.patch::version=2.2.6&hash=99aea8"
+  checksum: 10/e2d1f749f9c84f9a60fe37d96b9a59b4c6a6860475a9fe10c81509437a4306da13198215a5ba85f0068eb6bac2fc759f240f3fd9f19f0544e585db0b1c6ce873
   languageName: node
   linkType: hard
 
