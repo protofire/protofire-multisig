@@ -11,9 +11,11 @@ import IndexingStatus from '@/components/sidebar/IndexingStatus'
 import css from './styles.module.css'
 import { trackEvent, OVERVIEW_EVENTS } from '@/services/analytics'
 import MyAccounts from '@/features/myAccounts'
+import { useIsOfficialHost } from '@/hooks/useIsOfficialHost'
 
 const Sidebar = (): ReactElement => {
   const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false)
+  const isOfficialHost = useIsOfficialHost()
 
   const onDrawerToggle = useCallback(() => {
     setIsDrawerOpen((isOpen) => {
@@ -56,7 +58,7 @@ const Sidebar = (): ReactElement => {
 
         <Divider flexItem />
 
-        <IndexingStatus />
+        {isOfficialHost && <IndexingStatus />}
       </div>
       <Drawer variant="temporary" anchor="left" open={isDrawerOpen} onClose={onDrawerToggle}>
         <div className={css.drawer}>
