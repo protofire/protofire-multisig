@@ -80,6 +80,9 @@ const Footer = (): ReactElement | null => {
         ) : (
           <>
             <li>
+              <Typography variant="caption">&copy;{new Date().getFullYear()} Immutable Safe</Typography>
+            </li>
+            <li>
               <FooterLink href={getHref(AppRoutes.terms)}>Terms</FooterLink>
             </li>
             <li>
