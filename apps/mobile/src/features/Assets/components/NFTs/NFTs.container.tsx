@@ -13,8 +13,10 @@ import { Fallback } from '../Fallback'
 import { NFTItem } from './NFTItem'
 import { useInfiniteScroll } from '@/src/hooks/useInfiniteScroll'
 import { useDefinedActiveSafe } from '@/src/store/hooks/activeSafe'
-import { Spinner } from 'tamagui'
 import { NoFunds } from '@/src/features/Assets/components/NoFunds'
+import { AssetError } from '../../Assets.error'
+import { Loader } from '@/src/components/Loader'
+import { getTokenValue } from 'tamagui'
 
 export function NFTsContainer() {
   const activeSafe = useDefinedActiveSafe()
@@ -36,9 +38,17 @@ export function NFTsContainer() {
     data,
   })
 
-  if (!list?.results.length || error) {
+  if (error) {
     return (
-      <Fallback loading={isFetching || !list} hasError={!!error}>
+      <Fallback loading={isFetching}>
+        <AssetError assetType={'nft'} onRetry={() => refetch()} />
+      </Fallback>
+    )
+  }
+
+  if (!list?.results.length) {
+    return (
+      <Fallback loading={isFetching || !list}>
         <NoFunds fundsType={'nft'} />
       </Fallback>
     )
@@ -49,8 +59,9 @@ export function NFTsContainer() {
       onEndReached={onEndReached}
       data={list?.results}
       renderItem={NFTItem}
-      ListFooterComponent={isFetching ? <Spinner size="small" /> : undefined}
-      keyExtractor={(item) => item.id}
+      ListFooterComponent={isFetching ? <Loader size={24} /> : undefined}
+      keyExtractor={(item, index) => `${item.address}-${index}`}
+      style={{ marginTop: getTokenValue('$2') }}
     />
   )
 }

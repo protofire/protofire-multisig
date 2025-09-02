@@ -30,7 +30,7 @@ function ConfirmTxContainer() {
   })
 
   const detailedExecutionInfo = data?.detailedExecutionInfo as MultisigExecutionDetails
-  const { activeSigner, hasSigned } = useTxSigner(detailedExecutionInfo)
+  const { activeSigner, hasSigned, canSign } = useTxSigner(detailedExecutionInfo)
   const hasEnoughConfirmations =
     detailedExecutionInfo?.confirmationsRequired <= detailedExecutionInfo?.confirmations?.length
 
@@ -54,14 +54,15 @@ function ConfirmTxContainer() {
         <View paddingHorizontal="$4">
           <ConfirmationView txDetails={data} />
         </View>
-        <TransactionInfo txId={txId} detailedExecutionInfo={detailedExecutionInfo} />
+        <TransactionInfo txId={txId} detailedExecutionInfo={detailedExecutionInfo} txDetails={data} />
       </ScrollView>
 
-      <View paddingTop="$1" backgroundColor="$background">
+      <View paddingTop="$1">
         <ConfirmTxForm
           hasSigned={Boolean(hasSigned)}
           hasEnoughConfirmations={hasEnoughConfirmations}
           activeSigner={activeSigner}
+          canSign={canSign}
           isExpired={isExpired}
           txId={txId}
         />

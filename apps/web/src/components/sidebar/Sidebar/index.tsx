@@ -6,16 +6,14 @@ import ChainIndicator from '@/components/common/ChainIndicator'
 import SidebarHeader from '@/components/sidebar/SidebarHeader'
 import SidebarNavigation from '@/components/sidebar/SidebarNavigation'
 import SidebarFooter from '@/components/sidebar/SidebarFooter'
-import IndexingStatus from '@/components/sidebar/IndexingStatus'
 
 import css from './styles.module.css'
 import { trackEvent, OVERVIEW_EVENTS } from '@/services/analytics'
 import MyAccounts from '@/features/myAccounts'
-import { useIsOfficialHost } from '@/hooks/useIsOfficialHost'
+import IndexingStatus from '../IndexingStatus'
 
 const Sidebar = (): ReactElement => {
   const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false)
-  const isOfficialHost = useIsOfficialHost()
 
   const onDrawerToggle = useCallback(() => {
     setIsDrawerOpen((isOpen) => {
@@ -40,8 +38,6 @@ const Sidebar = (): ReactElement => {
         {/* Address, balance, copy button, etc */}
         <SidebarHeader />
 
-        <Divider />
-
         {/* Nav menu */}
         <SidebarNavigation />
 
@@ -53,12 +49,11 @@ const Sidebar = (): ReactElement => {
 
         <Divider flexItem />
 
-        {/* What's new + Need help? */}
         <SidebarFooter />
 
         <Divider flexItem />
 
-        {isOfficialHost && <IndexingStatus />}
+        <IndexingStatus />
       </div>
       <Drawer variant="temporary" anchor="left" open={isDrawerOpen} onClose={onDrawerToggle}>
         <div className={css.drawer}>

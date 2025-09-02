@@ -1,34 +1,28 @@
-import type { ReactElement } from 'react'
-import { useEffect } from 'react'
-
-import {
-  SidebarList,
-  SidebarListItemButton,
-  SidebarListItemIcon,
-  SidebarListItemText,
-} from '@/components/sidebar/SidebarList'
+import { type ReactElement, useEffect } from 'react'
 import { BEAMER_SELECTOR, loadBeamer } from '@/services/beamer'
 import { useAppDispatch, useAppSelector } from '@/store'
 import { CookieAndTermType, hasConsentFor } from '@/store/cookiesAndTermsSlice'
 import { openCookieBanner } from '@/store/popupSlice'
 import BeamerIcon from '@/public/images/sidebar/whats-new.svg'
 import HelpCenterIcon from '@/public/images/sidebar/help-center.svg'
-import { Link, ListItem, SvgIcon, Typography } from '@mui/material'
+import { Box, Divider, ListItem, SvgIcon, Typography, useTheme } from '@mui/material'
 import DebugToggle from '../DebugToggle'
 import { IS_PRODUCTION, NEW_SUGGESTION_FORM, SUPPORT_FORM } from '@/config/constants'
 import Track from '@/components/common/Track'
 import { OVERVIEW_EVENTS } from '@/services/analytics/events/overview'
 import { useCurrentChain } from '@/hooks/useChains'
-import darkPalette from '@/components/theme/darkPalette'
 import ProtofireLogo from '@/public/images/protofire-logo.svg'
 import SuggestionIcon from '@/public/images/sidebar/lightbulb_icon.svg'
 import { useIsOfficialHost } from '@/hooks/useIsOfficialHost'
+import { SidebarListItemButton, SidebarListItemIcon, SidebarListItemText } from '../SidebarList'
+import ExternalLink from '@/components/common/ExternalLink'
 
 const SidebarFooter = (): ReactElement => {
   const dispatch = useAppDispatch()
   const chain = useCurrentChain()
   const hasBeamerConsent = useAppSelector((state) => hasConsentFor(state, CookieAndTermType.UPDATES))
   const isOfficialHost = useIsOfficialHost()
+  const theme = useTheme()
 
   useEffect(() => {
     // Initialise Beamer when consent was previously given
@@ -44,11 +38,15 @@ const SidebarFooter = (): ReactElement => {
   }
 
   return (
-    <SidebarList>
+    <>
       {!IS_PRODUCTION && (
-        <ListItem disablePadding>
-          <DebugToggle />
-        </ListItem>
+        <>
+          <ListItem disablePadding>
+            <DebugToggle />
+          </ListItem>
+
+          <Divider flexItem />
+        </>
       )}
 
       {isOfficialHost && (
@@ -66,36 +64,48 @@ const SidebarFooter = (): ReactElement => {
         </Track>
       )}
 
-      <Track {...OVERVIEW_EVENTS.HELP_CENTER}>
-        <ListItem data-testid="need-help-btn" disablePadding>
-          <a target="_blank" rel="noopener noreferrer" href={SUPPORT_FORM} style={{ width: '100%' }}>
-            <SidebarListItemButton>
-              <SidebarListItemIcon color="primary">
-                <HelpCenterIcon />
-              </SidebarListItemIcon>
-              <SidebarListItemText data-testid="list-item-need-help" bold>
-                Need help?
-              </SidebarListItemText>
-            </SidebarListItemButton>
-          </a>
-        </ListItem>
-      </Track>
+      <ListItem style={{ padding: 'var(--space-1)' }}>
+        <a target="_blank" rel="noopener noreferrer" href={SUPPORT_FORM} style={{ width: '100%' }}>
+          <SidebarListItemButton>
+            <SidebarListItemIcon color="primary">
+              <HelpCenterIcon />
+            </SidebarListItemIcon>
+            <SidebarListItemText data-testid="list-item-need-help" bold>
+              Need help?
+            </SidebarListItemText>
+          </SidebarListItemButton>
+        </a>
+      </ListItem>
 
-      <Track {...OVERVIEW_EVENTS.SUGGESTIONS}>
-        <ListItem disablePadding>
-          <a target="_blank" rel="noopener noreferrer" href={NEW_SUGGESTION_FORM} style={{ width: '100%' }}>
-            <SidebarListItemButton id={BEAMER_SELECTOR} style={{ backgroundColor: '#12FF80', color: 'black' }}>
-              <SidebarListItemIcon color="primary">
+      <ListItem style={{ padding: '0 var(--space-1) 0' }}>
+        <a target="_blank" rel="noopener noreferrer" href={NEW_SUGGESTION_FORM} style={{ width: '100%' }}>
+          <SidebarListItemButton
+            style={{
+              color: 'black',
+              backgroundColor:
+                theme.palette.mode === 'dark' ? theme.palette.primary.main : theme.palette.secondary.main,
+            }}
+          >
+            <SidebarListItemIcon>
+              <Box
+                sx={{
+                  '& svg': {
+                    '& path': () => ({
+                      fill: 'black !important',
+                    }),
+                  },
+                }}
+              >
                 <SuggestionIcon />
-              </SidebarListItemIcon>
-              <SidebarListItemText bold>New Features Suggestion?</SidebarListItemText>
-            </SidebarListItemButton>
-          </a>
-        </ListItem>
-      </Track>
+              </Box>
+            </SidebarListItemIcon>
+            <SidebarListItemText bold>New Features Suggestion?</SidebarListItemText>
+          </SidebarListItemButton>
+        </a>
+      </ListItem>
       <ListItem>
         <SidebarListItemText>
-          <Typography variant="caption">
+          <Typography variant="caption" sx={{ mx: 'auto', textAlign: 'center' }}>
             Supported by{' '}
             <SvgIcon
               component={ProtofireLogo}
@@ -103,13 +113,17 @@ const SidebarFooter = (): ReactElement => {
               fontSize="small"
               sx={{ verticalAlign: 'middle', mx: 0.5 }}
             />
-            <Link href="https://protofire.io" sx={{ color: darkPalette.primary.main, textDecoration: 'none' }}>
+            <ExternalLink
+              href="https://protofire.io/services/solution/safe-deployment"
+              sx={{ textDecoration: 'none' }}
+              noIcon
+            >
               Protofire
-            </Link>
+            </ExternalLink>
           </Typography>
         </SidebarListItemText>
       </ListItem>
-    </SidebarList>
+    </>
   )
 }
 
