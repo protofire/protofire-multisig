@@ -1,108 +1,129 @@
-import React, { useMemo } from 'react'
-import { Tabs } from 'react-native-collapsible-tab-view'
-import { View, useTheme } from 'tamagui'
-import { SafeListItem } from '@/src/components/SafeListItem'
-import { TransactionItem } from '@safe-global/store/gateway/AUTO_GENERATED/transactions'
-import { getTxHash, GroupedTxsWithTitle, groupTxsByDate } from '@/src/features/TxHistory/utils'
-import { HistoryTransactionItems } from '@safe-global/store/gateway/types'
-import { renderItem } from '@/src/features/TxHistory/utils'
-import { TxHistorySkeleton, TxHistorySkeletonItem } from '../TxHistorySkeleton'
+import React, { useMemo, useCallback } from 'react'
+import { View, getTokenValue } from 'tamagui'
+import { FlashList } from '@shopify/flash-list'
 import { RefreshControl } from 'react-native'
-import { CircleSnail } from 'react-native-progress'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useRouter } from 'expo-router'
+import { HistoryTransactionItems } from '@safe-global/store/gateway/types'
+import { isDateLabel, isCreationTxInfo } from '@/src/utils/transaction-guards'
+import { groupBulkTxs } from '@/src/utils/transactions'
+import { TxCardPress } from '@/src/components/TxInfo/types'
+import { GroupedTransactionItem } from './components/GroupedTransactionItem'
+import { DateHeaderItem } from './components/DateHeaderItem'
+import { TransactionListItem } from './components/TransactionListItem'
+import { EmptyComponent, FooterComponent } from './components/LoadingComponents'
+import { ErrorComponent } from './components/ErrorComponent'
+import { keyExtractor, getItemType } from './utils'
+import { EMPTY_ARRAY } from './constants'
 
 interface TxHistoryList {
   transactions?: HistoryTransactionItems[]
   onEndReached: (info: { distanceFromEnd: number }) => void
-  isLoading?: boolean
-  refreshing?: boolean
-  onRefresh?: () => void
+  isLoading: boolean
+  isLoadingNext: boolean
+  isError: boolean
+  refreshing: boolean
+  onRefresh: () => void
 }
 
-export function TxHistoryList({ transactions, onEndReached, isLoading, refreshing, onRefresh }: TxHistoryList) {
-  const theme = useTheme()
+export function TxHistoryList({
+  transactions,
+  onEndReached,
+  isLoading,
+  isLoadingNext,
+  isError,
+  refreshing,
+  onRefresh,
+}: TxHistoryList) {
+  const { bottom } = useSafeAreaInsets()
+  const router = useRouter()
 
-  const groupedList: GroupedTxsWithTitle<TransactionItem>[] = useMemo(() => {
-    return groupTxsByDate(transactions || [])
+  const onHistoryTransactionPress = useCallback(
+    (transaction: TxCardPress) => {
+      // TODO: Remove this once the endpoint is fixed (see issue https://linear.app/safe-global/issue/COR-547/cgw-cant-return-information-for-creation-txs)
+      if (isCreationTxInfo(transaction.tx.txInfo)) {
+        console.log('Creation transaction navigation disabled:', transaction.tx.id)
+        return
+      }
+
+      router.push({
+        pathname: '/history-transaction-details',
+        params: {
+          txId: transaction.tx.id,
+        },
+      })
+    },
+    [router],
+  )
+
+  const groupedTransactions = useMemo(() => {
+    if (!transactions || transactions.length === 0) {
+      return EMPTY_ARRAY
+    }
+    return groupBulkTxs(transactions)
   }, [transactions])
 
-  const hasTransactions = transactions && transactions.length > 0
-  const isInitialLoading = isLoading && !hasTransactions && !refreshing
+  const renderItem = useCallback(
+    ({ item }: { item: HistoryTransactionItems | HistoryTransactionItems[] }) => {
+      if (Array.isArray(item)) {
+        return <GroupedTransactionItem item={item} onPress={onHistoryTransactionPress} />
+      }
 
-  // ListEmptyComponent for initial loading state
-  const renderEmptyComponent = useMemo(() => {
+      if (isDateLabel(item)) {
+        return <DateHeaderItem timestamp={item.timestamp} />
+      }
+
+      if (item.type === 'TRANSACTION') {
+        return <TransactionListItem item={item} onPress={onHistoryTransactionPress} />
+      }
+
+      return null
+    },
+    [onHistoryTransactionPress],
+  )
+
+  const hasTransactions = !!(transactions && transactions.length > 0)
+  const isInitialLoading = !!(isLoading && !hasTransactions && !refreshing)
+
+  const handleEndReached = useCallback(() => {
+    onEndReached({ distanceFromEnd: 0 })
+  }, [onEndReached])
+
+  const contentContainerStyle = useMemo(
+    () => ({
+      paddingHorizontal: 16,
+      paddingTop: 0,
+      paddingBottom: bottom + getTokenValue('$4'),
+    }),
+    [bottom],
+  )
+
+  const listEmptyComponent = useMemo(() => {
+    // Prioritize error state over loading state
+    if (isError && !hasTransactions && !refreshing) {
+      return <ErrorComponent />
+    }
     if (isInitialLoading) {
-      return (
-        <View
-          flex={1}
-          alignItems="flex-start"
-          justifyContent="flex-start"
-          paddingTop="$4"
-          testID="tx-history-initial-loader"
-        >
-          <TxHistorySkeleton />
-        </View>
-      )
+      return <EmptyComponent />
     }
     return null
-  }, [isInitialLoading])
-
-  // ListFooterComponent for pagination loading (bottom loading)
-  const renderFooterComponent = useMemo(() => {
-    if (isLoading && hasTransactions) {
-      return (
-        <View testID="tx-history-pagination-loader" marginTop="$4">
-          <TxHistorySkeletonItem />
-        </View>
-      )
-    }
-    return null
-  }, [isLoading, hasTransactions])
+  }, [isError, hasTransactions, refreshing, isInitialLoading])
 
   return (
     <View position="relative" flex={1}>
-      {!!refreshing && (
-        <View
-          position="absolute"
-          top={64}
-          alignSelf="center"
-          zIndex={1000}
-          backgroundColor="$background"
-          borderRadius={20}
-          padding="$2"
-          testID="tx-history-progress-indicator"
-        >
-          <CircleSnail size={24} color={theme.color.get()} thickness={2} duration={600} spinDuration={1500} />
-        </View>
-      )}
-
-      <Tabs.SectionList
+      <FlashList
         testID="tx-history-list"
-        stickySectionHeadersEnabled
-        contentInsetAdjustmentBehavior="automatic"
-        sections={groupedList}
-        keyExtractor={(item, index) => (Array.isArray(item) ? getTxHash(item[0]) + index : getTxHash(item) + index)}
+        data={groupedTransactions}
         renderItem={renderItem}
-        onEndReached={onEndReached}
-        onEndReachedThreshold={0.1}
-        refreshControl={
-          <RefreshControl
-            refreshing={!!refreshing}
-            onRefresh={onRefresh}
-            tintColor="transparent" // Hide default spinner
-            colors={['transparent']} // Hide default spinner on Android
-            progressBackgroundColor="transparent"
-            style={{ backgroundColor: 'transparent' }}
-          />
-        }
-        style={{ marginTop: -16 }} // Compensate for SafeTab container marginTop
-        contentContainerStyle={{
-          paddingHorizontal: 16,
-          paddingTop: 8,
-          marginTop: 16,
-        }}
-        ListEmptyComponent={renderEmptyComponent}
-        ListFooterComponent={renderFooterComponent}
-        renderSectionHeader={({ section: { title } }) => <SafeListItem.Header title={title} />}
+        keyExtractor={keyExtractor}
+        getItemType={getItemType}
+        onEndReached={handleEndReached}
+        onEndReachedThreshold={0.5}
+        refreshControl={<RefreshControl refreshing={!!refreshing} onRefresh={onRefresh} />}
+        contentContainerStyle={contentContainerStyle}
+        ListEmptyComponent={listEmptyComponent}
+        ListFooterComponent={isLoadingNext && hasTransactions ? <FooterComponent /> : null}
+        contentInsetAdjustmentBehavior="automatic"
       />
     </View>
   )

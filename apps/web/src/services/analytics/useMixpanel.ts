@@ -1,6 +1,5 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { useTheme } from '@mui/material/styles'
-import mixpanel from 'mixpanel-browser'
 import {
   mixpanelInit,
   mixpanelSetBlockchainNetwork,
@@ -11,6 +10,8 @@ import {
   mixpanelSetEOAWalletLabel,
   mixpanelSetEOAWalletAddress,
   mixpanelSetEOAWalletNetwork,
+  mixpanelOptInTracking,
+  mixpanelOptOutTracking,
 } from './mixpanel'
 import { useAppSelector } from '@/store'
 import { CookieAndTermType, hasConsentFor } from '@/store/cookiesAndTermsSlice'
@@ -19,11 +20,11 @@ import { FEATURES } from '@safe-global/utils/utils/chains'
 import { IS_PRODUCTION } from '@/config/constants'
 import { useMediaQuery } from '@mui/material'
 import { DeviceType } from './types'
-import { MixPanelUserProperty } from './mixpanel-events'
+import { MixpanelUserProperty } from './mixpanel-events'
 import useSafeAddress from '@/hooks/useSafeAddress'
 import useWallet from '@/hooks/wallets/useWallet'
 import { useIsSpaceRoute } from '@/hooks/useIsSpaceRoute'
-import { useMixPanelUserProperties } from './useMixPanelUserProperties'
+import { useMixpanelUserProperties } from './useMixpanelUserProperties'
 import { useChain } from '@/hooks/useChains'
 import useSafeInfo from '@/hooks/useSafeInfo'
 
@@ -39,10 +40,11 @@ const useMixpanel = () => {
   const safeAddress = useSafeAddress()
   const wallet = useWallet()
   const isSpaceRoute = useIsSpaceRoute()
-  const userProperties = useMixPanelUserProperties()
+  const userProperties = useMixpanelUserProperties()
   const { safe } = useSafeInfo()
   const currentChain = useChain(safe?.chainId || '')
   const walletChain = useChain(wallet?.chainId || '')
+  const lastUserPropertiesRef = useRef<string | null>(null)
 
   useEffect(() => {
     if (isMixpanelEnabled) {
@@ -54,14 +56,14 @@ const useMixpanel = () => {
     if (!isMixpanelEnabled) return
 
     if (isAnalyticsEnabled) {
-      mixpanel.opt_in_tracking()
+      mixpanelOptInTracking()
       if (!IS_PRODUCTION) {
-        console.info('[MixPanel] - User opted in')
+        console.info('[Mixpanel] - User opted in')
       }
     } else {
-      mixpanel.opt_out_tracking()
+      mixpanelOptOutTracking()
       if (!IS_PRODUCTION) {
-        console.info('[MixPanel] - User opted out')
+        console.info('[Mixpanel] - User opted out')
       }
     }
   }, [isMixpanelEnabled, isAnalyticsEnabled])
@@ -89,10 +91,10 @@ const useMixpanel = () => {
       const walletProperties: Record<string, any> = {}
 
       if (wallet.label) {
-        walletProperties[MixPanelUserProperty.WALLET_LABEL] = wallet.label
+        walletProperties[MixpanelUserProperty.WALLET_LABEL] = wallet.label
       }
       if (wallet.address) {
-        walletProperties[MixPanelUserProperty.WALLET_ADDRESS] = wallet.address
+        walletProperties[MixpanelUserProperty.WALLET_ADDRESS] = wallet.address
       }
 
       if (Object.keys(walletProperties).length > 0) {
@@ -118,7 +120,13 @@ const useMixpanel = () => {
   useEffect(() => {
     if (!userProperties) return
 
-    mixpanelSetUserProperties(userProperties.properties)
+    // Deep comparison to prevent infinite loop from object reference changes
+    const currentPropertiesStr = JSON.stringify(userProperties.properties)
+
+    if (lastUserPropertiesRef.current !== currentPropertiesStr) {
+      lastUserPropertiesRef.current = currentPropertiesStr
+      mixpanelSetUserProperties(userProperties.properties)
+    }
   }, [userProperties])
 }
 

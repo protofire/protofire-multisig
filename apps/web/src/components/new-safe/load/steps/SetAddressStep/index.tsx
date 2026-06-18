@@ -22,14 +22,16 @@ import { useAddressResolver } from '@/hooks/useAddressResolver'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import AddressInput from '@/components/common/AddressInput'
 import React from 'react'
-import { getSafeInfo } from '@safe-global/safe-gateway-typescript-sdk'
+import { useLazySafesGetSafeV1Query } from '@safe-global/store/gateway/AUTO_GENERATED/safes'
 import useChainId from '@/hooks/useChainId'
 import { useAppSelector } from '@/store'
 import { selectAddedSafes } from '@/store/addedSafesSlice'
 import { LOAD_SAFE_EVENTS, trackEvent } from '@/services/analytics'
-import { AppRoutes } from '@/config/routes'
+
 import MUILink from '@mui/material/Link'
 import Link from 'next/link'
+import { useRouter } from 'next/router'
+import { getTermsLink, getPrivacyLink } from '@/utils/templateConfig'
 
 enum Field {
   name = 'name',
@@ -42,8 +44,10 @@ type FormData = {
 }
 
 const SetAddressStep = ({ data, onSubmit, onBack }: StepRenderProps<LoadSafeFormData>) => {
+  const router = useRouter()
   const currentChainId = useChainId()
   const addedSafes = useAppSelector((state) => selectAddedSafes(state, currentChainId))
+  const [triggerGetSafe] = useLazySafesGetSafeV1Query()
   const formMethods = useForm<FormData>({
     mode: 'all',
     defaultValues: {
@@ -72,7 +76,10 @@ const SetAddressStep = ({ data, onSubmit, onBack }: StepRenderProps<LoadSafeForm
     }
 
     try {
-      await getSafeInfo(currentChainId, address)
+      const result = await triggerGetSafe({ chainId: currentChainId, safeAddress: address }).unwrap()
+      if (!result) {
+        return 'Address given is not a valid Safe Account address'
+      }
     } catch (error) {
       return 'Address given is not a valid Safe Account address'
     }
@@ -96,6 +103,13 @@ const SetAddressStep = ({ data, onSubmit, onBack }: StepRenderProps<LoadSafeForm
       [Field.name]: formData.name || fallbackName,
     })
   }
+
+  // Get terms and privacy links from template config or fallback to default routes
+  const getHref = (path: string): string => {
+    return router.pathname === path ? '' : path
+  }
+  const termsLink = getTermsLink(router.pathname, getHref)
+  const privacyLink = getPrivacyLink()
 
   return (
     <FormProvider {...formMethods}>
@@ -159,9 +173,18 @@ const SetAddressStep = ({ data, onSubmit, onBack }: StepRenderProps<LoadSafeForm
             }}
           >
             By continuing you consent to the{' '}
-            <Link href={AppRoutes.terms} passHref legacyBehavior>
+            <Link href={termsLink} passHref legacyBehavior>
               <MUILink>terms of use</MUILink>
             </Link>
+            {privacyLink && (
+              <>
+                {' '}
+                and{' '}
+                <Link href={privacyLink} passHref legacyBehavior>
+                  <MUILink>privacy policy</MUILink>
+                </Link>
+              </>
+            )}
             .
           </Typography>
         </Box>
@@ -177,16 +200,10 @@ const SetAddressStep = ({ data, onSubmit, onBack }: StepRenderProps<LoadSafeForm
               gap: 3,
             }}
           >
-            <Button variant="outlined" size="small" onClick={handleBack} startIcon={<ArrowBackIcon fontSize="small" />}>
+            <Button variant="outlined" size="large" onClick={handleBack} startIcon={<ArrowBackIcon fontSize="small" />}>
               Back
             </Button>
-            <Button
-              data-testid="load-safe-next-btn"
-              type="submit"
-              variant="contained"
-              size="stretched"
-              disabled={!isValid}
-            >
+            <Button data-testid="load-safe-next-btn" type="submit" variant="contained" size="large" disabled={!isValid}>
               Next
             </Button>
           </Box>

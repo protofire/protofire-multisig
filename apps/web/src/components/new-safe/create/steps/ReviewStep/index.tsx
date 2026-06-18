@@ -1,12 +1,18 @@
 import type { NamedAddress } from '@/components/new-safe/create/types'
 import EthHashInfo from '@/components/common/EthHashInfo'
-import { safeCreationDispatch, SafeCreationEvent } from '@/features/counterfactual/services/safeCreationEvents'
-import NetworkLogosList from '@/features/multichain/components/NetworkLogosList'
-import { getTotalFeeFormatted } from '@/hooks/useGasPrice'
+import {
+  safeCreationDispatch,
+  SafeCreationEvent,
+  replayCounterfactualSafeDeployment,
+  activateReplayedSafe,
+} from '@/features/counterfactual/services'
+import { PayNowPayLater } from '@/features/counterfactual/components'
+import { CF_TX_GROUP_KEY } from '@/features/counterfactual'
+import { NetworkLogosList, predictAddressBasedOnReplayData } from '@/features/multichain'
+
 import type { StepRenderProps } from '@/components/new-safe/CardStepper/useCardStepper'
 import type { NewSafeFormData } from '@/components/new-safe/create'
 import {
-  computeNewSafeAddress,
   createNewSafe,
   createNewUndeployedSafeWithoutSalt,
   relaySafeCreation,
@@ -18,16 +24,21 @@ import { useEstimateSafeCreationGas } from '@/components/new-safe/create/useEsti
 import useSyncSafeCreationStep from '@/components/new-safe/create/useSyncSafeCreationStep'
 import ReviewRow from '@/components/new-safe/ReviewRow'
 import ErrorMessage from '@/components/tx/ErrorMessage'
+import { TempoGasTokenSafeCreationHint } from '@/components/tx/FeeTokenSettingsHint'
 import { ExecutionMethod, ExecutionMethodSelector } from '@/components/tx/ExecutionMethodSelector'
-import PayNowPayLater from '@/features/counterfactual/PayNowPayLater'
-import { CF_TX_GROUP_KEY, replayCounterfactualSafeDeployment } from '@/features/counterfactual/utils'
 import { useCurrentChain, useHasFeature } from '@/hooks/useChains'
 import useGasPrice from '@/hooks/useGasPrice'
 import useIsWrongChain from '@/hooks/useIsWrongChain'
 import { useLeastRemainingRelays } from '@/hooks/useRemainingRelays'
 import useWalletCanPay from '@/hooks/useWalletCanPay'
 import useWallet from '@/hooks/wallets/useWallet'
-import { CREATE_SAFE_CATEGORY, CREATE_SAFE_EVENTS, OVERVIEW_EVENTS, trackEvent } from '@/services/analytics'
+import {
+  CREATE_SAFE_CATEGORY,
+  CREATE_SAFE_EVENTS,
+  OVERVIEW_EVENTS,
+  trackEvent,
+  MixpanelEventParams,
+} from '@/services/analytics'
 import { gtmSetChainId, gtmSetSafeAddress } from '@/services/analytics/gtm'
 import { asError } from '@safe-global/utils/services/exceptions/utils'
 import { useAppDispatch, useAppSelector } from '@/store'
@@ -35,24 +46,23 @@ import { hasRemainingRelays } from '@/utils/relaying'
 import { isWalletRejection } from '@/utils/wallets'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import { Box, Button, CircularProgress, Divider, Grid, Tooltip, Typography } from '@mui/material'
-import { type ChainInfo } from '@safe-global/safe-gateway-typescript-sdk'
+import { type Chain } from '@safe-global/store/gateway/AUTO_GENERATED/chains'
 import classnames from 'classnames'
 import { useRouter } from 'next/router'
 import { useMemo, useState } from 'react'
 import ChainIndicator from '@/components/common/ChainIndicator'
 import NetworkWarning from '../../NetworkWarning'
-import useAllSafes from '@/features/myAccounts/hooks/useAllSafes'
+import { useAllSafes } from '@/hooks/safes'
 import uniq from 'lodash/uniq'
 import { selectRpc } from '@/store/settingsSlice'
 import { AppRoutes } from '@/config/routes'
-import { type ReplayedSafeProps } from '@safe-global/utils/features/counterfactual/store/types'
-import { predictAddressBasedOnReplayData } from '@/features/multichain/utils/utils'
-import { createWeb3ReadOnly, getRpcServiceUrl } from '@/hooks/wallets/web3'
+import type { CreateSafeResult, ReplayedSafeProps } from '@safe-global/utils/features/counterfactual/store/types'
+import { createWeb3ReadOnly } from '@/hooks/wallets/web3'
 import { updateAddressBook } from '../../logic/address-book'
-import chains from '@/config/chains'
 import { FEATURES, hasFeature } from '@safe-global/utils/utils/chains'
 import { PayMethod } from '@safe-global/utils/features/counterfactual/types'
 import { type TransactionOptions } from '@safe-global/types-kit'
+import { getTotalFeeFormatted } from '@safe-global/utils/hooks/useDefaultGasPrice'
 
 export const NetworkFee = ({
   totalFee,
@@ -61,7 +71,7 @@ export const NetworkFee = ({
   inline = false,
 }: {
   totalFee: string
-  chain: ChainInfo | undefined
+  chain: Chain | undefined
   isWaived: boolean
   inline?: boolean
 }) => {
@@ -85,7 +95,7 @@ export const SafeSetupOverview = ({
   name?: string
   owners: NamedAddress[]
   threshold: number
-  networks: ChainInfo[]
+  networks: Chain[]
 }) => {
   return (
     <Grid container spacing={3}>
@@ -239,39 +249,27 @@ const ReviewStep = ({ data, onSubmit, onBack, setStep }: StepRenderProps<NewSafe
       const provider = createWeb3ReadOnly(chain, customRpcUrl)
       if (!provider) return
 
-      let safeAddress: string
+      const safeAddress = await predictAddressBasedOnReplayData(replayedSafeWithNonce, provider)
 
-      // FIXME a new check to indicate ZKsync chain will be added to the config service and available under ChainInfo
-      if (chain.chainId === chains['zksync'] || chain.chainId === chains['lens']) {
-        safeAddress = await computeNewSafeAddress(
-          customRpcUrl || getRpcServiceUrl(chain.rpcUri),
-          {
-            safeAccountConfig: replayedSafeWithNonce.safeAccountConfig,
-            safeDeploymentConfig: {
-              saltNonce: nextAvailableNonce,
-              safeVersion: replayedSafeWithNonce.safeVersion,
-            },
-          },
-          chain,
-        )
-      } else {
-        safeAddress = await predictAddressBasedOnReplayData(replayedSafeWithNonce, provider)
-      }
-
+      const createSafeResults: CreateSafeResult[] = []
       for (const network of data.networks) {
-        await createSafe(network, replayedSafeWithNonce, safeAddress)
+        const result = await createSafe(network, replayedSafeWithNonce, safeAddress)
+        createSafeResults.push(result)
       }
 
-      // Update addressbook with owners and Safe on all chosen networks
-      dispatch(
-        updateAddressBook(
-          data.networks.map((network) => network.chainId),
-          safeAddress,
-          data.name,
-          data.owners,
-          data.threshold,
-        ),
-      )
+      // Update the addressbook with owners and Safe on all successfully created networks
+      const successfulChains = createSafeResults.filter((result) => result.success)
+      if (successfulChains.length > 0) {
+        dispatch(
+          updateAddressBook(
+            successfulChains.map((res) => res.chain.chainId),
+            safeAddress,
+            data.name,
+            data.owners,
+            data.threshold,
+          ),
+        )
+      }
 
       gtmSetChainId(chain.chainId)
 
@@ -294,10 +292,26 @@ const ReviewStep = ({ data, onSubmit, onBack, setStep }: StepRenderProps<NewSafe
     }
   }
 
-  const createSafe = async (chain: ChainInfo, props: ReplayedSafeProps, safeAddress: string) => {
-    if (!wallet) return
+  const createSafe = async (chain: Chain, props: ReplayedSafeProps, safeAddress: string): Promise<CreateSafeResult> => {
+    if (!wallet) return { chain, safeAddress, success: false }
 
     gtmSetChainId(chain.chainId)
+
+    trackEvent(CREATE_SAFE_EVENTS.CREATED_SAFE, {
+      [MixpanelEventParams.SAFE_ADDRESS]: safeAddress,
+      [MixpanelEventParams.BLOCKCHAIN_NETWORK]: chain.chainName,
+      [MixpanelEventParams.NUMBER_OF_OWNERS]: props.safeAccountConfig.owners.length,
+      [MixpanelEventParams.THRESHOLD]: props.safeAccountConfig.threshold,
+      [MixpanelEventParams.ENTRY_POINT]: document.referrer || 'Direct',
+      [MixpanelEventParams.DEPLOYMENT_TYPE]:
+        isCounterfactualEnabled && payMethod === PayMethod.PayLater ? 'Counterfactual' : 'Direct',
+      [MixpanelEventParams.PAYMENT_METHOD]:
+        isCounterfactualEnabled && payMethod === PayMethod.PayLater
+          ? 'Pay-later'
+          : willRelay
+            ? 'Sponsored'
+            : 'Self-paid',
+    })
 
     try {
       if (isCounterfactualEnabled && payMethod === PayMethod.PayLater) {
@@ -305,8 +319,8 @@ const ReviewStep = ({ data, onSubmit, onBack, setStep }: StepRenderProps<NewSafe
 
         trackEvent({ ...OVERVIEW_EVENTS.PROCEED_WITH_TX, label: 'counterfactual', category: CREATE_SAFE_CATEGORY })
         replayCounterfactualSafeDeployment(chain.chainId, safeAddress, props, data.name, dispatch, payMethod)
-        trackEvent({ ...CREATE_SAFE_EVENTS.CREATED_SAFE, label: 'counterfactual' })
-        return
+
+        return { chain, safeAddress, success: true }
       }
 
       const options: TransactionOptions = isEIP1559
@@ -352,6 +366,7 @@ const ReviewStep = ({ data, onSubmit, onBack, setStep }: StepRenderProps<NewSafe
             onSubmitCallback(undefined, txHash)
           },
           true,
+          activateReplayedSafe,
         )
       }
     } catch (_err) {
@@ -364,9 +379,11 @@ const ReviewStep = ({ data, onSubmit, onBack, setStep }: StepRenderProps<NewSafe
       if (isWalletRejection(error)) {
         trackEvent(CREATE_SAFE_EVENTS.REJECT_CREATE_SAFE)
       }
+
+      return { chain, safeAddress, success: false }
     }
 
-    setIsCreating(false)
+    return { chain, safeAddress, success: true }
   }
 
   const showNetworkWarning =
@@ -391,6 +408,8 @@ const ReviewStep = ({ data, onSubmit, onBack, setStep }: StepRenderProps<NewSafe
               payMethod={payMethod}
               setPayMethod={setPayMethod}
             />
+
+            <TempoGasTokenSafeCreationHint />
 
             {canRelay && payMethod === PayMethod.PayNow && (
               <>
@@ -510,7 +529,7 @@ const ReviewStep = ({ data, onSubmit, onBack, setStep }: StepRenderProps<NewSafe
           <Button
             data-testid="back-btn"
             variant="outlined"
-            size="small"
+            size="large"
             onClick={handleBack}
             startIcon={<ArrowBackIcon fontSize="small" />}
           >
@@ -520,7 +539,7 @@ const ReviewStep = ({ data, onSubmit, onBack, setStep }: StepRenderProps<NewSafe
             data-testid="review-step-next-btn"
             onClick={handleCreateSafeClick}
             variant="contained"
-            size="stretched"
+            size="large"
             disabled={isDisabled}
           >
             {isCreating ? <CircularProgress size={18} /> : 'Create account'}

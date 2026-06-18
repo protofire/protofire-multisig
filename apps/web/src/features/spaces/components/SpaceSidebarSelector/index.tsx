@@ -10,7 +10,7 @@ import css from './styles.module.css'
 import { useRouter } from 'next/router'
 import { AppRoutes } from '@/config/routes'
 import SpaceCreationModal from '../SpaceCreationModal'
-import { useCurrentSpaceId } from 'src/features/spaces/hooks/useCurrentSpaceId'
+import { useCurrentSpaceId } from '@/features/spaces'
 import { useAppSelector } from '@/store'
 import { isAuthenticated } from '@/store/authSlice'
 import { SPACE_LABELS } from '@/services/analytics/events/spaces'
@@ -86,13 +86,12 @@ const SpaceSidebarSelector = () => {
 
         <Menu
           data-testid="space-selector-menu"
-          id="space-selector-menu"
           anchorEl={anchorEl}
           open={open}
           onClose={handleClose}
           sx={{ '& .MuiPaper-root': { minWidth: '260px !important' } }}
         >
-          <SpaceCard space={selectedSpace} isCompact isLink={false} />
+          <SpaceCard space={selectedSpace} isCompact isLink={false} currentUserId={currentUser?.id} />
 
           <Divider sx={{ mb: 1 }} />
 

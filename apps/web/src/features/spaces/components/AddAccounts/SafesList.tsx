@@ -1,16 +1,17 @@
 import ChainIndicator from '@/components/common/ChainIndicator'
 import EthHashInfo from '@/components/common/EthHashInfo'
 import { ChainIcon } from '@/components/common/SafeIcon'
-import { isMultiChainSafeItem } from '@/features/multichain/utils/utils'
-import { MultichainIndicator } from '@/features/myAccounts/components/AccountItems/MultiAccountItem'
-import type { SafeItem } from '@/features/myAccounts/hooks/useAllSafes'
 import {
+  isMultiChainSafeItem,
+  type SafeItem,
   type AllSafeItems,
   flattenSafeItems,
   type MultiChainSafeItem,
-} from '@/features/myAccounts/hooks/useAllSafesGrouped'
-import type { AddAccountsFormValues } from '@/features/spaces/components/AddAccounts/index'
-import css from '@/features/spaces/components/AddAccounts/styles.module.css'
+} from '@/hooks/safes'
+import { useLoadFeature } from '@/features/__core__'
+import { MyAccountsFeature } from '@/features/myAccounts'
+import type { AddAccountsFormValues } from './index'
+import css from './styles.module.css'
 import { useChain } from '@/hooks/useChains'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import {
@@ -28,7 +29,7 @@ import ListItemButton from '@mui/material/ListItemButton'
 import ListItemIcon from '@mui/material/ListItemIcon'
 import ListItemText from '@mui/material/ListItemText'
 import { Controller, useFormContext } from 'react-hook-form'
-import { useSpaceSafes } from '@/features/spaces/hooks/useSpaceSafes'
+import { useSpaceSafes } from '@/features/spaces'
 import isEqual from 'lodash/isEqual'
 
 const ChainItem = ({ chainId }: { chainId: string }) => {
@@ -61,6 +62,8 @@ function getMultiChainSafeId(mcSafe: MultiChainSafeItem) {
 }
 
 const SafesList = ({ safes }: { safes: AllSafeItems }) => {
+  const feature = useLoadFeature(MyAccountsFeature)
+  const { AccountItem } = feature
   const { watch, setValue, control } = useFormContext<AddAccountsFormValues>()
   const { allSafes: spaceSafes } = useSpaceSafes()
   const flatSafeItems = flattenSafeItems(spaceSafes)
@@ -75,8 +78,7 @@ const SafesList = ({ safes }: { safes: AllSafeItems }) => {
         display: 'flex',
         flexDirection: 'column',
         gap: 1,
-        maxHeight: 400,
-        minHeight: 400,
+        height: 400,
         overflow: 'auto',
       }}
     >
@@ -120,10 +122,14 @@ const SafesList = ({ safes }: { safes: AllSafeItems }) => {
                   sx={{ mr: 2 }}
                   disabled={alreadyAdded}
                 />
-                <Box className={css.safeRow}>
+                <Box className={css.safeRow} pr={4}>
                   <EthHashInfo address={safe.address} copyAddress={false} showPrefix={false} />
-                  <Box sx={{ justifySelf: 'flex-start' }}>
-                    <MultichainIndicator safes={safe.safes} />
+                  <Box sx={{ justifySelf: 'flex-start', pl: 2 }}>
+                    {feature.$isReady && AccountItem?.ChainBadge ? (
+                      <AccountItem.ChainBadge safes={safe.safes} />
+                    ) : (
+                      <ChainIndicator chainId={safe.safes[0]?.chainId} responsive onlyLogo />
+                    )}
                   </Box>
                 </Box>
               </AccordionSummary>

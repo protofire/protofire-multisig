@@ -5,7 +5,7 @@ import NetworkError from '@/public/images/apps/network-error.svg'
 
 import css from './styles.module.css'
 import ExternalLink from '@/components/common/ExternalLink'
-import { SUPPORT_FORM } from '@/config/constants'
+import { PROTOFIRE_SUPPORT_LINK } from '@/config/constants.extra'
 
 type SafeAppsLoadErrorProps = {
   onBackToApps: () => void
@@ -20,13 +20,10 @@ const SafeAppsLoadError = ({ onBackToApps }: SafeAppsLoadErrorProps): React.Reac
         <SvgIcon component={NetworkError} inheritViewBox className={css.image} />
 
         <div>
-          <Typography component="span">
-            In case if problem persists, please report it through our{' '}
-            <ExternalLink href={SUPPORT_FORM} fontSize="medium">
-              Form
-            </ExternalLink>
-            .
-          </Typography>
+          <Typography component="span">In case the problem persists, please reach out to us via </Typography>
+          <ExternalLink href={PROTOFIRE_SUPPORT_LINK} fontSize="medium">
+            Form
+          </ExternalLink>
         </div>
 
         <Button href="#back" color="primary" onClick={onBackToApps}>

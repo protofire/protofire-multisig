@@ -29,18 +29,19 @@ class WalletConnectWallet {
   /**
    * Initialize WalletConnect wallet SDK
    */
-  public async init() {
+  public async init(origin?: string) {
     if (this.web3Wallet) return
 
     const core = new Core({
       projectId: WC_PROJECT_ID,
       logger: IS_PRODUCTION ? undefined : 'debug',
-      customStoragePrefix: LS_NAMESPACE,
+      // This isolation ensures wallet connections work independently from dApp connections.
+      customStoragePrefix: LS_NAMESPACE + 'wc_dapp_',
     })
 
     const web3wallet = await WalletKit.init({
       core,
-      metadata: SAFE_WALLET_METADATA,
+      metadata: { ...SAFE_WALLET_METADATA, ...(origin ? { url: origin } : {}) },
     })
 
     this.web3Wallet = web3wallet
@@ -145,18 +146,14 @@ class WalletConnectWallet {
     const isUnsupportedChain = !currentEip155ChainIds.includes(newEip155ChainId)
     const isNewSessionSafe = !currentEip155Accounts.includes(newEip155Account)
 
-    // Switching to unsupported chain
-    if (isUnsupportedChain) {
-      return this.disconnectSession(session)
-    }
+    const shouldUpdateNamespaces = isUnsupportedChain || isNewSessionSafe
 
-    // Add new Safe to the session namespace
-    if (isNewSessionSafe) {
+    if (shouldUpdateNamespaces) {
       const namespaces: SessionTypes.Namespaces = {
         [EIP155]: {
           ...session.namespaces[EIP155],
-          chains: currentEip155ChainIds,
-          accounts: [newEip155Account, ...currentEip155Accounts],
+          chains: isUnsupportedChain ? [newEip155ChainId, ...currentEip155ChainIds] : currentEip155ChainIds,
+          accounts: isNewSessionSafe ? [newEip155Account, ...currentEip155Accounts] : currentEip155Accounts,
         },
       }
 

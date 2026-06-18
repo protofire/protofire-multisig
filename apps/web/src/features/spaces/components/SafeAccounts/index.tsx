@@ -1,11 +1,11 @@
-import AddAccounts from '@/features/spaces/components/AddAccounts'
-import EmptySafeAccounts from '@/features/spaces/components/SafeAccounts/EmptySafeAccounts'
+import AddAccounts from '../AddAccounts'
+import EmptySafeAccounts from './EmptySafeAccounts'
 import { Stack, Typography } from '@mui/material'
 import { useEffect, useState } from 'react'
-import SafesList from '@/features/myAccounts/components/SafesList'
-import { useSpaceSafes } from '@/features/spaces/hooks/useSpaceSafes'
-import { useSafesSearch } from '@/features/myAccounts/hooks/useSafesSearch'
-import { useIsAdmin, useIsInvited } from '@/features/spaces/hooks/useSpaceMembers'
+import { useLoadFeature } from '@/features/__core__'
+import { MyAccountsFeature } from '@/features/myAccounts'
+import { useSafesSearch } from '@/hooks/safes'
+import { useSpaceSafes, useIsAdmin, useIsInvited } from '@/features/spaces'
 import PreviewInvite from '../InviteBanner/PreviewInvite'
 import { SPACE_LABELS } from '@/services/analytics/events/spaces'
 import { SPACE_EVENTS } from '@/services/analytics/events/spaces'
@@ -14,6 +14,7 @@ import { trackEvent } from '@/services/analytics'
 import SearchInput from '../SearchInput'
 
 const SpaceSafeAccounts = () => {
+  const { SafesList } = useLoadFeature(MyAccountsFeature)
   const [searchQuery, setSearchQuery] = useState('')
   const { allSafes } = useSpaceSafes()
   const filteredSafes = useSafesSearch(allSafes ?? [], searchQuery)

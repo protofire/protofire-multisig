@@ -6,87 +6,19 @@ import {
   getReadOnlyCurrentGnosisSafeContract,
   getReadOnlyMultiSendCallOnlyContract,
 } from '@/services/contracts/safeContracts'
+import type { TenderlySimulatePayload } from '@safe-global/utils/components/tx/security/tenderly/types'
+import { getWeb3ReadOnly } from '@/hooks/wallets/web3ReadOnly'
+
 import type {
-  TenderlySimulatePayload,
-  TenderlySimulation,
-} from '@safe-global/utils/components/tx/security/tenderly/types'
-import { getWeb3ReadOnly } from '@/hooks/wallets/web3'
-import type { ChainInfo, SafeInfo } from '@safe-global/safe-gateway-typescript-sdk'
-import type { EnvState } from '@safe-global/store/settingsSlice'
-import type { SafeTransaction, MetaTransactionData } from '@safe-global/types-kit'
-import {
-  isSingleTransactionSimulation,
-  getStateOverwrites,
-  _getStateOverride,
+  MultiSendTransactionSimulationParams,
+  SimulationTxParams,
+  SingleTransactionSimulationParams,
 } from '@safe-global/utils/components/tx/security/tenderly/utils'
 import {
-  TENDERLY_SIMULATE_ENDPOINT_URL,
-  TENDERLY_ORG_NAME,
-  TENDERLY_PROJECT_NAME,
-} from '@safe-global/utils/config/constants'
-import { FEATURES, hasFeature } from '@safe-global/utils/utils/chains'
-
-export const isTxSimulationEnabled = (chain?: ChainInfo): boolean => {
-  if (!chain) {
-    return false
-  }
-
-  const isSimulationEnvSet =
-    Boolean(TENDERLY_SIMULATE_ENDPOINT_URL) && Boolean(TENDERLY_ORG_NAME) && Boolean(TENDERLY_PROJECT_NAME)
-
-  return isSimulationEnvSet && hasFeature(chain, FEATURES.TX_SIMULATION)
-}
-
-export const getSimulation = async (
-  tx: TenderlySimulatePayload,
-  customTenderly: EnvState['tenderly'] | undefined,
-): Promise<TenderlySimulation> => {
-  const requestObject: RequestInit = {
-    method: 'POST',
-    body: JSON.stringify(tx),
-  }
-
-  if (customTenderly?.accessToken) {
-    requestObject.headers = {
-      'content-type': 'application/JSON',
-      'X-Access-Key': customTenderly.accessToken,
-    }
-  }
-
-  const data = await fetch(
-    customTenderly?.url ? customTenderly.url : TENDERLY_SIMULATE_ENDPOINT_URL,
-    requestObject,
-  ).then((res) => {
-    if (res.ok) {
-      return res.json()
-    }
-    return res.json().then((data) => {
-      throw new Error(`${res.status} - ${res.statusText}: ${data?.error?.message}`)
-    })
-  })
-
-  return data as TenderlySimulation
-}
-
-export const getSimulationLink = (simulationId: string): string => {
-  return `https://dashboard.tenderly.co/shared/simulation/${simulationId}`
-}
-
-type SingleTransactionSimulationParams = {
-  safe: SafeInfo
-  executionOwner: string
-  transactions: SafeTransaction
-  gasLimit?: number
-}
-
-type MultiSendTransactionSimulationParams = {
-  safe: SafeInfo
-  executionOwner: string
-  transactions: MetaTransactionData[]
-  gasLimit?: number
-}
-
-export type SimulationTxParams = SingleTransactionSimulationParams | MultiSendTransactionSimulationParams
+  _getStateOverride,
+  getStateOverwrites,
+  isSingleTransactionSimulation,
+} from '@safe-global/utils/components/tx/security/tenderly/utils'
 
 export const _getSingleTransactionPayload = async (
   params: SingleTransactionSimulationParams,
@@ -132,7 +64,11 @@ export const _getMultiSendCallOnlyPayload = async (
   params: MultiSendTransactionSimulationParams,
 ): Promise<Pick<TenderlySimulatePayload, 'to' | 'input'>> => {
   const data = encodeMultiSendData(params.transactions) as `0x${string}`
-  const readOnlyMultiSendContract = await getReadOnlyMultiSendCallOnlyContract(params.safe.version)
+  const readOnlyMultiSendContract = await getReadOnlyMultiSendCallOnlyContract(
+    params.safe.version,
+    params.safe.chainId,
+    params.safe.implementation?.value,
+  )
 
   return {
     to: readOnlyMultiSendContract.getAddress(),

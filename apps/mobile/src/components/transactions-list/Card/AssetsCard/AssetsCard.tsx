@@ -10,23 +10,24 @@ interface AssetsCardProps {
   logoUri?: string | null
   rightNode?: string | React.ReactNode
   accessibilityLabel?: string
-  imageBackground?: string
   transparent?: boolean
   onPress?: () => void
+  testID?: string
 }
 
 export function AssetsCard({
   name,
   description,
-  imageBackground,
   logoUri,
   accessibilityLabel,
   rightNode,
   transparent = true,
   onPress,
+  testID,
 }: AssetsCardProps) {
   return (
     <SafeListItem
+      testID={testID}
       onPress={onPress}
       label={
         <View>
@@ -41,14 +42,7 @@ export function AssetsCard({
         </View>
       }
       transparent={transparent}
-      leftNode={
-        <TokenIcon
-          imageBackground={imageBackground}
-          logoUri={logoUri}
-          accessibilityLabel={accessibilityLabel}
-          size={'$8'}
-        />
-      }
+      leftNode={<TokenIcon logoUri={logoUri} accessibilityLabel={accessibilityLabel} size={'$8'} />}
       rightNode={
         typeof rightNode === 'string' ? (
           <Text fontSize="$4" fontWeight={400} color="$color">

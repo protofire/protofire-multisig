@@ -1,20 +1,21 @@
 import ModalDialog from '@/components/common/ModalDialog'
-import type { SafeItem, SafeItems } from '@/features/myAccounts/hooks/useAllSafes'
-import { useSafesSearch } from '@/features/myAccounts/hooks/useSafesSearch'
-import AddManually, { type AddManuallyFormValues } from '@/features/spaces/components/AddAccounts/AddManually'
-import SafesList, { getSafeId } from '@/features/spaces/components/AddAccounts/SafesList'
-import { useCurrentSpaceId } from '@/features/spaces/hooks/useCurrentSpaceId'
+import {
+  type SafeItem,
+  type SafeItems,
+  type AllSafeItems,
+  flattenSafeItems,
+  useOwnedSafesGrouped,
+  useSafesSearch,
+  getComparator,
+} from '@/hooks/safes'
+import AddManually, { type AddManuallyFormValues } from './AddManually'
+import SafesList, { getSafeId } from './SafesList'
+import { useCurrentSpaceId, useIsAdmin, useSpaceSafes } from '@/features/spaces'
 import SearchIcon from '@/public/images/common/search.svg'
 import { useSpaceSafesCreateV1Mutation } from '@safe-global/store/gateway/AUTO_GENERATED/spaces'
 
 import debounce from 'lodash/debounce'
 import css from './styles.module.css'
-import {
-  type AllSafeItems,
-  flattenSafeItems,
-  useOwnedSafesGrouped,
-} from '@/features/myAccounts/hooks/useAllSafesGrouped'
-import { getComparator } from '@/features/myAccounts/utils/utils'
 import { useAppDispatch, useAppSelector } from '@/store'
 import { selectOrderByPreference } from '@/store/orderByPreferenceSlice'
 import {
@@ -36,8 +37,6 @@ import { FormProvider, useForm } from 'react-hook-form'
 import { trackEvent } from '@/services/analytics'
 import { SPACE_EVENTS, SPACE_LABELS } from '@/services/analytics/events/spaces'
 import Track from '@/components/common/Track'
-import { useIsAdmin } from '@/features/spaces/hooks/useSpaceMembers'
-import { useSpaceSafes } from '@/features/spaces/hooks/useSpaceSafes'
 import { showNotification } from '@/store/notificationsSlice'
 
 export type AddAccountsFormValues = {
@@ -58,7 +57,8 @@ function getSelectedSafes(safes: AddAccountsFormValues['selectedSafes'], spaceSa
   )
 }
 
-const SAFE_ACCOUNTS_LIMIT = 10
+const safeAccountsLimitRaw = Number.parseInt(process.env.NEXT_PUBLIC_SPACES_SAFE_ACCOUNTS_LIMIT ?? '', 10)
+const SAFE_ACCOUNTS_LIMIT = !Number.isNaN(safeAccountsLimitRaw) ? safeAccountsLimitRaw : 40
 
 const AddAccounts = () => {
   const isAdmin = useIsAdmin()

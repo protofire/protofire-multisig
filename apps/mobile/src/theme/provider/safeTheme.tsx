@@ -1,4 +1,5 @@
-import React from 'react'
+import React, { useEffect } from 'react'
+import { Appearance } from 'react-native'
 import { ThemeProvider } from '@react-navigation/native'
 import { TamaguiProvider } from '@tamagui/core'
 
@@ -14,23 +15,32 @@ interface SafeThemeProviderProps {
 }
 
 export const SafeThemeProvider = ({ children }: SafeThemeProviderProps) => {
-  const { currentTheme } = useTheme()
+  const { colorScheme, isDark, themePreference } = useTheme()
+
+  // Sync native iOS appearance with the app theme so native components
+  // (RefreshControl, context menus, etc.) match the app's color scheme.
+  // In auto mode, pass null to let the OS control the appearance.
+  useEffect(() => {
+    Appearance.setColorScheme(themePreference === 'auto' ? null : (colorScheme ?? null))
+  }, [colorScheme, themePreference])
 
   const themeProvider = isStorybookEnv ? (
     <View
-      backgroundColor={currentTheme === 'dark' ? NavDarkTheme.colors.background : NavLightTheme.colors.background}
+      backgroundColor={isDark ? NavDarkTheme.colors.background : NavLightTheme.colors.background}
       style={{ flex: 1 }}
     >
       {children}
     </View>
   ) : (
-    <ThemeProvider value={currentTheme === 'dark' ? NavDarkTheme : NavLightTheme}>{children}</ThemeProvider>
+    <ThemeProvider value={isDark ? NavDarkTheme : NavLightTheme}>{children}</ThemeProvider>
   )
 
   return (
     <FontProvider>
-      <TamaguiProvider config={config} defaultTheme={currentTheme ?? 'light'}>
-        {themeProvider}
+      <TamaguiProvider config={config} defaultTheme={colorScheme ?? 'light'}>
+        <View testID={`theme-${colorScheme ?? 'light'}`} style={{ flex: 1 }}>
+          {themeProvider}
+        </View>
       </TamaguiProvider>
     </FontProvider>
   )

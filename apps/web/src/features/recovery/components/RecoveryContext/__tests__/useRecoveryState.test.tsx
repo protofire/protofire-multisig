@@ -2,7 +2,7 @@ import { faker } from '@faker-js/faker'
 
 import { useCurrentChain, useHasFeature } from '@/hooks/useChains'
 import useSafeInfo from '@/hooks/useSafeInfo'
-import { useWeb3ReadOnly } from '@/hooks/wallets/web3'
+import { useWeb3ReadOnly } from '@/hooks/wallets/web3ReadOnly'
 import { getRecoveryState } from '@/features/recovery/services/recovery-state'
 import { chainBuilder } from '@/tests/builders/chains'
 import { addressExBuilder, safeInfoBuilder } from '@/tests/builders/safe'
@@ -14,6 +14,7 @@ import { useAppDispatch } from '@/store'
 import { txHistorySlice } from '@/store/txHistorySlice'
 import { recoveryDispatch, RecoveryEvent, RecoveryTxType } from '@/features/recovery/services/recoveryEvents'
 import RecoveryContextHooks from '../RecoveryContextHooks'
+import { ConflictType } from '@safe-global/store/gateway/types'
 
 jest.mock('@/features/recovery/services/delay-modifier')
 jest.mock('@/features/recovery/services/recovery-state')
@@ -22,7 +23,7 @@ const mockGetRecoveryDelayModifiers = getRecoveryDelayModifiers as jest.MockedFu
 const mockGetRecoveryState = getRecoveryState as jest.MockedFunction<typeof getRecoveryState>
 
 jest.mock('@/hooks/useSafeInfo')
-jest.mock('@/hooks/wallets/web3')
+jest.mock('@/hooks/wallets/web3ReadOnly')
 jest.mock('@/hooks/useChains')
 jest.mock('@/hooks/useTxHistory')
 
@@ -54,6 +55,7 @@ describe('useRecoveryState', () => {
           { type: 'DATE_LABEL' },
           {
             type: 'TRANSACTION',
+            conflictType: ConflictType.NONE,
             transaction: {
               txInfo: {
                 type: 'Custom',
@@ -98,6 +100,7 @@ describe('useRecoveryState', () => {
           { type: 'DATE_LABEL' },
           {
             type: 'TRANSACTION',
+            conflictType: ConflictType.NONE,
             transaction: {
               txInfo: {
                 type: 'Custom',
@@ -141,6 +144,7 @@ describe('useRecoveryState', () => {
           { type: 'DATE_LABEL' },
           {
             type: 'TRANSACTION',
+            conflictType: ConflictType.NONE,
             transaction: {
               txInfo: {
                 type: 'Custom',
@@ -186,10 +190,12 @@ describe('useRecoveryState', () => {
         dispatch(
           txHistorySlice.actions.set({
             loading: false,
+            loaded: true,
             data: {
               results: [
                 {
                   type: 'TRANSACTION',
+                  conflictType: ConflictType.NONE,
                   transaction: {
                     txInfo: {
                       type: 'Custom',

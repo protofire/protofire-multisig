@@ -19,13 +19,13 @@ import { type ReactElement, useMemo, useState } from 'react'
 import ExternalLink from '@/components/common/ExternalLink'
 import { type SafeVersion } from '@safe-global/types-kit'
 import { useCurrentChain } from '@/hooks/useChains'
-import type { ChainInfo } from '@safe-global/safe-gateway-typescript-sdk'
+import type { Chain } from '@safe-global/store/gateway/AUTO_GENERATED/chains'
 import { getLatestSafeVersion } from '@safe-global/utils/utils/chains'
 import { HelpCenterArticle } from '@safe-global/utils/config/constants'
 
 export type NewSafeFormData = {
   name: string
-  networks: ChainInfo[]
+  networks: Chain[]
   threshold: number
   owners: NamedAddress[]
   saltNonce?: number
@@ -95,7 +95,7 @@ const staticHints: Record<
     steps: [
       {
         title: 'Connect your Safe Account',
-        text: 'In our Safe Apps section you can connect your Safe Account to Web3 dApps directly or via Wallet Connect to interact with any application.',
+        text: 'In our Safe Apps section you can connect your Safe Account to dApps directly or via Wallet Connect to interact with any application.',
       },
     ],
   },
@@ -107,7 +107,7 @@ const CreateSafe = () => {
   const chain = useCurrentChain()
 
   const [safeName, setSafeName] = useState('')
-  const [overviewNetworks, setOverviewNetworks] = useState<ChainInfo[]>()
+  const [overviewNetworks, setOverviewNetworks] = useState<Chain[]>()
 
   const [dynamicHint, setDynamicHint] = useState<CreateSafeInfoItem>()
   const [activeStep, setActiveStep] = useState(0)

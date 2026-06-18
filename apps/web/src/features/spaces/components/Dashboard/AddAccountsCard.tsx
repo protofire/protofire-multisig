@@ -1,4 +1,4 @@
-import AddAccounts from '@/features/spaces/components/AddAccounts'
+import AddAccounts from '../AddAccounts'
 import Image from 'next/image'
 import { Typography, Paper, Box, Stack } from '@mui/material'
 import EmptyDashboard from '@/public/images/spaces/empty_dashboard.png'
@@ -20,7 +20,7 @@ const AddAccountsCard = () => {
             Add your Safe Accounts
           </Typography>
 
-          <Typography variant="body1" color="text.secondary" mb={2}>
+          <Typography variant="body1" color="primary.light" mb={2}>
             Start by adding Safe Accounts to your space. Any accounts that are linked to your connected wallet can be
             added to the space.
           </Typography>

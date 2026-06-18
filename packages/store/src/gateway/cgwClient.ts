@@ -1,4 +1,4 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
+import { createApi, fetchBaseQuery, retry } from '@reduxjs/toolkit/query/react'
 import type { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query/react'
 import { REHYDRATE } from 'redux-persist'
 import type { UnknownAction } from '@reduxjs/toolkit'
@@ -13,8 +13,10 @@ export const CREDENTIAL_ROUTES = [
   /\/v2\/chains\/[^\/]+\/notifications\/devices/,
 ]
 
+const IS_BEHIND_IAP = process.env.NEXT_PUBLIC_IS_BEHIND_IAP === 'true'
+
 export function isCredentialRoute(url: string) {
-  return CREDENTIAL_ROUTES.some((route) => url.match(route))
+  return IS_BEHIND_IAP || CREDENTIAL_ROUTES.some((route) => url.match(route))
 }
 
 let baseUrl: null | string = null

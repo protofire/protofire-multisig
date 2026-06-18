@@ -20,15 +20,12 @@ describe('[SMOKE] Tx history tests', () => {
   })
 
   beforeEach(() => {
+    cy.intercept('GET', constants.transactionHistoryEndpoint, { fixture: 'history/history_tx_1.json' }).as('getHistory')
     cy.visit(constants.transactionsHistoryUrl + staticSafes.SEP_STATIC_SAFE_23)
-    cy.fixture('history/history_tx_1.json').then((mockData) => {
-      cy.intercept('GET', constants.transactionHistoryEndpoint, mockData).as('getHistory')
-    })
     cy.wait('@getHistory')
   })
 
   // mock
-  // Token receipt
   it('[SMOKE] Verify summary for token receipt', () => {
     createTx.verifySummaryByName(
       typeReceive.summaryTitle,

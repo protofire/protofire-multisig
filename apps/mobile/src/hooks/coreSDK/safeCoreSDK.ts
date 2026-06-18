@@ -7,7 +7,9 @@ import { isLegacyVersion } from '@safe-global/utils/services/contracts/utils'
 import { isValidMasterCopy } from '@safe-global/utils/services/contracts/safeContracts'
 import type { SafeCoreSDKProps } from '@safe-global/utils/hooks/coreSDK/types'
 import { isInDeployments } from '@safe-global/utils/hooks/coreSDK/utils'
+import { getCanonicalMultiSendContractNetworks } from '@safe-global/utils/hooks/coreSDK/contractNetworks'
 
+const singletonSafeSDK = new Map<string, Safe>()
 // Safe Core SDK
 export const initSafeSDK = async ({
   provider,
@@ -17,6 +19,13 @@ export const initSafeSDK = async ({
   implementationVersionState,
   implementation,
 }: SafeCoreSDKProps): Promise<Safe | undefined> => {
+  const providerUrl = provider._getConnection().url
+  const key = `${chainId}-${address}-${version}-${implementationVersionState}-${implementation}-${providerUrl}`
+
+  if (singletonSafeSDK.has(key)) {
+    return singletonSafeSDK.get(key)
+  }
+
   const providerNetwork = (await provider.getNetwork()).chainId
   if (providerNetwork !== BigInt(chainId)) {
     return
@@ -45,11 +54,21 @@ export const initSafeSDK = async ({
     isL1SafeSingleton = true
   }
 
-  return Safe.init({
-    provider: provider._getConnection().url,
+  const contractNetworks = getCanonicalMultiSendContractNetworks({
+    implementationAddress: implementation,
+    chainId,
+    safeVersion,
+  })
+
+  const safeSDK = await Safe.init({
+    provider: providerUrl,
     safeAddress: address,
     isL1SafeSingleton,
+    ...(contractNetworks ? { contractNetworks } : {}),
   })
+  singletonSafeSDK.set(key, safeSDK)
+
+  return safeSDK
 }
 
 export const {
@@ -57,3 +76,7 @@ export const {
   setStore: setSafeSDK,
   useStore: useSafeSDK,
 } = new ExternalStore<Safe | undefined>()
+
+export const clearSingletonCache = (): void => {
+  singletonSafeSDK.clear()
+}

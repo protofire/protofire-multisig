@@ -14,20 +14,19 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 import NoWalletConnectedWarning from '../../NoWalletConnectedWarning'
 import { type SafeVersion } from '@safe-global/types-kit'
-import { useCurrentChain } from '@/hooks/useChains'
+import { useCurrentChain, useChain } from '@/hooks/useChains'
 import { useEffect } from 'react'
-import type { ChainInfo } from '@safe-global/safe-gateway-typescript-sdk'
+import type { Chain } from '@safe-global/store/gateway/AUTO_GENERATED/chains'
 import { useSafeSetupHints } from '../OwnerPolicyStep/useSafeSetupHints'
 import type { CreateSafeInfoItem } from '../../CreateSafeInfos'
-import NetworkMultiSelector from '@/components/common/NetworkSelector/NetworkMultiSelector'
-import { useAppSelector } from '@/store'
-import { selectChainById } from '@/store/chainsSlice'
+import { SafeCreationNetworkInput } from '@/features/multichain'
 import useWallet from '@/hooks/wallets/useWallet'
 import { getLatestSafeVersion } from '@safe-global/utils/utils/chains'
+import { getTermsLink, getPrivacyLink } from '@/utils/templateConfig'
 
 type SetNameStepForm = {
   name: string
-  networks: ChainInfo[]
+  networks: Chain[]
   safeVersion: SafeVersion
 }
 
@@ -48,14 +47,14 @@ function SetNameStep({
   isAdvancedFlow = false,
 }: StepRenderProps<NewSafeFormData> & {
   setSafeName: (name: string) => void
-  setOverviewNetworks: (networks: ChainInfo[]) => void
+  setOverviewNetworks: (networks: Chain[]) => void
   setDynamicHint: (hints: CreateSafeInfoItem | undefined) => void
   isAdvancedFlow?: boolean
 }) {
   const router = useRouter()
   const currentChain = useCurrentChain()
   const wallet = useWallet()
-  const walletChain = useAppSelector((state) => selectChainById(state, wallet?.chainId || ''))
+  const walletChain = useChain(wallet?.chainId || '')
 
   const initialState = data.networks.length ? data.networks : walletChain ? [walletChain] : []
   const formMethods = useForm<SetNameStepForm>({
@@ -73,7 +72,7 @@ function SetNameStep({
     formState: { errors, isValid },
   } = formMethods
 
-  const networks: ChainInfo[] = useWatch({ control, name: SetNameStepFields.networks })
+  const networks: Chain[] = useWatch({ control, name: SetNameStepFields.networks })
   const isMultiChain = networks.length > 1
   const fallbackName = useMnemonicSafeName(isMultiChain)
   useSafeSetupHints(setDynamicHint, undefined, undefined, isMultiChain)
@@ -99,6 +98,13 @@ function SetNameStep({
   useEffect(() => {
     setValue(SetNameStepFields.safeVersion, getLatestSafeVersion(currentChain))
   }, [currentChain, setValue])
+
+  // Get terms and privacy links from template config or fallback to default routes
+  const getHref = (path: string): string => {
+    return router.pathname === path ? '' : path
+  }
+  const termsLink = getTermsLink(router.pathname, getHref)
+  const privacyLink = getPrivacyLink()
 
   const isDisabled = !isValid
 
@@ -136,14 +142,23 @@ function SetNameStep({
               <Typography variant="body2" mb={2}>
                 Choose which networks you want your account to be active on. You can add more networks later.{' '}
               </Typography>
-              <NetworkMultiSelector isAdvancedFlow={isAdvancedFlow} name={SetNameStepFields.networks} />
+              <SafeCreationNetworkInput isAdvancedFlow={isAdvancedFlow} name={SetNameStepFields.networks} />
             </Grid>
           </Grid>
           <Typography variant="body2" mt={2}>
             By continuing, you agree to our{' '}
-            <Link href={AppRoutes.terms} passHref legacyBehavior>
+            <Link href={termsLink} passHref legacyBehavior>
               <MUILink>terms of use</MUILink>
             </Link>
+            {privacyLink && (
+              <>
+                {' '}
+                and{' '}
+                <Link href={privacyLink} passHref legacyBehavior>
+                  <MUILink>privacy policy</MUILink>
+                </Link>
+              </>
+            )}
             .
           </Typography>
 
@@ -152,10 +167,10 @@ function SetNameStep({
         <Divider />
         <Box className={layoutCss.row}>
           <Box display="flex" flexDirection="row" justifyContent="space-between" gap={3}>
-            <Button data-testid="cancel-btn" variant="outlined" onClick={onCancel} size="small">
+            <Button data-testid="cancel-btn" variant="outlined" onClick={onCancel} size="large">
               Cancel
             </Button>
-            <Button data-testid="next-btn" type="submit" variant="contained" size="stretched" disabled={isDisabled}>
+            <Button data-testid="next-btn" type="submit" variant="contained" size="large" disabled={isDisabled}>
               Next
             </Button>
           </Box>

@@ -3,9 +3,13 @@ import * as main from '../pages/main.page'
 import * as wallet from '../pages/create_wallet.pages'
 import * as modal from '../pages/modals.page'
 import { dataRow } from '../pages/tables.page'
+import * as navigation from './navigation.page'
+import * as walletUtils from '../../support/utils/wallet.js'
+import * as owner from './owners.pages'
 
 export const delegateCallWarning = '[data-testid="delegate-call-warning"]'
 export const policyChangeWarning = '[data-testid="threshold-warning"]'
+export const tokenSelector = '[data-testid="token-selector"]'
 const newTransactionBtnStr = 'New transaction'
 const recepientInput = 'input[name="recipients.0.recipient"]'
 const recepientInput_ = (index) => `input[name="recipients.${index}.recipient"]`
@@ -23,7 +27,8 @@ export const connectedWalletExecMethod = '[data-testid="connected-wallet-executi
 export const relayExecMethod = '[data-testid="relay-execution-method"]'
 export const connectedWalletMethod = '[data-testid="connected-wallet-execution-method"]'
 export const payNowExecMethod = '[data-testid="pay-now-execution-method"]'
-export const addToBatchBtn = '[data-track="batching: Add to batch"]'
+export const addToBatchBtn = '[data-testid="combo-submit-batching"]'
+export const executeTxBtn = '[data-testid="execute-tx-btn"]'
 const accordionDetails = '[data-testid="accordion-details"]'
 export const copyIcon = '[data-testid="copy-btn-icon"]'
 export const explorerBtn = '[data-testid="explorer-btn"]'
@@ -36,6 +41,7 @@ const advancedDetails = '[data-testid="tx-advanced-details"]'
 const baseGas = '[data-testid="tx-base-gas"]'
 const requiredConfirmation = '[data-testid="required-confirmations"]'
 export const txDate = '[data-testid="tx-date"]'
+export const txType = '[data-testid="tx-type"]'
 export const proposalStatus = '[data-testid="proposal-status"]'
 export const txSigner = '[data-testid="signer"]'
 const spamTokenWarningIcon = '[data-testid="warning"]'
@@ -61,17 +67,16 @@ const toggleUntrustedBtn = '[data-testid="toggle-untrusted"]'
 const simulateTxBtn = '[data-testid="simulate-btn"]'
 const simulateSuccess = '[data-testid="simulation-success-msg"]'
 const signBtn = '[data-testid="combo-submit-sign"]'
-const continueSignBtn = '[data-testid="continue-sign-btn"]'
-export const altImgDai = 'img[alt="DAI"]'
-export const altImgCow = 'img[alt="COW"]'
-export const altImgWeth = 'img[alt="WETH"]'
-export const altImgUsdc = 'img[alt="USDC"]'
-export const altImgUsdt = 'img[alt="USDT"]'
+export const continueSignBtn = '[data-testid="continue-sign-btn"]'
+export const altImgDai = 'iframe[title="DAI"]'
+export const altImgCow = 'iframe[title="COW"]'
+export const altImgWeth = 'iframe[title="WETH"]'
+export const altImgUsdc = 'iframe[title="USDC"]'
+export const altImgUsdt = 'iframe[title="USDT"]'
 export const altImgSwaps = 'svg[alt="Swap order"]'
 export const altImgLimitOrder = 'svg[alt="Limit order"]'
 export const altImgTwapOrder = 'svg[alt="Twap Order"]'
 export const txShareBlock = '[data-testid="share-block"]'
-export const txShareBlockDetails = '[data-testid="share-block-details"]'
 const copyLinkBtn = '[data-testid="copy-link-btn"]'
 export const noteTextField = '[data-testid="tx-note-textfield"]'
 const noteAlert = "[data-testid='tx-note-alert']"
@@ -98,15 +103,13 @@ const insufficientFundsErrorStr = 'Insufficient funds'
 const viewTransactionBtn = 'View transaction'
 const transactionDetailsTitle = 'Transaction details'
 const QueueLabel = 'needs to be executed first'
+export const hashesText = 'Hashes'
 const TransactionSummary = 'Send '
 const transactionsPerHrStr = 'free transactions left today'
-const txHashesStr = 'Transaction hashes'
-const txAcknowledgementStr = 'I understand what'
 const maxAmountBtnStr = 'Max'
-const nextBtnStr = 'Next'
 const nativeTokenTransferStr = 'ETH'
-const yesStr = 'Yes, '
 const estimatedFeeStr = 'Estimated fee'
+// Re-export for backward compatibility
 export const executeStr = 'Execute'
 const editBtnStr = 'Edit'
 const executionParamsStr = 'Execution parameters'
@@ -137,7 +140,7 @@ export const settingsStr = 'Settings'
 export const assetsStr = 'Assets'
 export const topAssetsStr = 'Top assets'
 export const getStartedStr = 'Get started'
-export const txNoteWarningMessage = 'Notes are publicly visible.Do not share any private or sensitive details'
+export const txNoteWarningMessage = 'Notes are publicly visible. Do not share any private or sensitive details.'
 export const recordedTxNote = 'Tx note one'
 
 const comboButton = '[data-testid="combo-submit-dropdown"]'
@@ -166,6 +169,7 @@ export const txAccordionDetails = '[data-testid="decoded-tx-details"]'
 
 //Arrays for the Transaction Details on Tx creation for different type of txs
 export const MultisendData = ['Call', 'multiSend', 'on', 'Safe: MultiSendCallOnly 1.4.1']
+export const SafeProxy = ['Call', 'createProxyWithNonce', 'on', 'SafeProxyFactory 1.4.1']
 
 export const tx_status = {
   execution_needed: 'Execution needed',
@@ -187,8 +191,9 @@ export const advancedDetailsViewOptions = {
   grid: 'grid',
 }
 
+//tbr - will check if it should be removed ( we can cound by data-testid="tx-hexData" elements)
 export function checkHashesExist(count) {
-  cy.contains(txHashesStr)
+  cy.contains(txAccordionDetails)
     .next()
     .within(() => {
       main.verifyElementsCount(txHexDataRow, count)
@@ -198,6 +203,10 @@ export function checkHashesExist(count) {
           .should('match', /0x[a-fA-F0-9]{64}/)
       })
     })
+}
+
+export function clickOnHashes() {
+  cy.contains(hashesText).click()
 }
 export function clickOnReplaceTxOption() {
   cy.get(replaceChoiceBtn).find('button').click()
@@ -250,12 +259,15 @@ export function verifyDeleteChoiceBtnStatus(option) {
 }
 
 export function typeNoteText(text) {
-  cy.get(noteTextField).find('input').clear().type(text)
+  const input = cy.get(noteTextField).find('input')
+  input.clear()
+  input.type(text)
 }
 
 export function checkMaxNoteLength() {
   typeNoteText(main.generateRandomString(61))
-  cy.get(noteTextField).should('exist').contains('60/60').should('be.visible')
+  cy.get(noteTextField).should('exist')
+  cy.get(noteTextField).contains('60/60').should('be.visible')
 }
 
 export function checkNoteWarningMsg() {
@@ -291,11 +303,6 @@ export function verifyCopiedURL() {
 
     cy.get('@clipboardWrite').should('have.been.calledWith', currentUrl)
   })
-}
-
-export function expandTxShareBlock() {
-  cy.get(txShareBlock).click()
-  cy.get(txShareBlockDetails).should('be.visible')
 }
 
 export function checkCopyBtnExistsInShareblock() {
@@ -375,9 +382,7 @@ export function fillFilterForm({ address, startDate, endDate, amount, token, non
     if (value !== undefined) {
       const { selector, findInput } = inputMap[key]
       const element = findInput ? cy.get(selector).find('input') : cy.get(selector)
-      element.then(($el) => {
-        cy.wrap($el).invoke('removeAttr', 'readonly').clear().type(value, { force: true })
-      })
+      element.invoke('removeAttr', 'readonly').clear().type(value, { force: true })
     }
   })
 }
@@ -527,9 +532,9 @@ export function expandAdvancedDetails(data) {
 export function verifytxAccordionDetails(data) {
   main.checkTextsExistWithinElement(txAccordionDetails, data)
 }
-// Function to check elements inside Transaction details/DecodedDataRoot
-export function checkDataDecodingRoot(data) {
-  main.checkTextsExistWithinElement(decodedDataTop, data)
+//Search in the element with the scroll
+export function verifytxAccordionDetailsScroll(data) {
+  main.checkTextsExistWithinElementScroll(txAccordionDetails, data)
 }
 
 export function switchView(view) {
@@ -592,6 +597,56 @@ export function verifySpamIconIsDisplayed(name, token) {
     })
 }
 
+/**
+ * Helper function to verify icon alt/title attribute
+ * Checks for iframe (title), img (alt), or svg (alt) in the given element
+ */
+function verifyIconAlt($container, expectedAlt, context = 'element') {
+  const $iframe = $container.find('iframe')
+  const $img = $container.find('img')
+  const $svg = $container.find('svg')
+
+  if ($iframe.length > 0) {
+    const $targetIframe = $iframe.first()
+    const title = $targetIframe.attr('title')
+    expect(title, `iframe title attribute should exist and equal "${expectedAlt}" in ${context}`).to.exist
+    expect(title).to.equal(expectedAlt)
+  } else if ($img.length > 0) {
+    const $targetImg = $img.first()
+    const alt = $targetImg.attr('alt')
+    expect(alt, `img alt attribute should exist and equal "${expectedAlt}" in ${context}`).to.exist
+    expect(alt).to.equal(expectedAlt)
+  } else if ($svg.length > 0) {
+    const $targetSvg = $svg.first()
+    const alt = $targetSvg.attr('alt')
+    expect(alt, `svg alt attribute should exist and equal "${expectedAlt}" in ${context}`).to.exist
+    expect(alt).to.equal(expectedAlt)
+  } else {
+    throw new Error(`Expected alt "${expectedAlt}" in ${context} but no iframe, img, or svg found`)
+  }
+}
+
+/**
+ * Helper function to verify token symbol in token text elements
+ * Handles both single-word tokens (e.g., "ETH") and multi-word tokens (e.g., "FLOWER #6188", "$ ETH35.com")
+ */
+function verifyTokenSymbol($element, expectedToken) {
+  const tokenTextElements = $element.find('b[class*="tokenText"]')
+  expect(tokenTextElements.length, 'At least one token text element should exist').to.be.greaterThan(0)
+
+  // Check if the expected token appears in any of the token text elements
+  let found = false
+  tokenTextElements.each((index, el) => {
+    const tokenText = Cypress.$(el).text().trim()
+    if (tokenText && tokenText.includes(expectedToken)) {
+      found = true
+      return false // Break the loop
+    }
+  })
+
+  expect(found, `Token "${expectedToken}" should be found in token text elements`).to.be.true
+}
+
 export function verifySummaryByName(name, token, data, alt, altToken) {
   if (!name) {
     throw new Error('Name parameter is required for verification')
@@ -607,6 +662,7 @@ export function verifySummaryByName(name, token, data, alt, altToken) {
 
     const $element = $elements.first()
 
+    // Verify data text content
     if (Array.isArray(data)) {
       data.forEach((text) => {
         expect($element.text()).to.include(text)
@@ -615,22 +671,21 @@ export function verifySummaryByName(name, token, data, alt, altToken) {
       expect($element.text()).to.include(data)
     }
 
+    // Verify transaction type icon (alt parameter)
     if (alt) {
-      const firstImg = $element.find('img')
-      const firstSvg = $element.find('svg')
-
-      if (firstImg.length > 0) {
-        const targetImg = firstImg.first()
-        expect(targetImg.attr('alt')).to.equal(alt)
-      } else if (firstSvg.length > 0) {
-        const targetSvg = firstSvg.first()
-        expect(targetSvg.attr('alt')).to.equal(alt)
+      const $txTypeElement = $element.find(txType)
+      if ($txTypeElement.length > 0) {
+        // Transaction type icon is in the tx-type element
+        verifyIconAlt($txTypeElement, alt, 'tx-type element')
+      } else {
+        // Fallback: check entire element for backward compatibility
+        verifyIconAlt($element, alt, 'transaction element')
       }
     }
 
+    // Verify token symbol (altToken parameter)
     if (altToken) {
-      const secondImg = $element.find('img').eq(1)
-      expect(secondImg.attr('alt')).to.equal(altToken)
+      verifyTokenSymbol($element, altToken)
     }
   })
 }
@@ -714,8 +769,13 @@ export function verifyRelayerAttemptsAvailable() {
 }
 
 export function clickOnTokenselectorAndSelectSepoliaEth() {
-  cy.get(tokenAddressInput).prev().click()
+  cy.get(tokenSelector).click()
   cy.get('ul[role="listbox"]').contains(constants.tokenNames.sepoliaEther).click()
+}
+
+export function clickOnTokenselectorAndSelectToken(tokenName) {
+  cy.get(tokenSelector).click()
+  cy.get('ul[role="listbox"]').contains(tokenName).click()
 }
 
 export function setMaxAmount() {
@@ -747,11 +807,15 @@ export function setSendValue_(index, value) {
 }
 
 export function clickOnNextBtn() {
-  cy.contains(nextBtnStr).click()
+  cy.contains(main.nextBtnStr).click()
 }
 
 export function verifySubmitBtnIsEnabled() {
   cy.get('button[type="submit"]').should('not.be.disabled')
+}
+
+export function verifyContinueSignBtnIsEnabled() {
+  cy.get(continueSignBtn).should('not.be.disabled')
 }
 
 export function verifyAddToBatchBtnIsEnabled() {
@@ -759,7 +823,10 @@ export function verifyAddToBatchBtnIsEnabled() {
 }
 
 export function verifyNativeTokenTransfer() {
-  cy.contains(nativeTokenTransferStr).should('be.visible')
+  cy.get(modal.cardContent).within(() => {
+    cy.contains('Send').should('be.visible')
+    cy.contains(nativeTokenTransferStr).should('be.visible')
+  })
 }
 
 export function changeNonce(value) {
@@ -772,10 +839,6 @@ export function hasNonce() {
 
 export function verifyNonceInputValue(value) {
   cy.get(nonceInput).should('have.value', value)
-}
-
-export function clickOnYesOption() {
-  cy.contains(yesStr).should('exist').click()
 }
 
 export function displayAdvancedDetails() {
@@ -840,16 +903,38 @@ export function clickOnContinueSignTransactionBtn() {
   cy.get(continueSignBtn).click()
 }
 
-export function clickOnAcknowledgement() {
-  cy.contains(txAcknowledgementStr).click()
-}
-
 export function clickOnConfirmTransactionBtn() {
   cy.get('button').contains(confirmBtnStr).click()
 }
 
 export function verifyConfirmTransactionBtnIsVisible() {
   cy.get('button').contains(confirmBtnStr).should('be.visible')
+}
+
+export function clickOnConfirmBtn(index) {
+  cy.wait(2000)
+  cy.get(transactionItem)
+    .eq(index)
+    .within(() => {
+      cy.get('button')
+        .contains(confirmBtnStr)
+        .then((elements) => {
+          cy.wrap(elements[0]).click()
+        })
+    })
+}
+
+export function clickOnExecuteBtn(index) {
+  cy.wait(2000)
+  cy.get(transactionItem)
+    .eq(index)
+    .within(() => {
+      cy.get('button')
+        .contains(executeBtnStr)
+        .then((elements) => {
+          cy.wrap(elements[0]).click()
+        })
+    })
 }
 
 export function waitForProposeRequest() {
@@ -1041,4 +1126,46 @@ export function checkThatComboButtonOptionIsNotPresent(option) {
       })
     }
   })
+}
+//Functions for the happy path flow
+export function cleanTransactionQueue(safeAddress, signer) {
+  cy.visit(constants.transactionQueueUrl + safeAddress)
+  walletUtils.connectSigner(signer)
+  deleteAllTx()
+  navigation.clickOnWalletExpandMoreIcon()
+  navigation.clickOnDisconnectBtn()
+}
+
+export function switchToSignerAndConfirm(signer) {
+  navigation.clickOnWalletExpandMoreIcon()
+  navigation.clickOnDisconnectBtn()
+  walletUtils.connectSigner(signer)
+  clickOnConfirmTransactionBtn()
+  clickOnContinueSignTransactionBtn()
+  selectComboButtonOption('sign')
+  clickOnSignTransactionBtn()
+}
+
+export function deleteTransactionAndSwitchToSigner(signer) {
+  navigation.clickOnWalletExpandMoreIcon()
+  navigation.clickOnDisconnectBtn()
+  walletUtils.connectSigner(signer)
+  deleteTx()
+}
+
+export function createAddOwnerTransaction(safeAddress, signer, ownerAddress, ownerIndex = 2) {
+  // Create add owner transaction
+  cy.visit(constants.setupUrl + safeAddress)
+  walletUtils.connectSigner(signer)
+  owner.waitForConnectionStatus()
+  owner.openManageSignersWindow()
+  owner.clickOnAddSignerBtn()
+  owner.typeOwnerAddressManage(ownerIndex, ownerAddress)
+  changeNonce(1)
+  owner.clickOnNextBtnManage()
+  owner.verifyConfirmTransactionWindowDisplayed()
+  clickOnContinueSignTransactionBtn()
+  selectComboButtonOption('sign')
+  clickOnSignTransactionBtn()
+  clickViewTransaction()
 }

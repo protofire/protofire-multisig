@@ -5,24 +5,30 @@ import { CookieAndTermType, hasConsentFor } from '@/store/cookiesAndTermsSlice'
 import { openCookieBanner } from '@/store/popupSlice'
 import BeamerIcon from '@/public/images/sidebar/whats-new.svg'
 import HelpCenterIcon from '@/public/images/sidebar/help-center.svg'
-import { Box, Divider, ListItem, SvgIcon, Typography, useTheme } from '@mui/material'
+import { Divider, IconButton, ListItem, Stack, SvgIcon, Box, useTheme, Link } from '@mui/material'
 import DebugToggle from '../DebugToggle'
-import { IS_PRODUCTION, NEW_SUGGESTION_FORM, SUPPORT_FORM } from '@/config/constants'
+import { IS_PRODUCTION } from '@/config/constants'
 import Track from '@/components/common/Track'
 import { OVERVIEW_EVENTS } from '@/services/analytics/events/overview'
+import { MixpanelEventParams } from '@/services/analytics/mixpanel-events'
 import { useCurrentChain } from '@/hooks/useChains'
-import ProtofireLogo from '@/public/images/protofire-logo.svg'
-import SuggestionIcon from '@/public/images/sidebar/lightbulb_icon.svg'
-import { useIsOfficialHost } from '@/hooks/useIsOfficialHost'
+import { HELP_CENTER_URL } from '@safe-global/utils/config/constants'
+import { NEW_SUGGESTION_FORM, PROTOFIRE_SUPPORT_LINK } from '@/config/constants.extra'
 import { SidebarListItemButton, SidebarListItemIcon, SidebarListItemText } from '../SidebarList'
-import ExternalLink from '@/components/common/ExternalLink'
+import ProtofireLogo from '@/public/images/protofire.svg'
+import SuggestionIcon from '@/public/images/common/lightbulb.svg'
+import darkPalette from '@/components/theme/darkPalette'
+import IndexingStatus from '@/components/sidebar/IndexingStatus'
+import { useIsOfficialHost } from '@/hooks/useIsOfficialHost'
+import LicensedLogo from '@/public/images/logo-licensed.svg'
+import TEMPLATE_CONFIG from '@/config/templateConfig'
 
 const SidebarFooter = (): ReactElement => {
   const dispatch = useAppDispatch()
   const chain = useCurrentChain()
   const hasBeamerConsent = useAppSelector((state) => hasConsentFor(state, CookieAndTermType.UPDATES))
-  const isOfficialHost = useIsOfficialHost()
   const theme = useTheme()
+  const isOfficialHost = useIsOfficialHost()
 
   useEffect(() => {
     // Initialise Beamer when consent was previously given
@@ -45,27 +51,11 @@ const SidebarFooter = (): ReactElement => {
             <DebugToggle />
           </ListItem>
 
-          <Divider flexItem />
+          <Divider flexItem sx={{ borderColor: 'background.main' }} />
         </>
       )}
-
-      {isOfficialHost && (
-        <Track {...OVERVIEW_EVENTS.WHATS_NEW}>
-          <ListItem disablePadding>
-            <SidebarListItemButton id={BEAMER_SELECTOR} onClick={handleBeamer}>
-              <SidebarListItemIcon color="primary">
-                <BeamerIcon />
-              </SidebarListItemIcon>
-              <SidebarListItemText data-testid="list-item-whats-new" bold>
-                What&apos;s new
-              </SidebarListItemText>
-            </SidebarListItemButton>
-          </ListItem>
-        </Track>
-      )}
-
       <ListItem style={{ padding: 'var(--space-1)' }}>
-        <a target="_blank" rel="noopener noreferrer" href={SUPPORT_FORM} style={{ width: '100%' }}>
+        <a target="_blank" rel="noopener noreferrer" href={PROTOFIRE_SUPPORT_LINK} style={{ width: '100%' }}>
           <SidebarListItemButton>
             <SidebarListItemIcon color="primary">
               <HelpCenterIcon />
@@ -103,26 +93,57 @@ const SidebarFooter = (): ReactElement => {
           </SidebarListItemButton>
         </a>
       </ListItem>
+      {TEMPLATE_CONFIG.IS_LICENSED && (
+        <ListItem>
+          <SvgIcon component={LicensedLogo} inheritViewBox sx={{ height: '2em', mb: '-5px', width: '100%' }} />
+        </ListItem>
+      )}
+
       <ListItem>
-        <SidebarListItemText>
-          <Typography variant="caption" sx={{ mx: 'auto', textAlign: 'center' }}>
-            Supported by{' '}
-            <SvgIcon
-              component={ProtofireLogo}
-              inheritViewBox
-              fontSize="small"
-              sx={{ verticalAlign: 'middle', mx: 0.5 }}
-            />
-            <ExternalLink
+        <SidebarListItemText
+          slotProps={{
+            primary: {
+              variant: 'caption',
+            },
+          }}
+        >
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            Supported by <SvgIcon component={ProtofireLogo} inheritViewBox fontSize="small" sx={{ mx: 0.5 }} />
+            <Link
+              target="_blank"
               href="https://protofire.io/services/solution/safe-deployment"
-              sx={{ textDecoration: 'none' }}
-              noIcon
+              sx={{ color: darkPalette.primary.main, textDecoration: 'none' }}
             >
               Protofire
-            </ExternalLink>
-          </Typography>
+            </Link>
+          </Box>
         </SidebarListItemText>
       </ListItem>
+      <Stack direction="row" alignItems="center" spacing={1} my={0.5} mx={1}>
+        <IndexingStatus />
+        {isOfficialHost && (
+          <>
+            <Box ml="auto !important">
+              <Track
+                {...OVERVIEW_EVENTS.WHATS_NEW}
+                mixpanelParams={{ [MixpanelEventParams.SIDEBAR_ELEMENT]: "What's New" }}
+              >
+                <IconButton onClick={handleBeamer} id={BEAMER_SELECTOR} data-testid="list-item-whats-new" color="primary">
+                  <SvgIcon component={BeamerIcon} inheritViewBox fontSize="small" />
+                </IconButton>
+              </Track>
+            </Box>
+            <Track
+              {...OVERVIEW_EVENTS.HELP_CENTER}
+              mixpanelParams={{ [MixpanelEventParams.SIDEBAR_ELEMENT]: 'Help Center' }}
+            >
+              <IconButton href={HELP_CENTER_URL} target="_blank" data-testid="list-item-need-help" color="primary">
+                <SvgIcon component={HelpCenterIcon} inheritViewBox fontSize="small" />
+              </IconButton>
+            </Track>
+          </>
+        )}
+      </Stack>
     </>
   )
 }

@@ -1,34 +1,95 @@
 import chains from './chains'
 import { HELP_CENTER_URL } from '@safe-global/utils/config/constants'
 
+type Environment = 'development' | 'production' | 'test' | 'cypress'
+
+export const APP_ENV = process.env.NODE_ENV as Environment
 export const IS_PRODUCTION = process.env.NEXT_PUBLIC_IS_PRODUCTION === 'true'
-export const IS_DEV = process.env.NODE_ENV === 'development'
+export const IS_DEV = APP_ENV === 'development'
+export const IS_TEST_E2E = APP_ENV === 'cypress'
+export const COMMIT_HASH = process.env.NEXT_PUBLIC_COMMIT_HASH || ''
 
 // default chain ID's as provided to the environment
-export const DEFAULT_TESTNET_CHAIN_ID = +(process.env.NEXT_PUBLIC_DEFAULT_TESTNET_CHAIN_ID ?? chains.imx)
-export const DEFAULT_MAINNET_CHAIN_ID = +(process.env.NEXT_PUBLIC_DEFAULT_MAINNET_CHAIN_ID ?? chains.imx)
+export const DEFAULT_TESTNET_CHAIN_ID = +(process.env.NEXT_PUBLIC_DEFAULT_TESTNET_CHAIN_ID ?? 13371)
+export const DEFAULT_MAINNET_CHAIN_ID = +(process.env.NEXT_PUBLIC_DEFAULT_MAINNET_CHAIN_ID ?? 13371)
 
 // default chain ID used in the application
 export const DEFAULT_CHAIN_ID = IS_PRODUCTION ? DEFAULT_MAINNET_CHAIN_ID : DEFAULT_TESTNET_CHAIN_ID
 
 export const GATEWAY_URL_PRODUCTION =
-  process.env.NEXT_PUBLIC_GATEWAY_URL_PRODUCTION || 'https://gateway.safe.staging.immutable.com'
+  process.env.NEXT_PUBLIC_GATEWAY_URL_PRODUCTION || 'https://gateway.safe.immutable.com'
 export const GATEWAY_URL_STAGING =
   process.env.NEXT_PUBLIC_GATEWAY_URL_STAGING || 'https://gateway.safe.staging.immutable.com'
 
+// Indexing status page
+export const STATUS_PAGE = `https://tx-status-app.safe.protofire.io/?serviceUrl=${IS_PRODUCTION ? GATEWAY_URL_PRODUCTION : GATEWAY_URL_STAGING}`
+
+// Status page
+export const STATUS_PAGE_URL = process.env.NEXT_PUBLIC_SAFE_STATUS_PAGE_URL || 'https://status.safe.global'
+
 // Magic numbers
 export const POLLING_INTERVAL = 15_000
+export const PORTFOLIO_CACHE_TIME_MS = 10_000
 export const BASE_TX_GAS = 21_000
 export const LS_NAMESPACE = 'SAFE_v2__'
+export const DUST_THRESHOLD = 0.01
 
 export const SENTRY_DSN = process.env.NEXT_PUBLIC_SENTRY_DSN || ''
 export const BEAMER_ID = process.env.NEXT_PUBLIC_BEAMER_ID || ''
 export const DATADOG_CLIENT_TOKEN = process.env.NEXT_PUBLIC_DATADOG_CLIENT_TOKEN || ''
 
+// Datadog RUM
+export const DATADOG_RUM_APPLICATION_ID = process.env.NEXT_PUBLIC_DATADOG_RUM_APPLICATION_ID || ''
+export const DATADOG_RUM_CLIENT_TOKEN = process.env.NEXT_PUBLIC_DATADOG_RUM_CLIENT_TOKEN || ''
+export const DATADOG_RUM_SITE = process.env.NEXT_PUBLIC_DATADOG_RUM_SITE || 'datadoghq.eu'
+export const DATADOG_RUM_SERVICE = process.env.NEXT_PUBLIC_DATADOG_RUM_SERVICE || 'safe-wallet-web'
+export const DATADOG_RUM_ENV = process.env.NEXT_PUBLIC_DATADOG_RUM_ENV || 'development'
+const parsedSessionSampleRate = Number(process.env.NEXT_PUBLIC_DATADOG_RUM_SESSION_SAMPLE_RATE)
+export const DATADOG_RUM_SESSION_SAMPLE_RATE =
+  process.env.NEXT_PUBLIC_DATADOG_RUM_SESSION_SAMPLE_RATE !== undefined && !Number.isNaN(parsedSessionSampleRate)
+    ? parsedSessionSampleRate
+    : 10
+
+const parsedTraceSampleRate = Number(process.env.NEXT_PUBLIC_DATADOG_RUM_TRACE_SAMPLE_RATE)
+export const DATADOG_RUM_TRACE_SAMPLE_RATE =
+  process.env.NEXT_PUBLIC_DATADOG_RUM_TRACE_SAMPLE_RATE !== undefined && !Number.isNaN(parsedTraceSampleRate)
+    ? parsedTraceSampleRate
+    : 20
+
+const parsedLogsSampleRate = Number(process.env.NEXT_PUBLIC_DATADOG_LOGS_SAMPLE_RATE)
+export const DATADOG_LOGS_SAMPLE_RATE =
+  process.env.NEXT_PUBLIC_DATADOG_LOGS_SAMPLE_RATE !== undefined && !Number.isNaN(parsedLogsSampleRate)
+    ? parsedLogsSampleRate
+    : 100
+
+const parsedSessionReplaySampleRate = Number(process.env.NEXT_PUBLIC_DATADOG_RUM_SESSION_REPLAY_SAMPLE_RATE)
+export const DATADOG_RUM_SESSION_REPLAY_SAMPLE_RATE =
+  process.env.NEXT_PUBLIC_DATADOG_RUM_SESSION_REPLAY_SAMPLE_RATE !== undefined &&
+  !Number.isNaN(parsedSessionReplaySampleRate)
+    ? parsedSessionReplaySampleRate
+    : 0
+
+export const DATADOG_FORCE_ENABLE = process.env.NEXT_PUBLIC_DATADOG_FORCE_ENABLE === 'true'
+export const DATADOG_RUM_TRACING_ENABLED = process.env.NEXT_PUBLIC_DATADOG_RUM_TRACING_ENABLED === 'true'
+
+const parseBoolean = (value: string | undefined, defaultValue: boolean): boolean => {
+  if (value === undefined) return defaultValue
+  return value === 'true'
+}
+
+export const DATADOG_RUM_TRACK_USER_INTERACTIONS = parseBoolean(
+  process.env.NEXT_PUBLIC_DATADOG_RUM_TRACK_USER_INTERACTIONS,
+  true,
+)
+export const DATADOG_RUM_TRACK_RESOURCES = parseBoolean(process.env.NEXT_PUBLIC_DATADOG_RUM_TRACK_RESOURCES, true)
+export const DATADOG_RUM_TRACK_LONG_TASKS = parseBoolean(process.env.NEXT_PUBLIC_DATADOG_RUM_TRACK_LONG_TASKS, true)
+
+type DatadogPrivacyLevel = 'mask' | 'mask-user-input' | 'allow'
+export const DATADOG_RUM_DEFAULT_PRIVACY_LEVEL = (process.env.NEXT_PUBLIC_DATADOG_RUM_DEFAULT_PRIVACY_LEVEL ||
+  'mask') as DatadogPrivacyLevel
+
 // Wallets
 export const WC_PROJECT_ID = process.env.NEXT_PUBLIC_WC_PROJECT_ID || ''
-export const TREZOR_APP_URL = 'safe.immutable.com'
-export const TREZOR_EMAIL = 'support@immutable.com'
 
 // Safe Token
 export const SAFE_TOKEN_ADDRESSES: { [chainId: string]: string } = {
@@ -41,6 +102,9 @@ export const SAFE_LOCKING_ADDRESS: { [chainId: string]: string } = {
   [chains.sep]: '0xb161ccb96b9b817F9bDf0048F212725128779DE9',
 }
 
+export const DEVELOPER_PORTAL_URL =
+  process.env.NEXT_PUBLIC_DEVELOPER_PORTAL_URL || 'https://developer.safe.global/login'
+
 export const SAFE_APPS_THIRD_PARTY_COOKIES_CHECK_URL = 'https://third-party-cookies-check.gnosis-safe.com'
 export const SAFE_APPS_DEMO_SAFE_MAINNET = 'eth:0xfF501B324DC6d78dC9F983f140B9211c3EdB4dc7'
 export const SAFE_APPS_SDK_DOCS_URL =
@@ -52,15 +116,16 @@ export const TEST_GA_TRACKING_ID = process.env.NEXT_PUBLIC_TEST_GA_TRACKING_ID |
 export const SAFE_APPS_GA_TRACKING_ID = process.env.NEXT_PUBLIC_SAFE_APPS_GA_TRACKING_ID || ''
 export const GA_TRACKING_ID = IS_PRODUCTION ? PROD_GA_TRACKING_ID : TEST_GA_TRACKING_ID
 
-// MixPanel
-export const MIXPANEL_TOKEN = process.env.NEXT_PUBLIC_MIXPANEL_TOKEN || ''
+// Mixpanel
+const PROD_MIXPANEL_TOKEN = process.env.NEXT_PUBLIC_PROD_MIXPANEL_TOKEN || ''
+const STAGING_MIXPANEL_TOKEN = process.env.NEXT_PUBLIC_STAGING_MIXPANEL_TOKEN || ''
+export const MIXPANEL_TOKEN = IS_PRODUCTION ? PROD_MIXPANEL_TOKEN : STAGING_MIXPANEL_TOKEN
 
 // Safe Apps tags
 export enum SafeAppsTag {
   NFT = 'nft',
   TX_BUILDER = 'transaction-builder',
   SAFE_GOVERNANCE_APP = 'safe-governance-app',
-  ONRAMP = 'onramp',
   RECOVERY_SYGNUM = 'recovery-sygnum',
   SWAP_FALLBACK = 'swap-fallback',
 }
@@ -68,32 +133,32 @@ export enum SafeAppsTag {
 // Safe Apps names
 export enum SafeAppsName {
   CSV = 'CSV Airdrop',
+  TRANSACTION_BUILDER = 'Transaction Builder',
 }
-
-export const NEW_SUGGESTION_FORM = 'https://safe-feature-request.protofire.io/'
-export const RECOVERY_FEEDBACK_FORM =
-  'https://noteforms.com/forms/safe-feedback-form-hk16ds?notionforms=1&utm_source=notionforms'
-export const SUPPORT_FORM = 'https://safe-support.protofire.io/'
 
 // Legal
 export const IS_OFFICIAL_HOST = process.env.NEXT_PUBLIC_IS_OFFICIAL_HOST === 'true'
-export const OFFICIAL_HOSTS = /app\.safe\.global|.+\.5afe\.dev|localhost:3000/
-export const IPFS_HOSTS = /\.ipfs\.dweb\.link|\.ipfs\.w3s\.link|\.ipfs\.inbrowser\.link/
-export const BRAND_NAME = process.env.NEXT_PUBLIC_BRAND_NAME || (IS_OFFICIAL_HOST ? 'Safe{Wallet}' : 'Immutable Safe')
+export const OFFICIAL_HOSTS = /app\.safe\.global|.+\.5afe\.dev|localhost:3000|localhost:4000|localhost:6006/
+export const IPFS_HOSTS = /app\.safe\.eth\.limo|app\.5afedev\.eth\.limo/
+export const BRAND_NAME = process.env.NEXT_PUBLIC_BRAND_NAME || (IS_OFFICIAL_HOST ? 'Safe{Wallet}' : 'Wallet fork')
 export const BRAND_LOGO = process.env.NEXT_PUBLIC_BRAND_LOGO || ''
-
-export const REDEFINE_ARTICLE = 'https://safe.mirror.xyz/rInLWZwD_sf7enjoFerj6FIzCYmVMGrrV8Nhg4THdwI'
 
 export const CHAINALYSIS_OFAC_CONTRACT = '0x40c57923924b5c5c5455c48d93317139addac8fb'
 
-export const SAFE_PASS_URL = 'community.safe.global'
 export const ECOSYSTEM_ID_ADDRESS =
   process.env.NEXT_PUBLIC_ECOSYSTEM_ID_ADDRESS || '0x0000000000000000000000000000000000000000'
 export const MULTICHAIN_HELP_ARTICLE = `${HELP_CENTER_URL}/en/articles/222612-multi-chain-safe`
 
-export const TERMS_LINK =
-  process.env.NEXT_PUBLIC_TERMS_LINK ||
-  'https://raw.githubusercontent.com/protofire/safe-legal/refs/heads/main/terms.md'
-export const COOKIE_LINK =
-  process.env.NEXT_PUBLIC_COOKIE_LINK ||
-  'https://raw.githubusercontent.com/protofire/safe-legal/refs/heads/main/cookie.md'
+// Hypernative Campaign IDs
+export const PROD_HYPERNATIVE_OUTREACH_ID = parseInt(process.env.NEXT_PUBLIC_PROD_HYPERNATIVE_OUTREACH_ID ?? `${3}`)
+export const STAGING_HYPERNATIVE_OUTREACH_ID = parseInt(
+  process.env.NEXT_PUBLIC_STAGING_HYPERNATIVE_OUTREACH_ID ?? `${11}`,
+)
+export const PROD_HYPERNATIVE_ALLOWLIST_OUTREACH_ID = parseInt(
+  process.env.NEXT_PUBLIC_PROD_HYPERNATIVE_ALLOWLIST_OUTREACH_ID ?? `${7}`,
+)
+export const STAGING_HYPERNATIVE_ALLOWLIST_OUTREACH_ID = parseInt(
+  process.env.NEXT_PUBLIC_STAGING_HYPERNATIVE_ALLOWLIST_OUTREACH_ID ?? `${15}`,
+)
+// Deployment specifics
+export const IS_BEHIND_IAP = process.env.NEXT_PUBLIC_IS_BEHIND_IAP === 'true'

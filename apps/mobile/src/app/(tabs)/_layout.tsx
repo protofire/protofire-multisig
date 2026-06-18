@@ -3,41 +3,36 @@ import React from 'react'
 import { TabBarIcon } from '@/src/components/navigation/TabBarIcon'
 import { Navbar as AssetsNavbar } from '@/src/features/Assets/components/Navbar/Navbar'
 import { Pressable, StyleSheet } from 'react-native'
-import { getTokenValue } from 'tamagui'
-import { useTheme } from '@/src/theme/hooks/useTheme'
+import { useTheme } from 'tamagui'
 import TransactionHeader from '@/src/features/TxHistory/components/TransactionHeader'
 
 export default function TabLayout() {
-  const { currentTheme } = useTheme()
+  const theme = useTheme()
 
-  let activeTintColor, inactiveTintColor, borderTopColor
-  if (currentTheme === 'light') {
-    activeTintColor = getTokenValue('$color.textPrimaryLight')
-    inactiveTintColor = getTokenValue('$color.borderMainLight')
-    borderTopColor = getTokenValue('$color.borderLightLight')
-  } else {
-    activeTintColor = getTokenValue('$color.textPrimaryDark')
-    inactiveTintColor = getTokenValue('$color.borderMainDark')
-    borderTopColor = getTokenValue('$color.borderLightDark')
-  }
+  const activeTintColor = React.useMemo(() => theme.color.get(), [theme])
+  const inactiveTintColor = React.useMemo(() => theme.borderMain.get(), [theme])
+  const borderTopColor = React.useMemo(() => theme.borderLight.get(), [theme])
+
+  const screenOptions = React.useMemo(
+    () => ({
+      tabBarStyle: { ...styles.tabBar, borderTopColor },
+      tabBarLabelStyle: styles.label,
+      tabBarActiveTintColor: activeTintColor,
+      tabBarInactiveTintColor: inactiveTintColor,
+    }),
+    [borderTopColor, activeTintColor, inactiveTintColor],
+  )
 
   return (
     <>
-      <Tabs
-        screenOptions={{
-          tabBarStyle: { ...styles.tabBar, borderTopColor },
-          tabBarLabelStyle: styles.label,
-          tabBarActiveTintColor: activeTintColor,
-          tabBarInactiveTintColor: inactiveTintColor,
-        }}
-      >
+      <Tabs screenOptions={screenOptions}>
         <Tabs.Screen
           name="index"
           options={{
-            header: AssetsNavbar,
+            header: () => <AssetsNavbar />,
             title: 'Home',
             tabBarButtonTestID: 'home-tab',
-            tabBarButton: ({ children, ...rest }) => {
+            tabBarButton: ({ children, ref, ...rest }) => {
               return (
                 <Pressable {...rest} style={styles.tabButton}>
                   {children}
@@ -57,7 +52,7 @@ export default function TabLayout() {
             headerLeftContainerStyle: { flexGrow: 0 },
             tabBarButtonTestID: 'transactions-tab',
             tabBarLabel: 'Transactions',
-            tabBarButton: ({ children, ...rest }) => {
+            tabBarButton: ({ children, ref, ...rest }) => {
               return (
                 <Pressable {...rest} style={styles.tabButton}>
                   {children}
@@ -70,20 +65,18 @@ export default function TabLayout() {
 
         <Tabs.Screen
           name="settings"
-          options={() => {
-            return {
-              title: 'Account',
-              headerShown: false,
-              tabBarButtonTestID: 'account-tab',
-              tabBarButton: ({ children, ...rest }) => {
-                return (
-                  <Pressable {...rest} style={styles.tabButton}>
-                    {children}
-                  </Pressable>
-                )
-              },
-              tabBarIcon: ({ color }) => <TabBarIcon name={'wallet'} color={color} />,
-            }
+          options={{
+            title: 'Account',
+            headerShown: false,
+            tabBarButtonTestID: 'account-tab',
+            tabBarButton: ({ children, ref, ...rest }) => {
+              return (
+                <Pressable {...rest} style={styles.tabButton}>
+                  {children}
+                </Pressable>
+              )
+            },
+            tabBarIcon: ({ color }) => <TabBarIcon name={'wallet'} color={color} />,
           }}
         />
       </Tabs>

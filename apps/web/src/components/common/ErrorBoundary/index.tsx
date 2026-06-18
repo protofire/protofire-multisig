@@ -1,12 +1,13 @@
 import { Typography, Link } from '@mui/material'
 
-import { IS_PRODUCTION, SUPPORT_FORM } from '@/config/constants'
+import { IS_PRODUCTION } from '@/config/constants'
 import { AppRoutes } from '@/config/routes'
 import WarningIcon from '@/public/images/notifications/warning.svg'
 
 import css from '@/components/common/ErrorBoundary/styles.module.css'
 import CircularIcon from '../icons/CircularIcon'
 import ExternalLink from '../ExternalLink'
+import { PROTOFIRE_SUPPORT_LINK } from '@/config/constants.extra'
 interface ErrorBoundaryProps {
   error: Error
   componentStack: string
@@ -36,7 +37,7 @@ const ErrorBoundary = ({ error, componentStack }: ErrorBoundaryProps) => {
             }}
           >
             In case the problem persists, please reach out to us via our{' '}
-            <ExternalLink href={SUPPORT_FORM}>Help Center</ExternalLink>
+            <ExternalLink href={PROTOFIRE_SUPPORT_LINK}>Help Center</ExternalLink>
           </Typography>
         ) : (
           <>

@@ -5,7 +5,7 @@ import { Text, View } from 'tamagui'
 import { shortenText } from '@safe-global/utils/utils/formatters'
 import { CopyButton } from '@/src/components/CopyButton'
 
-const renderArrayValue = (value: object, index?: number): ReactElement => {
+const renderArrayValue = (value: string | string[], index?: number): ReactElement => {
   const displayLimit = 30
 
   if (Array.isArray(value)) {
@@ -27,7 +27,12 @@ const renderArrayValue = (value: object, index?: number): ReactElement => {
 
 export const formatArrayValue = (param: DataDecodedParameter): ListTableItem => {
   return {
-    label: param.name,
+    label: (
+      <View display="flex" flexDirection="row" gap="$1">
+        <Text color="$colorSecondary">{param.name}</Text>
+        <Text color="$colorLight">{param.type}</Text>
+      </View>
+    ),
     render: () => renderArrayValue(param.value),
     direction: 'column',
     alignItems: 'flex-start',

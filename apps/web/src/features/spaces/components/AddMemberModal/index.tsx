@@ -1,4 +1,4 @@
-import { type ReactElement, useState } from 'react'
+import { type ReactElement, useEffect, useState } from 'react'
 import {
   Alert,
   Box,
@@ -14,19 +14,19 @@ import { FormProvider, useForm } from 'react-hook-form'
 import ModalDialog from '@/components/common/ModalDialog'
 import memberIcon from '@/public/images/spaces/member.svg'
 import adminIcon from '@/public/images/spaces/admin.svg'
-import AddressInput from '@/components/common/AddressInput'
 import CheckIcon from '@mui/icons-material/Check'
 import css from './styles.module.css'
 import { useMembersInviteUserV1Mutation } from '@safe-global/store/gateway/AUTO_GENERATED/spaces'
-import { useCurrentSpaceId } from 'src/features/spaces/hooks/useCurrentSpaceId'
+import { useCurrentSpaceId, MemberRole } from '@/features/spaces'
 import { useRouter } from 'next/router'
 import { AppRoutes } from '@/config/routes'
-import { MemberRole } from '@/features/spaces/hooks/useSpaceMembers'
 import { trackEvent } from '@/services/analytics'
 import { SPACE_EVENTS } from '@/services/analytics/events/spaces'
 import { useAppDispatch } from '@/store'
 import { showNotification } from '@/store/notificationsSlice'
-import MemberInfoForm from '@/features/spaces/components/AddMemberModal/MemberInfoForm'
+import MemberInfoForm from './MemberInfoForm'
+import AddressBookInput from '@/components/common/AddressBookInput'
+import useAddressBook from '@/hooks/useAddressBook'
 
 type MemberField = {
   name: string
@@ -76,6 +76,7 @@ const AddMemberModal = ({ onClose }: { onClose: () => void }): ReactElement => {
   const [error, setError] = useState<string>()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [inviteMembers] = useMembersInviteUserV1Mutation()
+  const addressBook = useAddressBook()
 
   const methods = useForm<MemberField>({
     mode: 'onChange',
@@ -86,7 +87,16 @@ const AddMemberModal = ({ onClose }: { onClose: () => void }): ReactElement => {
     },
   })
 
-  const { handleSubmit, formState } = methods
+  const { handleSubmit, formState, watch, setValue } = methods
+
+  const addressValue = watch('address')
+
+  useEffect(() => {
+    const addressBookName = addressBook[addressValue]
+    if (addressBookName) {
+      setValue('name', addressBookName)
+    }
+  }, [addressBook, addressValue, setValue])
 
   const onSubmit = handleSubmit(async (data) => {
     setError(undefined)
@@ -144,7 +154,7 @@ const AddMemberModal = ({ onClose }: { onClose: () => void }): ReactElement => {
             <Stack spacing={3}>
               <MemberInfoForm />
 
-              <AddressInput
+              <AddressBookInput
                 data-testid="member-address-input"
                 name="address"
                 label="Address"

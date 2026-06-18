@@ -26,7 +26,7 @@ const ExternalLink = ({
       }}
     >
       {children ?? href}
-      {!noIcon && <OpenInNewRounded fontSize="small" />}
+      {!noIcon && <OpenInNewRounded className="external-link-icon" fontSize="small" />}
     </Box>
   )
   return mode === 'link' ? (
@@ -34,7 +34,14 @@ const ExternalLink = ({
       {linkContent}
     </Link>
   ) : (
-    <Button variant="outlined" href={href} rel="noreferrer noopener" target="_blank" sx={props.sx}>
+    <Button
+      variant="outlined"
+      href={href}
+      rel="noreferrer noopener"
+      target="_blank"
+      className={props.className}
+      sx={props.sx}
+    >
       {linkContent}
     </Button>
   )

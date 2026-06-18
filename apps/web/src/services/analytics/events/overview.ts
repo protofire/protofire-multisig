@@ -7,10 +7,6 @@ export const OVERVIEW_EVENTS = {
     action: 'Open wallet modal',
     category: OVERVIEW_CATEGORY,
   },
-  SUGGESTIONS: {
-    action: 'Suggest any new Feature',
-    category: OVERVIEW_CATEGORY,
-  },
   SWITCH_NETWORK: {
     action: 'Switch network',
     category: OVERVIEW_CATEGORY,
@@ -71,6 +67,10 @@ export const OVERVIEW_EVENTS = {
   },
   SIDEBAR: {
     action: 'Sidebar',
+    category: OVERVIEW_CATEGORY,
+  },
+  SIDEBAR_CLICKED: {
+    action: 'Sidebar clicked',
     category: OVERVIEW_CATEGORY,
   },
   WHATS_NEW: {
@@ -161,10 +161,6 @@ export const OVERVIEW_EVENTS = {
     action: 'Safe viewed',
     category: OVERVIEW_CATEGORY,
   },
-  BUY_CRYPTO_BUTTON: {
-    action: 'Buy crypto button',
-    category: OVERVIEW_CATEGORY,
-  },
   SHOW_MORE_SAFES: {
     action: 'Show more Safes',
     category: OVERVIEW_CATEGORY,
@@ -198,6 +194,62 @@ export const OVERVIEW_EVENTS = {
     action: 'Hide earn banner',
     category: OVERVIEW_CATEGORY,
   },
+  OPEN_EURCV_BOOST: {
+    action: 'Open EURCV boost from banner',
+    category: OVERVIEW_CATEGORY,
+  },
+  HIDE_EURCV_BOOST_BANNER: {
+    action: 'Hide EURCV boost banner',
+    category: OVERVIEW_CATEGORY,
+  },
+  // Trusted Safes management
+  OPEN_TRUSTED_SAFES_MODAL: {
+    action: 'Open trusted Safes modal',
+    category: OVERVIEW_CATEGORY,
+  },
+  TRUSTED_SAFES_ADDED: {
+    action: 'Trusted Safe added',
+    category: OVERVIEW_CATEGORY,
+  },
+  TRUSTED_SAFES_REMOVED: {
+    action: 'Trusted Safe removed',
+    category: OVERVIEW_CATEGORY,
+  },
+  TRUSTED_SAFES_SIMILAR_ADDRESS_CONFIRM: {
+    action: 'Confirm similar address in trusted Safes',
+    category: OVERVIEW_CATEGORY,
+  },
+  TRUSTED_SAFES_MIGRATION_PROMPT: {
+    action: 'Show trusted Safes migration prompt',
+    category: OVERVIEW_CATEGORY,
+  },
+  TRUSTED_SAFES_WARNING_SHOW: {
+    action: 'Show untrusted Safe warning',
+    category: OVERVIEW_CATEGORY,
+  },
+  TRUSTED_SAFES_WARNING_DISMISS: {
+    action: 'Dismiss untrusted Safe warning',
+    category: OVERVIEW_CATEGORY,
+  },
+  TRUSTED_SAFES_ADD_SINGLE: {
+    action: 'Open add trusted Safe dialog',
+    category: OVERVIEW_CATEGORY,
+  },
+  TRUSTED_SAFES_ADD_SINGLE_CONFIRM: {
+    action: 'Confirm add single trusted Safe',
+    category: OVERVIEW_CATEGORY,
+  },
+}
+
+export const EXPLORE_POSSIBLE_EVENTS = {
+  EXPLORE_POSSIBLE_CLICKED: {
+    action: 'Explore Possible clicked',
+    category: OVERVIEW_CATEGORY,
+  },
+  HORIZONTAL_CARD_CLICKED: {
+    action: 'HorizontalCardClicked',
+    category: OVERVIEW_CATEGORY,
+  },
 }
 
 export enum PIN_SAFE_LABELS {
@@ -206,16 +258,18 @@ export enum PIN_SAFE_LABELS {
 }
 
 export enum OPEN_SAFE_LABELS {
-  sidebar = 'sidebar',
-  after_create = 'after_create',
   after_add = 'after_add',
-  login_page = 'login_page',
+}
+
+export enum TRUSTED_SAFE_LABELS {
+  non_pinned_warning = 'non_pinned_warning',
+  safe_shield = 'safe_shield',
+  with_similarity = 'with_similarity',
+  without_similarity = 'without_similarity',
 }
 
 export enum OVERVIEW_LABELS {
   sidebar = 'sidebar',
-  quick_add = 'quick_add',
-  quick_remove = 'quick_remove',
   top_bar = 'top_bar',
   welcome_page = 'welcome_page',
   login_page = 'login_page',

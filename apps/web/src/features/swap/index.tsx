@@ -1,14 +1,10 @@
-import { CowSwapWidget } from '@cowprotocol/widget-react'
-import { type CowSwapWidgetParams, TradeType } from '@cowprotocol/widget-lib'
-import type { OnTradeParamsPayload } from '@cowprotocol/events'
-import { type CowEventListeners, CowEvents } from '@cowprotocol/events'
+import { TradeType, type CowSwapWidgetParams } from '@cowprotocol/widget-lib'
+import { type OnTradeParamsPayload, type CowEventListeners, CowEvents } from '@cowprotocol/events'
 import { type MutableRefObject, useEffect, useMemo, useRef, useState } from 'react'
 import { Box, useTheme } from '@mui/material'
-import {
-  SafeAppAccessPolicyTypes,
-  type SafeAppData,
-  SafeAppFeatures,
-} from '@safe-global/safe-gateway-typescript-sdk/dist/types/safe-apps'
+import { CowSwapWidget } from '@cowprotocol/widget-react'
+import { SafeAppAccessPolicyTypes, SafeAppFeatures } from '@safe-global/store/gateway/types'
+import type { SafeApp as SafeAppData } from '@safe-global/store/gateway/AUTO_GENERATED/safe-apps'
 import { useCurrentChain, useHasFeature } from '@/hooks/useChains'
 import { useDarkMode } from '@/hooks/useDarkMode'
 import { useCustomAppCommunicator } from '@/hooks/safe-apps/useCustomAppCommunicator'
@@ -87,7 +83,10 @@ const SwapWidget = ({ sell }: Params) => {
   const wallet = useWallet()
   const { isConsentAccepted, onAccept } = useSwapConsent()
   const feeEnabled = useHasFeature(FEATURES.NATIVE_SWAPS_FEE_ENABLED)
+  const nativeCowSwapFeeV2Enabled = useHasFeature(FEATURES.NATIVE_COW_SWAP_FEE_V2)
+  const isEurcvBoostEnabled = useHasFeature(FEATURES.EURCV_BOOST)
   const useStagingCowServer = useHasFeature(FEATURES.NATIVE_SWAPS_USE_COW_STAGING_SERVER)
+  const cowSwapBaseUrl = useStagingCowServer ? 'https://staging.swap.cow.fi' : 'https://swap.cow.fi'
 
   const { data: isSafeAddressBlocked } = useGetIsSanctionedQuery(safeAddress || skipToken)
   const { data: isWalletAddressBlocked } = useGetIsSanctionedQuery(wallet?.address || skipToken)
@@ -105,10 +104,11 @@ const SwapWidget = ({ sell }: Params) => {
     width: '100%', // Width in pixels (or 100% to use all available space)
     height: '860px',
     chainId,
-    baseUrl: useStagingCowServer ? 'https://staging.swap.cow.fi' : 'https://swap.cow.fi',
+    baseUrl: cowSwapBaseUrl,
     standaloneMode: false,
     disableToastMessages: true,
     disablePostedOrderConfirmationModal: true,
+    disableCrossChainSwap: true,
     hideLogo: true,
     hideNetworkSelector: true,
     sounds: {
@@ -156,7 +156,7 @@ const SwapWidget = ({ sell }: Params) => {
   const appData: SafeAppData = useMemo(
     () => ({
       id: 1,
-      url: 'https://app.safe.global',
+      url: cowSwapBaseUrl,
       name: SWAP_TITLE,
       iconUrl: darkMode ? './images/common/safe-swap-dark.svg' : './images/common/safe-swap.svg',
       description: 'Safe Apps',
@@ -165,8 +165,9 @@ const SwapWidget = ({ sell }: Params) => {
       tags: ['safe-apps'],
       features: [SafeAppFeatures.BATCHED_TRANSACTIONS],
       socialProfiles: [],
+      featured: false,
     }),
-    [darkMode],
+    [darkMode, cowSwapBaseUrl],
   )
 
   const listeners = useMemo<CowEventListeners>(() => {
@@ -226,7 +227,9 @@ const SwapWidget = ({ sell }: Params) => {
         handler: (newTradeParams: OnTradeParamsPayload) => {
           const { orderType: tradeType, recipient, sellToken, buyToken } = newTradeParams
 
-          const newFeeBps = feeEnabled ? calculateFeePercentageInBps(newTradeParams) : 0
+          const newFeeBps = feeEnabled
+            ? calculateFeePercentageInBps(newTradeParams, nativeCowSwapFeeV2Enabled, isEurcvBoostEnabled)
+            : 0
 
           setParams((params) => ({
             ...params,
@@ -251,7 +254,7 @@ const SwapWidget = ({ sell }: Params) => {
         },
       },
     ]
-  }, [dispatch, feeEnabled])
+  }, [dispatch, feeEnabled, nativeCowSwapFeeV2Enabled, isEurcvBoostEnabled])
 
   useEffect(() => {
     setParams((params) => ({

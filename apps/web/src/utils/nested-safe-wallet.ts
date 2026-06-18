@@ -1,6 +1,8 @@
-import { type Eip1193Provider, getAddress, type JsonRpcProvider } from 'ethers'
+import { type Eip1193Provider, type JsonRpcProvider } from 'ethers'
+import { getAddress } from 'viem'
 import { SafeWalletProvider, type WalletSDK } from '@/services/safe-wallet-provider'
-import { getTransactionDetails, type SafeInfo } from '@safe-global/safe-gateway-typescript-sdk'
+import { getTransactionDetails } from '@/utils/tx-details'
+import { type SafeState } from '@safe-global/store/gateway/AUTO_GENERATED/safes'
 import { type NextRouter } from 'next/router'
 import { AppRoutes } from '@/config/routes'
 import proposeTx from '@/services/tx/proposeTransaction'
@@ -21,7 +23,7 @@ export type NestedWallet = {
 
 export const getNestedWallet = (
   actualWallet: ConnectedWallet,
-  safeInfo: SafeInfo,
+  safeInfo: SafeState,
   web3ReadOnly: JsonRpcProvider,
   router: NextRouter,
 ): NestedWallet => {

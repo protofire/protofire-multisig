@@ -36,9 +36,9 @@ describe('Create transactions tests 2', () => {
     createtx.selectComboButtonOption('execute')
     createtx.selectCurrentWallet()
     createtx.openExecutionParamsModal()
-    createtx.setAdvncedExecutionParams()
-    createtx.displayAdvncedDetails()
-    createtx.verifyEditedExutionParams()
+    createtx.setAdvancedExecutionParams()
+    createtx.displayAdvancedDetails()
+    createtx.verifyEditedExcutionParams()
   })
 
   it('Verify advance parameters gas limit input', () => {
@@ -53,7 +53,7 @@ describe('Create transactions tests 2', () => {
 
   it('Verify a transaction shows relayer attempts', () => {
     happyPathToStepTwo()
-    createtx.verifySubmitBtnIsEnabled()
+    createtx.verifyContinueSignBtnIsEnabled()
     createtx.verifyNativeTokenTransfer()
     createtx.changeNonce('5')
     createtx.clickOnContinueSignTransactionBtn()

@@ -1,12 +1,14 @@
 import { useRouter } from 'next/router'
 import Head from 'next/head'
 import { BRAND_NAME } from '@/config/constants'
-import SpaceDashboard from '@/features/spaces/components/Dashboard'
-import AuthState from '@/features/spaces/components/AuthState'
+import { SpacesFeature, useFeatureFlagRedirect } from '@/features/spaces'
+import { useLoadFeature } from '@/features/__core__'
 
 export default function SpacePage() {
   const router = useRouter()
   const { spaceId } = router.query
+  const spaces = useLoadFeature(SpacesFeature)
+  useFeatureFlagRedirect()
 
   if (!router.isReady || !spaceId || typeof spaceId !== 'string') return null
 
@@ -17,9 +19,7 @@ export default function SpacePage() {
       </Head>
 
       <main>
-        <AuthState spaceId={spaceId}>
-          <SpaceDashboard />
-        </AuthState>
+        <spaces.SpaceDashboardPage spaceId={spaceId} />
       </main>
     </>
   )

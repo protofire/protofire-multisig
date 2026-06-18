@@ -1,21 +1,21 @@
-import React from 'react'
+import React, { ReactNode } from 'react'
 import { useTheme, View } from 'tamagui'
 import { Tabs, MaterialTabBar } from 'react-native-collapsible-tab-view'
 import { TransactionDetails } from '@safe-global/store/gateway/AUTO_GENERATED/transactions'
 import { ReviewHeader } from './ReviewHeader'
-import { ReviewFooter } from './ReviewFooter'
 import { DataTab } from './tabs/DataTab'
 import { JSONTab } from './tabs/JSONTab'
-import { Address } from '@/src/types/address'
+import { HashesTab } from './tabs/HashesTab'
 import { useTheme as useCurrentTheme } from '@/src/theme/hooks/useTheme'
 
 interface ReviewAndConfirmViewProps {
   txDetails: TransactionDetails
-  signerAddress: Address
+  children: ReactNode
+  header?: ReactNode
 }
 
-export function ReviewAndConfirmView({ txDetails, signerAddress }: ReviewAndConfirmViewProps) {
-  const { currentTheme } = useCurrentTheme()
+export function ReviewAndConfirmView({ txDetails, children, header }: ReviewAndConfirmViewProps) {
+  const { isDark } = useCurrentTheme()
   const theme = useTheme()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const renderTabBar = (props: any) => (
@@ -24,11 +24,11 @@ export function ReviewAndConfirmView({ txDetails, signerAddress }: ReviewAndConf
       indicatorStyle={{
         backgroundColor: theme.color.get(),
       }}
-      style={{ backgroundColor: currentTheme === 'light' ? theme.backgroundPaper.get() : theme.background.get() }}
+      style={{ backgroundColor: isDark ? theme.background.get() : theme.backgroundSheet.get() }}
       labelStyle={{ color: theme.color.get(), fontSize: 16, fontWeight: '600' }}
       activeColor={theme.color.get()}
       inactiveColor={theme.colorSecondary.get()}
-      width={200}
+      width={300}
     />
   )
 
@@ -43,17 +43,20 @@ export function ReviewAndConfirmView({ txDetails, signerAddress }: ReviewAndConf
           shadowColor: 'transparent',
           shadowOffset: { width: 0, height: 0 },
         }}
-        renderHeader={() => <ReviewHeader />}
+        renderHeader={() => (header ? <>{header}</> : <ReviewHeader />)}
       >
         <Tabs.Tab name="Data" label="Data">
           <DataTab />
+        </Tabs.Tab>
+        <Tabs.Tab name="Hashes" label="Hashes">
+          <HashesTab txDetails={txDetails} />
         </Tabs.Tab>
         <Tabs.Tab name="JSON" label="JSON">
           <JSONTab txDetails={txDetails} />
         </Tabs.Tab>
       </Tabs.Container>
 
-      <ReviewFooter signerAddress={signerAddress} txId={txDetails.txId} />
+      {children}
     </View>
   )
 }

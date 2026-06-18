@@ -155,7 +155,7 @@ describe('notificationSyncMiddleware', () => {
                 blockExplorerUriTemplate: {
                   address: 'https://etherscan.io/address/{{address}}',
                   txHash: 'https://etherscan.io/tx/{{txHash}}',
-                  api: 'https://api.etherscan.io/api?module={{module}}&action={{action}}&address={{address}}&apiKey={{apiKey}}',
+                  api: 'https://api.etherscan.io/v2/api?chainid=1&module={{module}}&action={{action}}&address={{address}}&apiKey={{apiKey}}',
                 },
                 nativeCurrency: {
                   name: 'Ether',
@@ -170,7 +170,7 @@ describe('notificationSyncMiddleware', () => {
                 gasPrice: [
                   {
                     type: 'ORACLE',
-                    uri: 'https://api.etherscan.io/api?module=gastracker&action=gasoracle&apikey=YourApiKeyToken',
+                    uri: 'https://api.etherscan.io/v2/api?chainid=1&module=gastracker&action=gasoracle&apikey=YourApiKeyToken',
                     gasParameter: 'SafeGasPrice',
                     gweiFactor: '1000000000.000000000',
                   },
@@ -199,7 +199,16 @@ describe('notificationSyncMiddleware', () => {
       )
 
       // Dispatch the real RTK Query thunk
-      await testStore.dispatch(apiSliceWithChainsConfig.endpoints.getChainsConfig.initiate() as unknown as Action)
+      const promise = testStore.dispatch(
+        apiSliceWithChainsConfig.endpoints.getChainsConfig.initiate() as unknown as Action,
+      )
+
+      // Advance through all retry delays (5 retries with exponential backoff)
+      for (let i = 0; i < 5; i++) {
+        await jest.runAllTimersAsync()
+      }
+
+      await promise
 
       // The middleware should NOT have been triggered by the rejected action
       expect(mockSyncNotificationExtensionData).not.toHaveBeenCalled()

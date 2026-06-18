@@ -4,7 +4,7 @@ import * as modal from './modals.page.js'
 import * as navigation from './navigation.page.js'
 import { safeHeaderInfo } from './import_export.pages.js'
 import * as file from './import_export.pages.js'
-import safes from '../../fixtures/safes/static.json'
+import safes from '../../fixtures/safes/static.js'
 import * as address_book from './address_book.page.js'
 import * as create_wallet from '../pages/create_wallet.pages.js'
 
@@ -18,7 +18,7 @@ const explorerBtn = '[data-testid="explorer-btn"]'
 export const sideBarListItem = '[data-testid="sidebar-list-item"]'
 const sideBarListItemWhatsNew = '[data-testid="list-item-whats-new"]'
 const sideBarListItemNeedHelp = '[data-testid="list-item-need-help"]'
-const sideSafeListItem = '[data-testid="safe-list-item"]'
+export const sideSafeListItem = '[data-testid="safe-list-item"]'
 const sidebarSafeHeader = '[data-testid="safe-header-info"]'
 const sidebarSafeContainer = '[data-testid="sidebar-safe-container"]'
 const safeItemOptionsBtn = '[data-testid="safe-options-btn"]'
@@ -301,7 +301,9 @@ export function verifySafeHeaderDetails(details) {
 }
 
 export function clickOnQRCodeBtn() {
-  cy.get(qrModalBtn).should('be.visible').click()
+  cy.get(sidebarContainer).within(() => {
+    cy.get(qrModalBtn).should('have.length', 1).click()
+  })
 }
 
 export function verifyQRModalDisplayed() {
@@ -637,7 +639,7 @@ export function verifyTxToConfirmDoesNotExist() {
 
 export function checkBalanceExists() {
   const balance = new RegExp(`\\s*\\d*\\.?\\d*\\s*`, 'i')
-  const element = cy.get(chainLogo).prev().contains(balance)
+  cy.get(chainLogo).next().contains(balance).should('exist')
 }
 
 export function clickOnAddOptionsBtn() {

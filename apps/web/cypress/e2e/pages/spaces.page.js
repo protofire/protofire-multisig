@@ -1,6 +1,6 @@
 import * as constants from '../../support/constants.js'
 import * as main from './main.page.js'
-import staticSafes from '../../fixtures/safes/static.json'
+import staticSafes from '../../fixtures/safes/static.js'
 import { tableContainer } from './address_book.page.js'
 
 export const orgList = '[data-testid="org-list"]'
@@ -200,8 +200,6 @@ export function typeMemberAddress(address) {
 export function typeMemberName(name) {
   cy.get(memberNameInput).find('input').clear().type(name)
 }
-
-const pendingInvitationsList = '[data-testid="pending-invitations-list"]'
 
 export function memberIsInList(name) {
   cy.contains(name).should('be.visible')

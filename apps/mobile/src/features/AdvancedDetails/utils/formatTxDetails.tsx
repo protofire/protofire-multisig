@@ -9,11 +9,12 @@ import { Identicon } from '@/src/components/Identicon'
 import { Badge } from '@/src/components/Badge'
 import { shortenText } from '@safe-global/utils/utils/formatters'
 import { isMultisigDetailedExecutionInfo } from '@/src/utils/transaction-guards'
-import { Operation } from '@safe-global/safe-gateway-typescript-sdk'
+import { Operation } from '@safe-global/store/gateway/types'
 import { SafeFontIcon } from '@/src/components/SafeFontIcon'
 import { TouchableOpacity } from 'react-native'
 import { Receiver } from '../components/Receiver'
 import { InfoSheet } from '@/src/components/InfoSheet'
+import { HexDataDisplay } from '@/src/components/HexDataDisplay'
 
 interface formatTxDetailsProps {
   txDetails?: TransactionDetails
@@ -31,39 +32,49 @@ const formatTxDetails = ({ txDetails, viewOnExplorer }: formatTxDetailsProps): L
   }
 
   // Basic transaction info
-  items.push({
-    label: 'To',
-    render: () => (
-      <>
-        <View width="100%">
-          <Receiver txData={txDetails.txData} />
-        </View>
-        <View width="100%" flexDirection="row" alignItems="center" gap="$2">
-          <Identicon address={txDetails.txData?.to.value as Address} size={24} />
+  if (txDetails.txData?.to.value) {
+    items.push({
+      label: 'To',
+      render: () => (
+        <>
+          <View width="100%">
+            <Receiver txData={txDetails.txData} />
+          </View>
+          <View width="100%" flexDirection="row" alignItems="center" gap="$2">
+            <Identicon address={txDetails.txData?.to.value as Address} size={24} />
 
-          <View flexDirection="row" justifyContent="space-between" alignItems="center">
-            <Text flexWrap="wrap" width="77%">
-              {txDetails.txData?.to.value}
-            </Text>
+            <View flexDirection="row" justifyContent="space-between" alignItems="center">
+              <Text flexWrap="wrap" width="77%">
+                {txDetails.txData?.to.value}
+              </Text>
 
-            <View flexDirection="row" alignItems="center" gap="$3">
-              <CopyButton value={txDetails.txData?.to.value || ''} size={16} color={'$textSecondaryLight'} />
+              <View flexDirection="row" alignItems="center" gap="$3">
+                <CopyButton value={txDetails.txData?.to.value || ''} size={16} color={'$textSecondaryLight'} />
 
-              <TouchableOpacity onPress={viewOnExplorer}>
-                <SafeFontIcon name="external-link" size={16} color="$textSecondaryLight" />
-              </TouchableOpacity>
+                <TouchableOpacity onPress={viewOnExplorer} testID="external-link-button">
+                  <SafeFontIcon name="external-link" size={16} color="$textSecondaryLight" />
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
-        </View>
-      </>
-    ),
-  })
+        </>
+      ),
+    })
+  }
 
   // Value
   if (txDetails.txData?.value) {
     items.push({
       label: 'Value',
       render: () => <Text>{txDetails.txData?.value || '0'}</Text>,
+    })
+  }
+
+  // Data field - always show when txData exists
+  if (txDetails.txData) {
+    items.push({
+      label: 'Data',
+      render: () => <HexDataDisplay data={txDetails.txData?.hexData || '0x'} title="Data" copyMessage="Data copied." />,
     })
   }
 

@@ -2,7 +2,7 @@ import { Typography, Paper, Box, Stack } from '@mui/material'
 import { useSpacesGetOneV1Query } from '@safe-global/store/gateway/AUTO_GENERATED/spaces'
 import InitialsAvatar from '../InitialsAvatar'
 import css from './styles.module.css'
-import { useCurrentSpaceId } from 'src/features/spaces/hooks/useCurrentSpaceId'
+import { useCurrentSpaceId } from '@/features/spaces'
 import { isAuthenticated } from '@/store/authSlice'
 import { useAppSelector } from '@/store'
 import AcceptButton from './AcceptButton'
@@ -18,7 +18,7 @@ const PreviewInvite = () => {
   const isDarkMode = useDarkMode()
   const isUserSignedIn = useAppSelector(isAuthenticated)
   const spaceId = useCurrentSpaceId()
-  const { currentData: currentUser } = useUsersGetWithWalletsV1Query()
+  const { currentData: currentUser } = useUsersGetWithWalletsV1Query(undefined, { skip: !isUserSignedIn })
   const { currentData: space } = useSpacesGetOneV1Query({ id: Number(spaceId) }, { skip: !isUserSignedIn || !spaceId })
   const invitedBy = space?.members.find((member) => member.user.id === currentUser?.id)?.invitedBy
 

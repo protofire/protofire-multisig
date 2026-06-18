@@ -1,4 +1,5 @@
-import { TERMS_LINK } from '@/config/constants'
+import { BRAND_NAME } from '@/config/constants'
+import { TERMS_LINK } from '@/config/constants.extra'
 import { Typography } from '@mui/material'
 import type { NextPage } from 'next'
 import Head from 'next/head'
@@ -29,7 +30,7 @@ const Terms: NextPage = () => {
   return (
     <>
       <Head>
-        <title>Terms and Conditions</title>
+        <title>{`${BRAND_NAME} – Terms`}</title>
       </Head>
 
       <main>

@@ -1,9 +1,7 @@
-import { useMemo, type ReactElement } from 'react'
-import { Alert, SvgIcon } from '@mui/material'
-import InfoOutlinedIcon from '@/public/images/notifications/info.svg'
+import type { TransactionDetails } from '@safe-global/store/gateway/AUTO_GENERATED/transactions'
+import { useMemo } from 'react'
 import { useHasUntrustedFallbackHandler } from '@/hooks/useHasUntrustedFallbackHandler'
 import { FallbackHandlerWarning } from '@/components/settings/FallbackHandler'
-import type { TransactionDetails } from '@safe-global/safe-gateway-typescript-sdk'
 
 export const useSetsUntrustedFallbackHandler = (txData: TransactionDetails['txData']): boolean => {
   // multiSend method receives one parameter `transactions`
@@ -45,19 +43,4 @@ export const UntrustedFallbackHandlerTxText = ({ isTxExecuted = false }: { isTxE
       </>
     )}
   </>
-)
-
-export const UntrustedFallbackHandlerTxAlert = ({
-  isTxExecuted = false,
-}: {
-  isTxExecuted?: boolean
-}): ReactElement | null => (
-  <Alert
-    data-testid="untrusted-fallback-handler-alert"
-    severity="warning"
-    icon={<SvgIcon component={InfoOutlinedIcon} inheritViewBox color="error" />}
-    sx={{ mb: 1 }}
-  >
-    <UntrustedFallbackHandlerTxText isTxExecuted={isTxExecuted} />
-  </Alert>
 )

@@ -1,16 +1,11 @@
 import { renderHook } from '@testing-library/react'
 import useIsStakingBannerVisible from './useIsStakingBannerVisible'
 
-jest.mock('@safe-global/safe-gateway-typescript-sdk', () => ({
+jest.mock('@/features/stake', () => ({
   __esModule: true,
-  TokenType: { NATIVE_TOKEN: 'NATIVE_TOKEN', ERC20: 'ERC20' },
+  useIsStakingBannerEnabled: jest.fn(),
 }))
-
-jest.mock('@/features/stake/hooks/useIsStakingBannerEnabled', () => ({
-  __esModule: true,
-  default: jest.fn(),
-}))
-import useIsStakingBannerEnabled from '@/features/stake/hooks/useIsStakingBannerEnabled'
+import { useIsStakingBannerEnabled } from '@/features/stake'
 
 jest.mock('@/hooks/useBalances', () => ({
   __esModule: true,
@@ -38,7 +33,7 @@ const nativeBalance = (
   tokenInfo: { type: 'NATIVE_TOKEN', decimals },
 })
 
-const mockIsEnabled = useIsStakingBannerEnabled as jest.MockedFunction<() => boolean>
+const mockIsEnabled = useIsStakingBannerEnabled as jest.MockedFunction<typeof useIsStakingBannerEnabled>
 const mockBalances = useBalances as jest.MockedFunction<any>
 const mockSanctions = useSanctionedAddress as jest.MockedFunction<(f: boolean) => string | undefined>
 

@@ -1,4 +1,4 @@
-import css from '@/features/spaces/components/Dashboard/styles.module.css'
+import css from './styles.module.css'
 import LightbulbIcon from '@/public/images/common/lightbulb.svg'
 import { Typography, Paper, Box, Button, SvgIcon } from '@mui/material'
 import SpaceInfoModal from '../SpaceInfoModal'
@@ -25,7 +25,7 @@ const SpacesCTACard = () => {
           <Button
             onClick={handleLearnMore}
             variant="outlined"
-            size="compact"
+            size="medium"
             sx={{
               position: 'absolute',
               top: 0,
@@ -40,7 +40,7 @@ const SpacesCTACard = () => {
           <Typography variant="body1" color="text.primary" fontWeight={700} mb={1}>
             Explore spaces
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" color="primary.light">
             Seamlessly use your Safe Accounts from one place and collaborate with your team members.
           </Typography>
         </Box>
