@@ -26,6 +26,33 @@ describe('web3', () => {
       expect(result).toBe(mockSignature)
     })
 
+    it.each([
+      [1, 0, 27],
+      [1, 1, 28],
+      [1, 27, 27],
+      [728126428, 58, 58],
+      [2494104990, 59, 59],
+      [1, 58, undefined],
+      [137, 59, undefined],
+      [728126428, 60, undefined],
+      [728126428, 255, undefined],
+    ])('validates signature V %s/%s by typed-data chain', async (chainId, v, expected) => {
+      const signature = mockSignature.slice(0, -2) + v.toString(16).padStart(2, '0')
+      const signer = { signTypedData: jest.fn().mockResolvedValue(signature) }
+      const typedData = {
+        domain: { chainId },
+        types: { Message: [{ name: 'value', type: 'uint256' }] },
+        message: { value: 1 },
+        primaryType: 'Message',
+      }
+      const result = signTypedData(signer as unknown as JsonRpcSigner, typedData)
+      if (expected === undefined) {
+        await expect(result).rejects.toThrow('Invalid signature')
+      } else {
+        await expect(result).resolves.toBe(mockSignature.slice(0, -2) + expected.toString(16))
+      }
+    })
+
     it('should throw an error if signTypedData fails', async () => {
       const signer = {
         signTypedData: jest.fn().mockRejectedValue(new Error('error')),

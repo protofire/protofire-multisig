@@ -5,7 +5,10 @@ export const AppRoutes = {
   userSettings: '/user-settings',
   terms: '/terms',
   safeLabsTerms: '/safe-labs-terms',
-  swap: '/swap',
+  swap: '/lifi-swap',
+  superchainMigration: '/superchain-migration',
+  migration: '/migration',
+  migrate: '/migrate',
   stake: '/stake',
   privacy: '/privacy',
   licenses: '/licenses',
@@ -73,6 +76,7 @@ export const AppRoutes = {
     spaces: '/welcome/spaces',
     index: '/welcome',
     accounts: '/welcome/accounts',
+    dataMigration: '/welcome/data-migration',
   },
 }
 

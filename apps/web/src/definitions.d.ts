@@ -11,6 +11,8 @@ declare global {
         isUnlocked: () => Promise<boolean>
       }
       isConnected?: () => boolean
+      // TronLink 5.x also announces an EVM provider on window.ethereum and sets this flag
+      isTronLink?: boolean
     }
     beamer_config?: BeamerConfig
     Beamer?: BeamerMethods

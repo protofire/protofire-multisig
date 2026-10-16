@@ -1,6 +1,7 @@
 import { type Chain, type RpcUri } from '@safe-global/store/gateway/AUTO_GENERATED/chains'
 import { JsonRpcProvider, BrowserProvider, type Eip1193Provider } from 'ethers'
 import { INFURA_TOKEN, SAFE_APPS_INFURA_TOKEN } from '@safe-global/utils/config/constants'
+import { isTronChain } from '@/utils/tron-chains'
 
 // Re-export stores from lightweight module for backwards compatibility
 export { setWeb3, useWeb3, getWeb3ReadOnly, setWeb3ReadOnly, useWeb3ReadOnly } from './web3ReadOnly'
@@ -33,9 +34,13 @@ export const getRpcServiceUrl = (rpcUri: RpcUri): string => {
 export const createWeb3ReadOnly = (chain: Chain, customRpc?: string): JsonRpcProvider | undefined => {
   const url = customRpc || getRpcServiceUrl(chain.rpcUri)
   if (!url) return
+  // Tron's /jsonrpc returns HTTP 503 for the whole batch when one call errors
+  // (e.g. unsupported eth_getTransactionCount), poisoning unrelated calls sharing the batch.
+  // Disable batching for Tron so one bad call can't fail its neighbours.
+  const batchMaxCount = isTronChain(chain.chainId) ? 1 : BATCH_MAX_COUNT
   return new JsonRpcProvider(url, Number(chain.chainId), {
     staticNetwork: true,
-    batchMaxCount: BATCH_MAX_COUNT,
+    batchMaxCount,
   })
 }
 
@@ -58,6 +63,16 @@ export const getUserNonce = async (userAddress: string): Promise<number> => {
   try {
     return await web3.getTransactionCount(userAddress, 'pending')
   } catch (error) {
-    return Promise.reject(error)
+    // Tron /jsonrpc does not support eth_getTransactionCount (no nonce concept).
+    // Keep the nonce fallback confined to Tron; EVM must surface RPC failures.
+    try {
+      const chainId = (await web3.getNetwork()).chainId.toString()
+      if (isTronChain(chainId)) {
+        return 0
+      }
+    } catch {
+      // Preserve the original nonce error when the provider cannot identify its network.
+    }
+    throw error
   }
 }

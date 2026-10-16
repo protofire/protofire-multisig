@@ -3,6 +3,8 @@ import useGasPrice from '@/hooks/useGasPrice'
 import { useCurrentChain } from '../useChains'
 import { getTotalFee } from '@safe-global/utils/hooks/useDefaultGasPrice'
 
+const mockProviderSend = jest.fn()
+
 // mock useWeb3Readonly
 jest.mock('../wallets/web3', () => {
   const provider = {
@@ -13,6 +15,7 @@ jest.mock('../wallets/web3', () => {
         maxPriorityFeePerGas: BigInt('0x136f'), //4975
       }),
     ),
+    send: (...args: unknown[]) => mockProviderSend(...args),
   }
   return {
     useWeb3ReadOnly: jest.fn(() => provider),
@@ -46,6 +49,12 @@ jest.mock('@/hooks/useChains', () => {
     useCurrentChain: jest.fn(() => currentChain),
   }
 })
+
+const mockUseChainId = jest.fn(() => currentChain.chainId)
+jest.mock('@/hooks/useChainId', () => ({
+  __esModule: true,
+  default: () => mockUseChainId(),
+}))
 
 describe('useGasPrice', () => {
   beforeEach(() => {
@@ -326,6 +335,44 @@ describe('useGasPrice', () => {
     expect(result.current[2]).toBe(false)
 
     expect(result2.current[0]?.maxFeePerGas?.toString()).toBe('22000000000')
+  })
+})
+
+describe('useGasPrice on Tron', () => {
+  const TRON_CHAIN_ID = '728126428'
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    mockUseChainId.mockReturnValue(TRON_CHAIN_ID)
+    ;(useCurrentChain as jest.Mock).mockReturnValue({ ...currentChain, chainId: TRON_CHAIN_ID })
+  })
+
+  it('returns the energy price from eth_gasPrice', async () => {
+    mockProviderSend.mockResolvedValueOnce('0x1a4') // 420
+
+    const { result } = renderHook(() => useGasPrice())
+
+    await waitFor(() => {
+      expect(result.current[2]).toBe(false)
+    })
+
+    expect(result.current[0]?.maxFeePerGas).toBe(420n)
+    expect(result.current[0]?.maxPriorityFeePerGas).toBe(0n)
+    expect(result.current[1]).toBeUndefined()
+  })
+
+  it('falls back to the fixed energy price if eth_gasPrice fails', async () => {
+    mockProviderSend.mockRejectedValueOnce(new Error('Temporary internal error'))
+
+    const { result } = renderHook(() => useGasPrice())
+
+    await waitFor(() => {
+      expect(result.current[2]).toBe(false)
+    })
+
+    expect(result.current[0]?.maxFeePerGas).toBe(100n)
+    expect(result.current[0]?.maxPriorityFeePerGas).toBe(0n)
+    expect(result.current[1]).toBeUndefined()
   })
 })
 

@@ -44,7 +44,7 @@ export const SpenderField = ({ address }: { address: string }) => {
       >
         Spender
       </Typography>
-      <div>
+      <div className={css.spender}>
         <EthHashInfo
           avatarSize={24}
           address={address}

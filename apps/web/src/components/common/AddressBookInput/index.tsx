@@ -11,6 +11,8 @@ import inputCss from '@/styles/inputs.module.css'
 import { isValidAddress } from '@safe-global/utils/utils/validation'
 import { sameAddress } from '@safe-global/utils/utils/addresses'
 import { useMergedAddressBooks } from '@/hooks/useAllAddressBooks'
+import useChainId from '@/hooks/useChainId'
+import useTronAddress from '@/hooks/useTronAddress'
 
 const abFilterOptions = createFilterOptions({
   stringify: (option: { label: string; name: string }) => option.name + ' ' + option.label,
@@ -26,6 +28,8 @@ const AddressBookInput = ({ name, canAdd, ...props }: AddressInputProps & { canA
 
   const { setValue, control } = useFormContext()
   const addressValue = useWatch({ name, control })
+  const chainId = useChainId()
+  const { displayAddress } = useTronAddress(addressValue ?? '', chainId)
 
   const allAddressBookEntries = useMemo(
     () =>
@@ -71,6 +75,8 @@ const AddressBookInput = ({ name, canAdd, ...props }: AddressInputProps & { canA
         render={({ field: { ref, ...field } }) => (
           <Autocomplete
             {...field}
+            // For Tron: display per the user's tronAddressFormat setting while form stores 0x
+            inputValue={displayAddress}
             className={inputCss.input}
             disableClearable
             disabled={props.disabled}

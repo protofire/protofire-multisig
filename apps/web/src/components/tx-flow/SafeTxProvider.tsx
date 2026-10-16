@@ -4,6 +4,7 @@ import type { Dispatch, ReactNode, SetStateAction, ReactElement } from 'react'
 import type { SafeTransaction } from '@safe-global/types-kit'
 import { createTx } from '@/services/tx/tx-sender'
 import { useRecommendedNonce, useSafeTxGas } from '@/components/tx/shared/hooks'
+import { isSafePaysTx } from '@/services/tx/gasTokenFee'
 import { Errors, logError } from '@/services/exceptions'
 
 export type SafeTxContextParams = {
@@ -64,9 +65,10 @@ const SafeTxProvider = ({ children }: { children: ReactNode }): ReactElement => 
 
   // Priority to external nonce, then to the recommended one
   const finalNonce = canEdit ? (nonce ?? recommendedNonce ?? safeTx?.data.nonce) : safeTx?.data.nonce
-  const finalSafeTxGas = canEdit
-    ? (safeTxGas ?? recommendedSafeTxGas ?? safeTx?.data.safeTxGas)
-    : safeTx?.data.safeTxGas
+  const finalSafeTxGas =
+    canEdit && !isSafePaysTx(safeTx)
+      ? (safeTxGas ?? recommendedSafeTxGas ?? safeTx?.data.safeTxGas)
+      : safeTx?.data.safeTxGas
 
   // Update the tx when the nonce or safeTxGas change
   useEffect(() => {
@@ -74,13 +76,19 @@ const SafeTxProvider = ({ children }: { children: ReactNode }): ReactElement => 
     if (!safeTx?.data) return
     if (safeTx.data.nonce === finalNonce && safeTx.data.safeTxGas === finalSafeTxGas) return
 
+    let cancelled = false
     setSafeTxError(undefined)
 
     createTx({ ...safeTx.data, safeTxGas: String(finalSafeTxGas) }, finalNonce)
       .then((tx) => {
-        setSafeTx(tx)
+        if (!cancelled) setSafeTx((current) => (current === safeTx ? tx : current))
       })
-      .catch(setSafeTxError)
+      .catch((error) => {
+        if (!cancelled) setSafeTxError(error)
+      })
+    return () => {
+      cancelled = true
+    }
   }, [canEdit, finalNonce, finalSafeTxGas, safeTx?.data])
 
   // Log errors

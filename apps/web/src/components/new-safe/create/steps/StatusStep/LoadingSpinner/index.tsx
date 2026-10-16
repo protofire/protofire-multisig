@@ -2,7 +2,6 @@ import { Box } from '@mui/material'
 import css from '@/components/new-safe/create/steps/StatusStep/LoadingSpinner/styles.module.css'
 import classnames from 'classnames'
 import { useCallback, useEffect, useRef } from 'react'
-
 const rectTlEndTransform = 'translateX(0) translateY(20px) scaleY(1.1)'
 const rectTrEndTransform = 'translateX(30px) scaleX(2.3)'
 const rectBlEndTransform = 'translateX(30px) translateY(60px) scaleX(2.3)'

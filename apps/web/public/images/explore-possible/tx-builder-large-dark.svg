@@ -8,9 +8,9 @@
 <stop offset="1" stop-color="#E0E0E0"/>
 </linearGradient>
 <linearGradient id="paint1_linear_8142_14226" x1="6.0901" y1="21.9968" x2="52.1583" y2="34.5074" gradientUnits="userSpaceOnUse">
-<stop stop-color="#00B460"/>
-<stop offset="0.475962" stop-color="#08763B"/>
-<stop offset="1" stop-color="#237E4D"/>
+<stop stop-color="#F5730D"/>
+<stop offset="0.475962" stop-color="#FFA24D"/>
+<stop offset="1" stop-color="#FBC21A"/>
 </linearGradient>
 </defs>
 </svg>

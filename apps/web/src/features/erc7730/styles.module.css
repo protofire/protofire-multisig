@@ -1,0 +1,158 @@
+.panel {
+  margin-bottom: var(--space-2);
+  min-width: 0;
+  max-width: 100%;
+}
+
+.accordion:global(.Mui-expanded) > * > :global(.MuiAccordionSummary-root) {
+  background-color: var(--color-secondary-background);
+}
+
+.accordion :global(.MuiAccordionSummary-content) > * {
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.summaryRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  width: 100%;
+  min-width: 0;
+  padding-right: var(--space-1);
+}
+
+.summaryTitle {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.summaryTags {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.headerAction {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.pill {
+  display: inline-block;
+  vertical-align: middle;
+  max-width: 280px;
+  padding: 4px var(--space-1);
+  border-radius: 3px;
+  color: var(--color-secondary-dark);
+  background-color: var(--color-secondary-background);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chipWrapper {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.accent:global(.MuiTypography-root) {
+  color: var(--color-secondary-dark);
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+[data-theme='dark'] .pill,
+[data-theme='dark'] .accent:global(.MuiTypography-root) {
+  color: var(--color-primary-main);
+}
+
+.ownerTag {
+  font-size: 14px;
+}
+
+.ownerTag :global(.external-link-icon) {
+  font-size: 16px;
+}
+
+.sourceLink {
+  font-size: 12px;
+}
+
+.sourceLink :global(.external-link-icon) {
+  font-size: 14px;
+}
+
+.shrinkable {
+  min-width: 0;
+}
+
+.fieldRow {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.fieldGrid {
+  display: grid;
+  grid-template-columns: minmax(100px, 170px) minmax(0, 1fr);
+  gap: var(--space-1);
+  align-items: baseline;
+}
+
+.fieldValue {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.group {
+  padding-left: 4px;
+}
+
+.embeddedCall {
+  padding: var(--space-1);
+  border: 1px solid var(--color-border-light);
+  border-radius: 6px;
+  background-color: var(--color-background-default);
+}
+
+.warnings:global(.MuiAlert-root) {
+  padding-top: 4px;
+  padding-bottom: 4px;
+  align-items: center;
+}
+
+@media (max-width: 599.95px) {
+  .pill {
+    max-width: 160px;
+  }
+
+  .chipSuffix {
+    display: none;
+  }
+
+  .fieldGrid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+  }
+
+  .panel :global(.MuiAccordionDetails-root) {
+    padding-left: var(--space-1);
+    padding-right: var(--space-1);
+  }
+
+  .embeddedCall {
+    padding: var(--space-1) 6px;
+  }
+}
+
+.inlineAction:not(:last-child) {
+  margin-right: var(--space-1);
+}

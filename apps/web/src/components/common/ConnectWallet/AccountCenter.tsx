@@ -7,10 +7,18 @@ import ExpandMoreIcon from '@mui/icons-material/KeyboardArrowDownRounded'
 import { type ConnectedWallet } from '@/hooks/wallets/useOnboard'
 import WalletOverview from '../WalletOverview'
 import WalletInfo from '@/components/common/WalletInfo'
+import useChainId from '@/hooks/useChainId'
 
 const AccountCenter = ({ wallet }: { wallet: ConnectedWallet }) => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null)
-  const { balance } = wallet
+  const currentChainId = useChainId()
+  // web3-onboard's `wallet.balance` is sourced from the wallet provider's own
+  // `eth_getBalance`. For TronLink (which routes RPC through the user's chosen
+  // fullNode independent of the app's selected chain) this can leak the
+  // mainnet balance when the app is on Shasta testnet (BUG-06 / GSD-12881).
+  // Suppress the balance string entirely on chain mismatch — better empty than
+  // wrong.
+  const balance = wallet.chainId === currentChainId ? wallet.balance : ''
 
   const openWalletInfo = (event: MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget)

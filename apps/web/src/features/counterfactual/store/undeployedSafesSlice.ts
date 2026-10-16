@@ -46,6 +46,17 @@ export const undeployedSafesSlice = createSlice({
       return payload
     },
 
+    // Upserts a single imported undeployed Safe without touching any other chain/address already in the store.
+    upsertUndeployedSafe: (
+      state,
+      action: PayloadAction<{ chainId: string; address: string; safe: UndeployedSafe }>,
+    ) => {
+      const { chainId, address, safe } = action.payload
+
+      state[chainId] ??= {}
+      state[chainId][address] = safe
+    },
+
     updateUndeployedSafeStatus: (
       state,
       action: PayloadAction<{ chainId: string; address: string; status: Omit<UndeployedSafeStatus, 'type'> }>,
@@ -76,7 +87,8 @@ export const undeployedSafesSlice = createSlice({
   },
 })
 
-export const { removeUndeployedSafe, addUndeployedSafe, updateUndeployedSafeStatus } = undeployedSafesSlice.actions
+export const { removeUndeployedSafe, addUndeployedSafe, updateUndeployedSafeStatus, upsertUndeployedSafe } =
+  undeployedSafesSlice.actions
 
 export const selectUndeployedSafes = (state: RootState): UndeployedSafesState => {
   return state[undeployedSafesSlice.name]

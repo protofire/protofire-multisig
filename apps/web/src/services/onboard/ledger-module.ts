@@ -356,6 +356,22 @@ async function getLedgerSdk() {
   const sessionId = await dmk.connect({ device })
   const signer = new SignerEthBuilder({ dmk, sessionId, originToken: 'your-origin-token' }).build()
 
+  // Pause the DMK device-session refresher for the duration of on-device signing.
+  // On device-management-kit 0.9.1 the refresher keeps polling the device (GetAppAndVersion,
+  // ~2s interval, 800ms abort) while a signature is in flight. The WebHID transport shares a
+  // single response resolver, so a poll that aborts releases the command mutex while the device
+  // reply is still pending; a late reply then resolves the signing request and corrupts APDU
+  // framing (surfacing as InvalidStatusWordError). This backports the fix from DMK 1.1.0
+  // ("don't ping when an intent is being processed") and can be removed once the kit is upgraded.
+  const withRefresherPaused = async <T>(action: () => Promise<T>): Promise<T> => {
+    const resumeRefresher = dmk.disableDeviceSessionRefresher({ sessionId, blockerId: 'safe-signing' })
+    try {
+      return await action()
+    } finally {
+      resumeRefresher()
+    }
+  }
+
   return {
     disconnect: async (): Promise<void> => {
       return dmk.disconnect({ sessionId })
@@ -364,13 +380,13 @@ async function getLedgerSdk() {
       return waitForAction(signer.getAddress(derivationPath, { checkOnDevice: false }))
     },
     signMessage: async (derivationPath: string, message: string | Uint8Array): Promise<SignPersonalMessageDAOutput> => {
-      return waitForAction(signer.signMessage(derivationPath, message))
+      return withRefresherPaused(() => waitForAction(signer.signMessage(derivationPath, message)))
     },
     signTransaction: async (derivationPath: string, transaction: Uint8Array): Promise<SignTransactionDAOutput> => {
-      return waitForAction(signer.signTransaction(derivationPath, transaction))
+      return withRefresherPaused(() => waitForAction(signer.signTransaction(derivationPath, transaction)))
     },
     signTypedData: async (derivationPath: string, typedData: TypedData): Promise<SignTypedDataDAOutput> => {
-      return waitForAction(signer.signTypedData(derivationPath, typedData))
+      return withRefresherPaused(() => waitForAction(signer.signTypedData(derivationPath, typedData)))
     },
   }
 }

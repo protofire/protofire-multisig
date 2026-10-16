@@ -1,8 +1,11 @@
-import { useCurrentChain } from '@/hooks/useChains'
+import { useChain, useCurrentChain } from '@/hooks/useChains'
 import useSafeAddress from '@/hooks/useSafeAddress'
 import { useCallback, useEffect, type ReactElement } from 'react'
 import type { Chain } from '@safe-global/store/gateway/AUTO_GENERATED/chains'
 import { Controller, useFormContext, useWatch } from 'react-hook-form'
+import useWallet from '@/hooks/wallets/useWallet'
+import { isTronChain } from '@/utils/tron-chains'
+import { isTronWallet } from '@/utils/wallets'
 import { useRouter } from 'next/router'
 import { getNetworkLink } from '@/components/common/NetworkSelector'
 import { SetNameStepFields } from '@/components/new-safe/create/steps/SetNameStep'
@@ -22,11 +25,27 @@ const SafeCreationNetworkInput = ({
   const router = useRouter()
   const safeAddress = useSafeAddress()
   const currentChain = useCurrentChain()
+  const wallet = useWallet()
+  const walletChain = useChain(wallet?.chainId || '')
 
   const {
     formState: { errors },
     control,
+    setValue,
   } = useFormContext()
+
+  // MetaMask & co. can't create on Tron and TronLink can't create on EVM chains
+  const isWalletFamily = useCallback(
+    (network: Chain) => !wallet || isTronChain(network.chainId) === isTronWallet(wallet),
+    [wallet],
+  )
+  const getOptionNote = useCallback(
+    (network: Chain) => {
+      if (isWalletFamily(network)) return
+      return isTronChain(network.chainId) ? 'Needs TronLink' : 'Needs an EVM wallet'
+    },
+    [isWalletFamily],
+  )
 
   const selectedNetworks: Chain[] = useWatch({ control, name: SetNameStepFields.networks })
 
@@ -41,6 +60,8 @@ const SafeCreationNetworkInput = ({
 
   const isOptionDisabled = useCallback(
     (optionNetwork: Chain) => {
+      if (!isWalletFamily(optionNetwork)) return true
+
       // Initially all networks are always available
       if (selectedNetworks.length === 0) {
         return false
@@ -88,32 +109,47 @@ const SafeCreationNetworkInput = ({
       if (!selectedHasCanonicalSingletonDeployment) return !optionIsSelectedNetwork
       return !optionHasCanonicalSingletonDeployment
     },
-    [isAdvancedFlow, selectedNetworks],
+    [isAdvancedFlow, selectedNetworks, isWalletFamily],
   )
 
+  // After switching to a wallet of the other family, start over from the wallet's own network
   useEffect(() => {
-    if (selectedNetworks.length === 1 && selectedNetworks[0].chainId !== currentChain?.chainId) {
+    if (selectedNetworks.some((network) => !isWalletFamily(network))) {
+      setValue(name, walletChain ? [walletChain] : [], { shouldValidate: true })
+    }
+  }, [selectedNetworks, isWalletFamily, walletChain, name, setValue])
+
+  useEffect(() => {
+    if (
+      selectedNetworks.length === 1 &&
+      selectedNetworks[0].chainId !== currentChain?.chainId &&
+      isWalletFamily(selectedNetworks[0])
+    ) {
       updateCurrentNetwork([selectedNetworks[0]])
     }
-  }, [selectedNetworks, currentChain, updateCurrentNetwork])
+  }, [selectedNetworks, currentChain, updateCurrentNetwork, isWalletFamily])
 
   return (
-    <Controller
-      name={name}
-      control={control}
-      defaultValue={[]}
-      render={({ field }) => (
-        <NetworkMultiSelectorInput
-          value={field.value || []}
-          name={name}
-          onNetworkChange={updateCurrentNetwork}
-          isOptionDisabled={isOptionDisabled}
-          error={!!errors.networks}
-          helperText={errors.networks ? 'Select at least one network' : ''}
-        />
-      )}
-      rules={{ required: true }}
-    />
+    <>
+      <Controller
+        name={name}
+        control={control}
+        defaultValue={[]}
+        render={({ field }) => (
+          <NetworkMultiSelectorInput
+            value={field.value || []}
+            name={name}
+            onNetworkChange={updateCurrentNetwork}
+            isOptionDisabled={isOptionDisabled}
+            getOptionNote={getOptionNote}
+            placeholder="Type to search..."
+            error={!!errors.networks}
+            helperText={errors.networks ? 'Select at least one network' : ''}
+          />
+        )}
+        rules={{ required: true }}
+      />
+    </>
   )
 }
 

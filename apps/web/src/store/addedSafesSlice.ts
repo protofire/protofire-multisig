@@ -40,6 +40,19 @@ export const addedSafesSlice = createSlice({
         threshold,
       }
     },
+    // Upserts a single imported Safe without touching any other chain/address already in the store.
+    upsertAddedSafe: (
+      state,
+      { payload }: PayloadAction<{ chainId: string; address: string; safe: AddedSafesOnChain[string] }>,
+    ) => {
+      const { chainId, address, safe } = payload
+
+      state[chainId] ??= {}
+      state[chainId][address] = {
+        ...(state[chainId][address] ?? {}),
+        ...safe,
+      }
+    },
     removeSafe: (state, { payload }: PayloadAction<{ chainId: string; address: string }>) => {
       const { chainId, address } = payload
 
@@ -66,7 +79,7 @@ export const addedSafesSlice = createSlice({
   },
 })
 
-export const { addOrUpdateSafe, removeSafe, pinSafe, unpinSafe } = addedSafesSlice.actions
+export const { addOrUpdateSafe, upsertAddedSafe, removeSafe, pinSafe, unpinSafe } = addedSafesSlice.actions
 
 export const selectAllAddedSafes = (state: RootState): AddedSafesState => {
   return state[addedSafesSlice.name]

@@ -1,22 +1,8 @@
 import ChainIndicator from '@/components/common/ChainIndicator'
-import Track from '@/components/common/Track'
 import { useDarkMode } from '@/hooks/useDarkMode'
 import { useTheme } from '@mui/material/styles'
 import Link from 'next/link'
-import {
-  Box,
-  ButtonBase,
-  CircularProgress,
-  Collapse,
-  Divider,
-  MenuItem,
-  Select,
-  Skeleton,
-  Stack,
-  Tooltip,
-  Typography,
-} from '@mui/material'
-import partition from 'lodash/partition'
+import { MenuItem, Select, Skeleton } from '@mui/material'
 import ExpandMoreIcon from '@mui/icons-material/KeyboardArrowDownRounded'
 import useChains, { useCurrentChain } from '@/hooks/useChains'
 import type { NextRouter } from 'next/router'
@@ -28,13 +14,19 @@ import { useAllSafesGrouped } from '@/hooks/safes'
 import useSafeAddress from '@/hooks/useSafeAddress'
 import { sameAddress } from '@safe-global/utils/utils/addresses'
 import uniq from 'lodash/uniq'
-import { useCompatibleNetworks } from '@safe-global/utils/features/multichain/hooks/useCompatibleNetworks'
-import { useSafeCreationData, CreateSafeOnSpecificChain, hasMultiChainAddNetworkFeature } from '@/features/multichain'
+import { hasMultiChainAddNetworkFeature } from '@/features/multichain'
 import { type Chain } from '@safe-global/store/gateway/AUTO_GENERATED/chains'
-import PlusIcon from '@/public/images/common/plus.svg'
-import useAddressBook from '@/hooks/useAddressBook'
 import useChainId from '@/hooks/useChainId'
-import { InfoOutlined } from '@mui/icons-material'
+import AddableNetworksSection from './AddableNetworksSection'
+import NetworkMenuSearch from './NetworkMenuSearch'
+import NetworkSectionHeader from './NetworkSectionHeader'
+import NoNetworksFound from './NoNetworksFound'
+import NewNetworkChip from './NewNetworkChip'
+import { renderNetworkGroups } from './renderNetworkGroups'
+import { useAddableNetworks } from './useAddableNetworks'
+import { useNetworkSearch } from './useNetworkSearch'
+import { getGroupedFilteredChains } from './utils'
+
 export const getNetworkLink = (
   router: NextRouter,
   safeAddress: string,
@@ -72,243 +64,6 @@ export const getNetworkLink = (
   return route
 }
 
-const UndeployedNetworkMenuItem = ({
-  chain,
-  isSelected = false,
-  onSelect,
-}: {
-  chain: Chain & { available: boolean }
-  isSelected?: boolean
-  onSelect: (chain: Chain) => void
-}) => {
-  const isDisabled = !chain.available
-
-  return (
-    <Track {...OVERVIEW_EVENTS.ADD_NEW_NETWORK} label={OVERVIEW_LABELS.top_bar}>
-      <Tooltip data-testid="add-network-tooltip" title="Add network" arrow placement="left">
-        <MenuItem
-          value={chain.chainId}
-          sx={{ '&:hover': { backgroundColor: 'inherit' } }}
-          onClick={() => onSelect(chain)}
-          disabled={isDisabled}
-        >
-          <Box className={css.item}>
-            <ChainIndicator responsive={isSelected} chainId={chain.chainId} inline />
-            {isDisabled ? (
-              <Typography variant="caption" component="span" className={css.comingSoon}>
-                Not available
-              </Typography>
-            ) : (
-              <PlusIcon className={css.plusIcon} />
-            )}
-          </Box>
-        </MenuItem>
-      </Tooltip>
-    </Track>
-  )
-}
-
-const NetworkSkeleton = () => {
-  return (
-    <Stack
-      direction="row"
-      spacing={1}
-      sx={{
-        alignItems: 'center',
-        p: '4px 0px',
-      }}
-    >
-      <Skeleton variant="circular" width="24px" height="24px" />
-      <Skeleton variant="rounded" sx={{ flexGrow: 1 }} />
-    </Stack>
-  )
-}
-
-const TestnetDivider = () => {
-  return (
-    <Divider sx={{ m: '0px !important', '& .MuiDivider-wrapper': { p: '0px 16px' } }}>
-      <Typography
-        variant="overline"
-        sx={{
-          color: 'border.main',
-        }}
-      >
-        Testnets
-      </Typography>
-    </Divider>
-  )
-}
-
-const UndeployedNetworks = ({
-  deployedChains,
-  chains,
-  safeAddress,
-  closeNetworkSelect,
-}: {
-  deployedChains: string[]
-  chains: Chain[]
-  safeAddress: string
-  closeNetworkSelect: () => void
-}) => {
-  const [open, setOpen] = useState(false)
-  const [replayOnChain, setReplayOnChain] = useState<Chain>()
-  const addressBook = useAddressBook()
-  const safeName = addressBook[safeAddress]
-  const { configs } = useChains()
-
-  const deployedChainInfos = useMemo(
-    () => chains.filter((chain) => deployedChains.includes(chain.chainId)),
-    [chains, deployedChains],
-  )
-  const safeCreationResult = useSafeCreationData(safeAddress, deployedChainInfos)
-  const [safeCreationData, safeCreationDataError, safeCreationLoading] = safeCreationResult
-
-  const allCompatibleChains = useCompatibleNetworks(safeCreationData, configs)
-  const isUnsupportedSafeCreationVersion = Boolean(!allCompatibleChains?.length)
-
-  const availableNetworks = useMemo(
-    () =>
-      allCompatibleChains?.filter(
-        (config) => !deployedChains.includes(config.chainId) && hasMultiChainAddNetworkFeature(config),
-      ) || [],
-    [allCompatibleChains, deployedChains],
-  )
-
-  const [testNets, prodNets] = useMemo(
-    () => partition(availableNetworks, (config) => config.isTestnet),
-    [availableNetworks],
-  )
-
-  const noAvailableNetworks = useMemo(() => availableNetworks.every((config) => !config.available), [availableNetworks])
-
-  const onSelect = (chain: Chain) => {
-    setReplayOnChain(chain)
-  }
-
-  if (safeCreationLoading) {
-    return (
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          my: 1,
-        }}
-      >
-        <CircularProgress size={18} />
-      </Box>
-    )
-  }
-
-  const errorMessage =
-    safeCreationDataError || (safeCreationData && noAvailableNetworks) ? (
-      <Stack
-        direction="row"
-        spacing={1}
-        sx={{
-          alignItems: 'center',
-        }}
-      >
-        {safeCreationDataError?.message && (
-          <Tooltip title={safeCreationDataError?.message}>
-            <InfoOutlined color="info" fontSize="medium" />
-          </Tooltip>
-        )}
-        <Typography>Adding another network is not possible for this Safe. </Typography>
-      </Stack>
-    ) : isUnsupportedSafeCreationVersion ? (
-      'This account was created from an outdated mastercopy. Adding another network is not possible.'
-    ) : (
-      ''
-    )
-
-  if (errorMessage) {
-    return (
-      <Box
-        sx={{
-          px: 2,
-          py: 1,
-        }}
-      >
-        <Typography
-          sx={{
-            color: 'text.secondary',
-            fontSize: '14px',
-            maxWidth: 300,
-          }}
-        >
-          {errorMessage}
-        </Typography>
-      </Box>
-    )
-  }
-
-  const onFormClose = () => {
-    setReplayOnChain(undefined)
-    closeNetworkSelect()
-  }
-
-  const onShowAllNetworks = () => {
-    !open && trackEvent(OVERVIEW_EVENTS.SHOW_ALL_NETWORKS)
-    setOpen((prev) => !prev)
-  }
-
-  return (
-    <>
-      <ButtonBase className={css.listSubHeader} onClick={onShowAllNetworks} tabIndex={-1}>
-        <Stack
-          direction="row"
-          spacing={1}
-          sx={{
-            alignItems: 'center',
-          }}
-        >
-          <div data-testid="show-all-networks">Show all networks</div>
-
-          <ExpandMoreIcon
-            fontSize="small"
-            sx={{
-              transform: open ? 'rotate(180deg)' : undefined,
-            }}
-          />
-        </Stack>
-      </ButtonBase>
-      <Collapse in={open} timeout="auto" unmountOnExit>
-        {!safeCreationData ? (
-          <Box
-            sx={{
-              p: '0px 16px',
-            }}
-          >
-            <NetworkSkeleton />
-            <NetworkSkeleton />
-          </Box>
-        ) : (
-          <>
-            {prodNets.map((chain) => (
-              <UndeployedNetworkMenuItem chain={chain} onSelect={onSelect} key={chain.chainId} />
-            ))}
-            {testNets.length > 0 && <TestnetDivider />}
-            {testNets.map((chain) => (
-              <UndeployedNetworkMenuItem chain={chain} onSelect={onSelect} key={chain.chainId} />
-            ))}
-          </>
-        )}
-      </Collapse>
-      {replayOnChain && safeCreationData && (
-        <CreateSafeOnSpecificChain
-          chain={replayOnChain}
-          safeAddress={safeAddress}
-          open
-          onClose={onFormClose}
-          currentName={safeName ?? ''}
-          safeCreationResult={safeCreationResult}
-        />
-      )}
-    </>
-  )
-}
-
 const NetworkSelector = ({
   onChainSelect,
   offerSafeCreation = false,
@@ -329,6 +84,7 @@ const NetworkSelector = ({
   const isSafeOpened = safeAddress !== ''
 
   const addNetworkFeatureEnabled = hasMultiChainAddNetworkFeature(currentChain)
+  const showAddableNetworks = offerSafeCreation && isSafeOpened && addNetworkFeatureEnabled
 
   const safesGrouped = useAllSafesGrouped()
   const availableChainIds = useMemo(() => {
@@ -344,30 +100,38 @@ const NetworkSelector = ({
     ])
   }, [chainId, configs, isSafeOpened, safeAddress, safesGrouped.allMultiChainSafes])
 
-  const [testNets, prodNets] = useMemo(
-    () =>
-      partition(
-        configs.filter((config) => availableChainIds.includes(config.chainId)),
-        (config) => config.isTestnet,
-      ),
+  const availableChains = useMemo(
+    () => configs.filter((config) => availableChainIds.includes(config.chainId)),
     [availableChainIds, configs],
   )
 
-  const renderMenuItem = useCallback(
-    (chainId: string, isSelected: boolean) => {
-      const chain = configs.find((chain) => chain.chainId === chainId)
-      if (!chain) return null
+  const { searchQuery, setSearchQuery, resetSearch, isSearching, groups, isSelectedChainVisible } =
+    useNetworkSearch(availableChains)
 
+  const addableNetworks = useAddableNetworks(safeAddress, availableChainIds, {
+    enabled: showAddableNetworks && open,
+  })
+
+  const addableSearchResults = useMemo(
+    () => getGroupedFilteredChains(addableNetworks.availableNetworks, searchQuery),
+    [addableNetworks.availableNetworks, searchQuery],
+  )
+
+  const renderMenuItem = useCallback(
+    (chain: Chain, isSelected: boolean) => {
       const onSwitchNetwork = () => {
-        trackEvent({ ...OVERVIEW_EVENTS.SWITCH_NETWORK, label: chainId })
+        trackEvent({ ...OVERVIEW_EVENTS.SWITCH_NETWORK, label: chain.chainId })
       }
 
       return (
         <MenuItem
           data-testid="network-selector-item"
-          key={chainId}
-          value={chainId}
-          sx={{ '&:hover': { backgroundColor: isSelected ? 'transparent' : 'inherit' } }}
+          key={chain.chainId}
+          value={chain.chainId}
+          sx={{
+            ...(!isSelected && { overflow: 'hidden' }),
+            '&:hover': { backgroundColor: isSelected ? 'transparent' : 'inherit' },
+          }}
           disableRipple={isSelected}
           onClick={onSwitchNetwork}
         >
@@ -377,15 +141,18 @@ const NetworkSelector = ({
               chainId={chain.chainId}
               inline
               onlyLogo={compactButton && isSelected}
+              className={css.chainIndicator}
             />
+            {!isSelected && <NewNetworkChip chain={chain} />}
           </Link>
         </MenuItem>
       )
     },
-    [configs, onChainSelect, router, safeAddress, compactButton],
+    [onChainSelect, router, safeAddress, compactButton],
   )
 
   const handleClose = () => {
+    resetSearch()
     setOpen(false)
   }
 
@@ -393,6 +160,9 @@ const NetworkSelector = ({
     setOpen(true)
     offerSafeCreation && trackEvent({ ...OVERVIEW_EVENTS.EXPAND_MULTI_SAFE, label: OVERVIEW_LABELS.top_bar })
   }
+
+  const showSearchSectionHeaders = isSearching && showAddableNetworks
+  const hasAnySearchResults = groups.hasResults || (showAddableNetworks && addableSearchResults.hasResults)
 
   return configs.length ? (
     <Select
@@ -404,12 +174,27 @@ const NetworkSelector = ({
       className={css.select}
       variant="standard"
       IconComponent={ExpandMoreIcon}
-      renderValue={(value) => renderMenuItem(value, true)}
+      renderValue={(value) => {
+        const chain = configs.find((config) => config.chainId === value)
+        return chain ? renderMenuItem(chain, true) : null
+      }}
       MenuProps={{
         transitionDuration: 0,
+        autoFocus: false,
+        marginThreshold: 16,
+        anchorOrigin: {
+          vertical: 'bottom',
+          horizontal: 'right',
+        },
+        transformOrigin: {
+          vertical: 'top',
+          horizontal: 'right',
+        },
         sx: {
           '& .MuiPaper-root': {
             overflow: 'auto',
+            width: 260,
+            maxWidth: 'calc(100vw - 32px) !important',
             minWidth: '260px !important',
           },
           ...(isDarkMode
@@ -439,18 +224,21 @@ const NetworkSelector = ({
         }),
       }}
     >
-      {prodNets.map((chain) => renderMenuItem(chain.chainId, false))}
+      <NetworkMenuSearch value={searchQuery} onChange={setSearchQuery} />
+      {isSearching && !isSelectedChainVisible(chainId) && <MenuItem value={chainId} sx={{ display: 'none' }} />}
+      {isSearching && !hasAnySearchResults && <NoNetworksFound />}
+      {showSearchSectionHeaders && groups.hasResults && <NetworkSectionHeader label="Deployed on" />}
+      {renderNetworkGroups(groups, (chain) => renderMenuItem(chain, false))}
 
-      {testNets.length > 0 && <TestnetDivider />}
-
-      {testNets.map((chain) => renderMenuItem(chain.chainId, false))}
-
-      {offerSafeCreation && isSafeOpened && addNetworkFeatureEnabled && (
-        <UndeployedNetworks
-          chains={configs}
-          deployedChains={availableChainIds}
+      {showAddableNetworks && (
+        <AddableNetworksSection
+          isSearching={isSearching}
+          groupedNetworks={addableSearchResults}
           safeAddress={safeAddress}
           closeNetworkSelect={handleClose}
+          safeCreationResult={addableNetworks.safeCreationResult}
+          isUnsupportedSafeCreationVersion={addableNetworks.isUnsupportedSafeCreationVersion}
+          noAvailableNetworks={addableNetworks.noAvailableNetworks}
         />
       )}
     </Select>

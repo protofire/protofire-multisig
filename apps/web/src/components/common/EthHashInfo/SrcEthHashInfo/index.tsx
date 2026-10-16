@@ -13,6 +13,7 @@ import { shortenAddress } from '@safe-global/utils/utils/formatters'
 import ImageFallback from '../../ImageFallback'
 import css from './styles.module.css'
 import { ContactSource } from '@/hooks/useAllAddressBooks'
+import useTronAddress from '@/hooks/useTronAddress'
 
 export type EthHashInfoProps = {
   address: string
@@ -41,6 +42,7 @@ const stopPropagation = (e: SyntheticEvent) => e.stopPropagation()
 
 const SrcEthHashInfo = ({
   address,
+  chainId,
   customAvatar,
   prefix = '',
   copyPrefix = true,
@@ -66,6 +68,9 @@ const SrcEthHashInfo = ({
   const identicon = <Identicon address={address} size={avatarSize} />
   const shouldCopyPrefix = shouldPrefix && copyPrefix
 
+  // Convert 0x address to Tron base58 for display on Tron chains
+  const { displayAddress, copyAddress: tronCopyAddress, isTron } = useTronAddress(address, chainId)
+
   const accountStylesWithBadge = badgeTooltip
     ? {
         backgroundColor: 'var(--color-background-main)',
@@ -75,21 +80,24 @@ const SrcEthHashInfo = ({
       }
     : undefined
 
+  const shownAddress = isTron ? displayAddress : address
+  const copyAddr = isTron ? tronCopyAddress : address
+
   const highlightedAddress = highlight4bytes ? (
     <>
-      {address.slice(0, 2)}
-      <b>{address.slice(2, 6)}</b>
-      {address.slice(6, -4)}
-      <b>{address.slice(-4)}</b>
+      {shownAddress.slice(0, 2)}
+      <b>{shownAddress.slice(2, 6)}</b>
+      {shownAddress.slice(6, -4)}
+      <b>{shownAddress.slice(-4)}</b>
     </>
   ) : (
-    address
+    shownAddress
   )
 
   const addressElement = (
     <>
-      {showPrefix && shouldPrefix && prefix && <b>{prefix}:</b>}
-      <span>{shortAddress || isMobile ? shortenAddress(address) : highlightedAddress}</span>
+      {showPrefix && shouldPrefix && prefix && !isTron && <b>{prefix}:</b>}
+      <span>{shortAddress || isMobile ? shortenAddress(shownAddress) : highlightedAddress}</span>
     </>
   )
 
@@ -149,7 +157,12 @@ const SrcEthHashInfo = ({
           {(!onlyName || !name) && (
             <Box fontWeight="inherit" fontSize="inherit" overflow="hidden" textOverflow="ellipsis">
               {copyAddress ? (
-                <CopyAddressButton prefix={prefix} address={address} copyPrefix={shouldCopyPrefix} trusted={trusted}>
+                <CopyAddressButton
+                  prefix={prefix}
+                  address={copyAddr}
+                  copyPrefix={shouldCopyPrefix && !isTron}
+                  trusted={trusted}
+                >
                   {addressElement}
                 </CopyAddressButton>
               ) : (
@@ -159,7 +172,12 @@ const SrcEthHashInfo = ({
           )}
 
           {showCopyButton && (
-            <CopyAddressButton prefix={prefix} address={address} copyPrefix={shouldCopyPrefix} trusted={trusted} />
+            <CopyAddressButton
+              prefix={prefix}
+              address={copyAddr}
+              copyPrefix={shouldCopyPrefix && !isTron}
+              trusted={trusted}
+            />
           )}
 
           {hasExplorer && ExplorerButtonProps && (

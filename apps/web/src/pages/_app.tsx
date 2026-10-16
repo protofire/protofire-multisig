@@ -39,7 +39,7 @@ import useChangedValue from '@/hooks/useChangedValue'
 import { TxModalProvider } from '@/components/tx-flow'
 import { useNotificationTracking } from '@/components/settings/PushNotifications/hooks/useNotificationTracking'
 import WalletProvider from '@/components/common/WalletProvider'
-import { CounterfactualFeature } from '@/features/counterfactual'
+import { CounterfactualHooksFeature } from '@/features/counterfactual'
 import { RecoveryFeature } from '@/features/recovery'
 import { SpendingLimitsFeature } from '@/features/spending-limits'
 import { useLoadFeature } from '@/features/__core__'
@@ -59,7 +59,7 @@ const RecoveryLoader = () => {
  * through handle.ts rather than scattered next/dynamic imports.
  */
 const CounterfactualHooksLoader = () => {
-  const { CounterfactualHooks } = useLoadFeature(CounterfactualFeature)
+  const { CounterfactualHooks } = useLoadFeature(CounterfactualHooksFeature)
   return <CounterfactualHooks />
 }
 

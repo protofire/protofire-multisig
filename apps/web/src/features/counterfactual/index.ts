@@ -48,11 +48,29 @@
  *   import { isPredictedSafeProps } from '@/features/counterfactual/services'
  */
 
-import { createFeatureHandle } from '@/features/__core__'
+import { createFeatureHandle, type FeatureHandle } from '@/features/__core__'
+import { useHasFeature } from '@/hooks/useChains'
+import { FEATURES } from '@safe-global/utils/utils/chains'
 import type { CounterfactualImplementation } from './contract'
 
 // Feature handle - uses auto-derivation (counterfactual → FEATURES.COUNTERFACTUAL)
 export const CounterfactualFeature = createFeatureHandle<CounterfactualImplementation>('counterfactual')
+
+/**
+ * Handle for the global CounterfactualHooks only (mounted in _app). Those hooks also drive
+ * direct deployments (PROCESSING → pending status → checkSafeActivation), so Tron — which has
+ * no COUNTERFACTUAL feature (CREATE2 differs) — needs them too. Every other consumer keeps
+ * CounterfactualFeature, so pay-later UI stays off on Tron.
+ */
+export const CounterfactualHooksFeature: FeatureHandle<CounterfactualImplementation> = {
+  ...CounterfactualFeature,
+  useIsEnabled: () => {
+    const isCounterfactual = useHasFeature(FEATURES.COUNTERFACTUAL)
+    const isTron = useHasFeature(FEATURES.TRON)
+    if (isCounterfactual || isTron) return true
+    return isCounterfactual === undefined && isTron === undefined ? undefined : false
+  },
+}
 
 // Contract type (for type-safe registry lookup)
 export type { CounterfactualContract, PayNowPayLaterProps, CounterfactualFormProps, FirstTxFlowProps } from './contract'

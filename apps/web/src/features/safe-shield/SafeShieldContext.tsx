@@ -10,6 +10,8 @@ import {
 } from 'react'
 import { useCounterpartyAnalysis, useRecipientAnalysis, useThreatAnalysis } from './hooks'
 import useUntrustedSafeAnalysis from './hooks/useUntrustedSafeAnalysis'
+import { useHasFeature } from '@/hooks/useChains'
+import { FEATURES } from '@safe-global/utils/utils/chains'
 import type { AsyncResult } from '@safe-global/utils/hooks/useAsync'
 import type { SafeTransaction } from '@safe-global/types-kit'
 import { SafeTxContext } from '@/components/tx-flow/SafeTxProvider'
@@ -22,6 +24,7 @@ import {
 } from '@safe-global/utils/features/safe-shield/types'
 import { getPrimaryResult, SEVERITY_PRIORITY } from '@safe-global/utils/features/safe-shield/utils'
 import { useAuthToken } from '@/features/hypernative'
+import { ClearSigningLookupProvider } from '@/features/erc7730'
 
 type SafeShieldContextType = {
   setRecipientAddresses: Dispatch<SetStateAction<string[] | undefined>>
@@ -58,6 +61,10 @@ export const SafeShieldProvider = ({ children }: { children: ReactNode }) => {
   // Safe-level analysis: untrusted Safe check
   const { safeAnalysis, addToTrustedList } = useUntrustedSafeAnalysis()
 
+  // Safe Shield is unavailable on Tron. Keep EVM risk confirmation fail-closed while
+  // chain features are loading or unavailable.
+  const isTron = useHasFeature(FEATURES.TRON) === true
+
   const [isRiskConfirmed, setIsRiskConfirmed] = useState(false)
 
   const { needsRiskConfirmation, primaryThreatSeverity } = useMemo(() => {
@@ -65,14 +72,14 @@ export const SafeShieldProvider = ({ children }: { children: ReactNode }) => {
 
     const severity = primaryThreatResult?.severity
     const hasCriticalThreat = !!severity && SEVERITY_PRIORITY[severity] <= SEVERITY_PRIORITY[Severity.CRITICAL]
-    // Include Safe-level analysis in risk confirmation
-    const needsRiskConfirmation = hasCriticalThreat || safeAnalysis?.severity === Severity.CRITICAL
+    // Include Safe-level analysis in risk confirmation; Tron has no Safe Shield UI.
+    const needsRiskConfirmation = !isTron && (hasCriticalThreat || safeAnalysis?.severity === Severity.CRITICAL)
 
     return {
       needsRiskConfirmation,
       primaryThreatSeverity: severity,
     }
-  }, [threatAnalysisResult, safeAnalysis])
+  }, [threatAnalysisResult, safeAnalysis, isTron])
 
   useEffect(() => {
     setIsRiskConfirmed(false)
@@ -94,7 +101,7 @@ export const SafeShieldProvider = ({ children }: { children: ReactNode }) => {
         addToTrustedList,
       }}
     >
-      {children}
+      <ClearSigningLookupProvider>{children}</ClearSigningLookupProvider>
     </SafeShieldContext.Provider>
   )
 }

@@ -41,21 +41,32 @@ export class SimpleTxWatcher {
       let replacedBlockCount = 0
 
       const checkTx = async () => {
-        // try to retrieve the receipt
-        const testReceipt = await provider.getTransactionReceipt(txHash)
-        if (testReceipt !== null) {
-          unsubscribe()
-          resolve(testReceipt)
-        } else {
-          // Check if tx was replaced
-          const currentNonce = await provider.getTransactionCount(walletAddress)
-          if (currentNonce > walletNonce) {
-            if (replacedBlockCount >= SimpleTxWatcher.REPLACED_BLOCK_THRESHOLD) {
-              unsubscribe()
-              reject(`Transaction not found. It might have been replaced or cancelled in the connected wallet.`)
+        try {
+          // try to retrieve the receipt
+          const testReceipt = await provider.getTransactionReceipt(txHash)
+          if (testReceipt !== null) {
+            unsubscribe()
+            resolve(testReceipt)
+          } else {
+            // Check if tx was replaced
+            try {
+              const currentNonce = await provider.getTransactionCount(walletAddress)
+              if (currentNonce > walletNonce) {
+                if (replacedBlockCount >= SimpleTxWatcher.REPLACED_BLOCK_THRESHOLD) {
+                  unsubscribe()
+                  reject(`Transaction not found. It might have been replaced or cancelled in the connected wallet.`)
+                }
+                replacedBlockCount++
+              }
+            } catch (e) {
+              // Tron /jsonrpc does not support eth_getTransactionCount.
+              // Skip nonce-based replacement detection — rely on receipt polling only.
+              console.warn('SimpleTxWatcher: getTransactionCount failed, skipping replacement detection', e)
             }
-            replacedBlockCount++
           }
+        } catch (e) {
+          // getTransactionReceipt may also fail on some networks; keep polling.
+          console.warn('SimpleTxWatcher: getTransactionReceipt failed, retrying', e)
         }
       }
 

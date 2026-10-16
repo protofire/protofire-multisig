@@ -6,7 +6,7 @@ import { isAddress } from 'ethers'
 import type { ReactElement } from 'react'
 
 import InfoIcon from '@/public/images/notifications/info.svg'
-import { isSmartContractWallet } from '@/utils/wallets'
+import { getSmartContractWalletStatus, type SmartContractWalletStatus } from '@/utils/wallets'
 import useDebounce from '@safe-global/utils/hooks/useDebounce'
 import useSafeInfo from '@/hooks/useSafeInfo'
 import { UpsertRecoveryFlowFields } from '.'
@@ -30,23 +30,28 @@ export function RecovererWarning(): ReactElement | null {
     }
 
     ;(async () => {
-      let isSmartContract = false
+      let status: SmartContractWalletStatus
 
       try {
-        isSmartContract = await isSmartContractWallet(safe.chainId, debouncedRecoverer)
+        status = await getSmartContractWalletStatus(safe.chainId, debouncedRecoverer)
       } catch {
         return
       }
 
-      // EOA
-      if (!isSmartContract) {
+      // Confirmed EOA
+      if (status === 'eoa') {
         return
       }
 
+      // 'contract' or 'unknown' — fail closed and don't assume it can sign transactions
       try {
         await triggerGetSafe({ chainId: safe.chainId, safeAddress: debouncedRecoverer }).unwrap()
       } catch {
-        setWarning('The given address is a smart contract. Please ensure that it can sign transactions.')
+        setWarning(
+          status === 'unknown'
+            ? 'Could not verify whether the given address is a smart contract. Please ensure that it can sign transactions.'
+            : 'The given address is a smart contract. Please ensure that it can sign transactions.',
+        )
       }
     })()
   }, [debouncedRecoverer, safe.chainId, safeAddress, triggerGetSafe])

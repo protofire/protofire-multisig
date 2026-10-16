@@ -4,17 +4,27 @@ import type { NextPage } from 'next'
 import Head from 'next/head'
 
 import { useAppDispatch, useAppSelector } from '@/store'
-import { selectSettings, setCopyShortName, setDarkMode } from '@/store/settingsSlice'
+import {
+  selectSettings,
+  setCopyShortName,
+  setDarkMode,
+  selectTronAddressFormat,
+  setTronAddressFormat,
+} from '@/store/settingsSlice'
 import SettingsHeader from '@/components/settings/SettingsHeader'
 import { trackEvent, SETTINGS_EVENTS } from '@/services/analytics'
 import { useDarkMode } from '@/hooks/useDarkMode'
 import ExternalLink from '@/components/common/ExternalLink'
 import { BRAND_NAME } from '@/config/constants'
+import { useHasFeature } from '@/hooks/useChains'
+import { FEATURES } from '@safe-global/utils/utils/chains'
 
 const Appearance: NextPage = () => {
   const dispatch = useAppDispatch()
   const settings = useAppSelector(selectSettings)
   const isDarkMode = useDarkMode()
+  const isTron = useHasFeature(FEATURES.TRON) === true
+  const tronAddressFormat = useAppSelector(selectTronAddressFormat)
 
   const handleToggle = (
     action: typeof setCopyShortName | typeof setDarkMode,
@@ -106,6 +116,40 @@ const Appearance: NextPage = () => {
               />
             </Grid>
           </Grid>
+
+          {isTron && (
+            <Grid
+              container
+              spacing={3}
+              sx={{
+                alignItems: 'center',
+                marginTop: 2,
+              }}
+            >
+              <Grid item lg={4} xs={12}>
+                <Typography
+                  variant="h4"
+                  sx={{
+                    fontWeight: 'bold',
+                  }}
+                >
+                  Address format
+                </Typography>
+              </Grid>
+
+              <Grid item xs>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={tronAddressFormat === 'base58'}
+                      onChange={(_, checked) => dispatch(setTronAddressFormat(checked ? 'base58' : 'hex'))}
+                    />
+                  }
+                  label="Display addresses in Tron format (T...)"
+                />
+              </Grid>
+            </Grid>
+          )}
         </Paper>
       </main>
     </>

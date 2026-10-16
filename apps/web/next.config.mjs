@@ -83,6 +83,10 @@ const nextConfig = {
   output: 'export', // static site export
 
   transpilePackages: ['@safe-global/store'],
+  // `unoptimized` disables the /_next/image endpoint entirely, which is what keeps us out of
+  // reach of image-optimizer CVEs such as GHSA-2xp9-vwfh-vxw4 (AVIF RCE via sharp/libheif).
+  // Enabling optimization would require a Next.js server runtime we do not deploy anyway.
+  // Guarded by src/tests/next-config-invariants.test.ts — update that test if this changes.
   images: {
     unoptimized: true,
   },

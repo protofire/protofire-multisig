@@ -10,7 +10,7 @@ interface ThresholdProps {
   owners: number | string
 }
 const Threshold = ({ threshold, owners }: ThresholdProps): ReactElement => (
-  <Box className={css.threshold} sx={{ color: ({ palette }) => palette.static.main }}>
+  <Box className={css.threshold}>
     {threshold}/{owners}
   </Box>
 )
@@ -37,6 +37,7 @@ export const ChainIcon = ({ chainId }: { chainId: string }) => {
       width={40}
       height={40}
       loading="lazy"
+      style={{ borderRadius: '50%' }}
     />
   )
 }

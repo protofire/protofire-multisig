@@ -79,7 +79,7 @@ const ReplaySafeDialog = ({
       }
 
       // 1. Double check that the creation Data will lead to the correct address
-      const predictedAddress = await predictAddressBasedOnReplayData(safeCreationData, provider)
+      const predictedAddress = await predictAddressBasedOnReplayData(safeCreationData, provider, selectedChain.chainId)
       if (!sameAddress(safeAddress, predictedAddress)) {
         setCreationError(new Error('The replayed Safe leads to an unexpected address'))
         return

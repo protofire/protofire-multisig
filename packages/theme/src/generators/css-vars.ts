@@ -9,11 +9,33 @@ import darkPalette from '../palettes/dark'
 import { spacingWeb } from '../tokens'
 
 /**
+ * Optional per-mode color group overrides (e.g. a per-chain or license palette),
+ * layered on top of the default web palette before it's flattened to CSS vars.
+ */
+export type PaletteOverride = Partial<Record<keyof ColorPalette, Record<string, string>>>
+
+/**
  * Convert camelCase to kebab-case.
  * Example: 'textSecondary' => 'text-secondary'
  */
 function toKebabCase(str: string): string {
   return str.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()
+}
+
+/**
+ * Shallow-merge an override on top of a base palette, one color group at a time.
+ * Groups not present in the override are left untouched.
+ */
+function applyPaletteOverride(base: ColorPalette, override?: PaletteOverride): ColorPalette {
+  if (!override) return base
+
+  const merged: Record<string, Record<string, string>> = { ...base }
+  for (const [key, group] of Object.entries(override)) {
+    if (group) {
+      merged[key] = { ...merged[key], ...group }
+    }
+  }
+  return merged as unknown as ColorPalette
 }
 
 /**
@@ -56,69 +78,79 @@ function generateSpacingCSS(indent = '  '): string[] {
 /**
  * Generate complete CSS variables file content.
  * Includes light mode (default), dark mode override, and media query fallback.
+ *
+ * `overrides` layers a per-chain or license palette (e.g. the one applied to the
+ * MUI theme in apps/web/src/components/theme/safeTheme.ts) on top of the default
+ * web palette, so CSS-module-styled components stay in sync with the MUI theme.
  */
-export function generateCSSVars(): string {
+export function generateCSSVars(overrides?: { light?: PaletteOverride; dark?: PaletteOverride }): string {
   // For web, restore original colors that differ from mobile's unified palette
-  const webLightPalette: ColorPalette = {
-    ...lightPalette,
-    background: {
-      ...lightPalette.background,
-      paper: '#FFFFFF',
-      default: '#F4F4F4',
+  const webLightPalette: ColorPalette = applyPaletteOverride(
+    {
+      ...lightPalette,
+      background: {
+        ...lightPalette.background,
+        paper: '#FFFFFF',
+        default: '#F4F4F4',
+      },
+      error: {
+        dark: '#AC2C3B',
+        main: '#FF5F72',
+        light: '#FFB4BD',
+        background: '#FFE6EA',
+      },
+      success: {
+        dark: '#028D4C',
+        main: '#00B460',
+        light: '#D3F2E4',
+        background: '#EFFAF1',
+      },
+      info: {
+        dark: '#52BFDC',
+        main: '#5FDDFF',
+        light: '#D7F6FF',
+        background: '#EFFCFF',
+      },
+      warning: {
+        dark: '#C04C32',
+        main: '#FF8061',
+        light: '#FFBC9F',
+        background: '#FFF1E0',
+      },
     },
-    error: {
-      dark: '#AC2C3B',
-      main: '#FF5F72',
-      light: '#FFB4BD',
-      background: '#FFE6EA',
-    },
-    success: {
-      dark: '#028D4C',
-      main: '#00B460',
-      light: '#D3F2E4',
-      background: '#EFFAF1',
-    },
-    info: {
-      dark: '#52BFDC',
-      main: '#5FDDFF',
-      light: '#D7F6FF',
-      background: '#EFFCFF',
-    },
-    warning: {
-      dark: '#C04C32',
-      main: '#FF8061',
-      light: '#FFBC9F',
-      background: '#FFF1E0',
-    },
-  }
+    overrides?.light,
+  )
 
-  const webDarkPalette: ColorPalette = {
-    ...darkPalette,
-    error: {
-      dark: '#AC2C3B',
-      main: '#FF5F72',
-      light: '#FFB4BD',
-      background: '#2F2527',
+  const webDarkPalette: ColorPalette = applyPaletteOverride(
+    {
+      ...darkPalette,
+      error: {
+        dark: '#AC2C3B',
+        main: '#FF5F72',
+        light: '#FFB4BD',
+        background: '#2F2527',
+      },
+      success: {
+        dark: '#388E3C',
+        main: '#00B460',
+        light: '#81C784',
+        background: '#1F2920',
+      },
+      info: {
+        dark: '#52BFDC',
+        main: '#5FDDFF',
+        light: '#B7F0FF',
+        background: '#19252C',
+      },
+      warning: {
+        dark: '#C04C32',
+        main: '#FF8061',
+        light: '#FFBC9F',
+        background: '#2F2318',
+      },
     },
-    success: {
-      dark: '#388E3C',
-      main: '#00B460',
-      light: '#81C784',
-      background: '#1F2920',
-    },
-    info: {
-      dark: '#52BFDC',
-      main: '#5FDDFF',
-      light: '#B7F0FF',
-      background: '#19252C',
-    },
-    warning: {
-      dark: '#C04C32',
-      main: '#FF8061',
-      light: '#FFBC9F',
-      background: '#2F2318',
-    },
-  }
+    overrides?.dark,
+  )
 
   const lightVars = flattenPaletteToCSS(webLightPalette)
   const darkVars = flattenPaletteToCSS(webDarkPalette)

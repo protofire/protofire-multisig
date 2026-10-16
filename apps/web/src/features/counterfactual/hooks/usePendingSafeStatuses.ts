@@ -15,6 +15,7 @@ import { CREATE_SAFE_EVENTS, trackEvent, MixpanelEventParams } from '@/services/
 import { useAppDispatch, useAppSelector } from '@/store'
 import { useEffect, useRef } from 'react'
 import { isSmartContract } from '@/utils/wallets'
+import { isTronChain } from '@/utils/tron-chains'
 import { gtmSetSafeAddress } from '@/services/analytics/gtm'
 import { PendingSafeStatus } from '@safe-global/utils/features/counterfactual/store/types'
 import { PayMethod } from '@safe-global/utils/features/counterfactual/types'
@@ -78,6 +79,9 @@ const usePendingSafeStatus = (): void => {
   usePendingSafeMonitor()
 
   // Clear undeployed safe state if already deployed
+  // Also re-check when undeployedSafes changes (self-correcting for stuck states)
+  const isMarkedUndeployed = !!undeployedSafes[safe.chainId]?.[safeAddress]
+
   useEffect(() => {
     if (!provider || !safeAddress) return
 
@@ -94,7 +98,7 @@ const usePendingSafeStatus = (): void => {
     }
 
     checkDeploymentStatus()
-  }, [safe.chainId, dispatch, provider, safeAddress])
+  }, [safe.chainId, dispatch, provider, safeAddress, isMarkedUndeployed])
 
   // Subscribe to pending safe statuses
   useEffect(() => {
@@ -148,6 +152,13 @@ const usePendingSafeStatus = (): void => {
             trackEvent(CREATE_SAFE_EVENTS.ACTIVATED_SAFE)
           }
 
+          // The Safe is already deployed on-chain, so drop the undeployed record
+          // immediately instead of waiting for CGW indexing (which can lag on Tron).
+          // Otherwise the UI stays on "activating" and hides signing controls.
+          if (isTronChain(creationChainId)) {
+            dispatch(removeUndeployedSafe({ chainId: creationChainId, address: detail.safeAddress }))
+          }
+
           pollSafeInfo(creationChainId, detail.safeAddress).finally(() => {
             safeCreationDispatch(SafeCreationEvent.INDEXED, {
               groupKey: detail.groupKey,
@@ -186,7 +197,8 @@ const usePendingSafeStatus = (): void => {
               status,
               txHash: 'txHash' in detail ? detail.txHash : undefined,
               taskId: 'taskId' in detail ? detail.taskId : undefined,
-              startBlock: await provider?.getBlockNumber(),
+              // Unused by the Tron receipt polling, and a failed read must not lose the hash.
+              startBlock: isTronChain(creationChainId) ? undefined : await provider?.getBlockNumber(),
               submittedAt: Date.now(),
             },
           }),

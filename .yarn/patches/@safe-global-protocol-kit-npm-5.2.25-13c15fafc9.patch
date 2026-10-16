@@ -1,0 +1,100 @@
+diff --git a/dist/src/contracts/utils.js b/dist/src/contracts/utils.js
+index 3172ce68e4736b7ae6d4d778ef45e5a313e6466a..238524b19f2a1ad3c8f78f0b4b0c1d0018079f41 100644
+--- a/dist/src/contracts/utils.js
++++ b/dist/src/contracts/utils.js
+@@ -109,11 +109,18 @@ const memoizedGetSafeContract = (0, memoized_1.createMemoizedFunction)(({ safePr
+  * @throws when fetching an address which doesn't have a Safe deployed in it.
+  */
+ async function getSafeContractVersion(safeProvider, safeAddress) {
+-    return (await safeProvider.readContract({
++    // TRON_VERSION_OVERRIDE: use the compatible 1.4.1 SDK ABI for the Tron 1.5.0 fork
++    const TRON_CHAIN_IDS = new Set(['728126428', '2494104990']);
++    const _chainId = (await safeProvider.getChainId()).toString();
++    const _origVersion = await safeProvider.readContract({
+         address: safeAddress,
+         abi: (0, viem_1.parseAbi)(['function VERSION() view returns (string)']),
+         functionName: 'VERSION'
+-    }));
++    });
++    if (TRON_CHAIN_IDS.has(_chainId) && _origVersion === '1.5.0') {
++        return '1.4.1';
++    }
++    return _origVersion;
+ }
+ exports.getSafeContractVersion = getSafeContractVersion;
+ /**
+diff --git a/dist/src/utils/eip-3770/config.js b/dist/src/utils/eip-3770/config.js
+index 5a4c24f50b4852eeff2e606f9b9f6fc77f99d89c..3fc4d20997f3af34bd0cd4690a0f30aa3e90c3f1 100644
+--- a/dist/src/utils/eip-3770/config.js
++++ b/dist/src/utils/eip-3770/config.js
+@@ -541,7 +541,32 @@ exports.networks = [
+     { chainId: 37714555429n, shortName: 'xaitestnet' },
+     { chainId: 88153591557n, shortName: 'arb-blueberry' },
+     { chainId: 123420000220n, shortName: 'fluence-stage' },
+-    { chainId: 920637907288165n, shortName: 'kkrt-starknet-sepolia' }
++    { chainId: 920637907288165n, shortName: 'kkrt-starknet-sepolia' },
++    { chainId: 484n, shortName: 'camp' },
++    { chainId: 677n, shortName: 'bot' },
++    { chainId: 714n, shortName: 'eden' },
++    { chainId: 784n, shortName: 'ritual' },
++    { chainId: 904n, shortName: 'ault' },
++    { chainId: 1155n, shortName: 'intuition-mainnet' },
++    { chainId: 2288n, shortName: 'moca' },
++    { chainId: 3223n, shortName: 'xo-network' },
++    { chainId: 3946n, shortName: 'nexus' },
++    { chainId: 4114n, shortName: 'citrea-mainnet' },
++    { chainId: 4217n, shortName: 'tempo' },
++    { chainId: 4441n, shortName: 'liteforge' },
++    { chainId: 4663n, shortName: 'robinhood' },
++    { chainId: 5042n, shortName: 'arc' },
++    { chainId: 6497n, shortName: 'awaji' },
++    { chainId: 6498n, shortName: 'mizuhiki' },
++    { chainId: 10904n, shortName: 'ault-testnet' },
++    { chainId: 20310n, shortName: 'alpen3' },
++    { chainId: 29032n, shortName: 'alpen' },
++    { chainId: 69000n, shortName: 'anime' },
++    { chainId: 72957n, shortName: 'RLS' },
++    { chainId: 99999n, shortName: 'adi-testnet' },
++    { chainId: 127001n, shortName: 'grav' },
++  { chainId: 728126428n, shortName: 'trx' },
++  { chainId: 2494104990n, shortName: 'trx-shasta' },
+ ];
+ try {
+     if (process.env.TEST_NETWORK === 'hardhat') {
+diff --git a/dist/src/utils/signatures/utils.js b/dist/src/utils/signatures/utils.js
+index a3e8acce96f648f2f24d7ddc407e4b4e5ec945dd..2b2aee6dd2e8ca724914147c714baaa289a1e1c2 100644
+--- a/dist/src/utils/signatures/utils.js
++++ b/dist/src/utils/signatures/utils.js
+@@ -75,13 +75,22 @@ const adjustVInSignature = async (signingMethod, signature, safeTxHash, signerAd
+     return signature;
+ };
+ exports.adjustVInSignature = adjustVInSignature;
++// TRON_CHAIN_SIGNATURE: exception belongs to the provider, not the Ethereum validator.
++async function adjustVForTron(safeProvider, ...args) {
++    const signature = args[1];
++    if (/^0x[0-9a-f]{128}(3a|3b)$/i.test(signature) &&
++        ["728126428","2494104990"].includes((await safeProvider.getChainId()).toString())) {
++        return signature;
++    }
++    return (0, exports.adjustVInSignature)(...args);
++}
+ async function generateSignature(safeProvider, hash) {
+     const signerAddress = await safeProvider.getSignerAddress();
+     if (!signerAddress) {
+         throw new Error('SafeProvider must be initialized with a signer to use this method');
+     }
+     let signature = await safeProvider.signMessage(hash);
+-    signature = await (0, exports.adjustVInSignature)(types_1.SigningMethod.ETH_SIGN, signature, hash, signerAddress);
++    signature = await adjustVForTron(safeProvider, types_1.SigningMethod.ETH_SIGN, signature, hash, signerAddress);
+     return new SafeSignature_1.EthSafeSignature(signerAddress, signature);
+ }
+ exports.generateSignature = generateSignature;
+@@ -92,7 +101,7 @@ async function generateEIP712Signature(safeProvider, safeEIP712Args, methodVersi
+     }
+     //@ts-expect-error: Evaluate removal of methodVersion and use v4
+     let signature = await safeProvider.signTypedData(safeEIP712Args, methodVersion);
+-    signature = await (0, exports.adjustVInSignature)(types_1.SigningMethod.ETH_SIGN_TYPED_DATA, signature);
++    signature = await adjustVForTron(safeProvider, types_1.SigningMethod.ETH_SIGN_TYPED_DATA, signature);
+     return new SafeSignature_1.EthSafeSignature(signerAddress, signature);
+ }
+ exports.generateEIP712Signature = generateEIP712Signature;

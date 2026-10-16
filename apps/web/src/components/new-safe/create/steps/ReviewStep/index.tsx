@@ -24,6 +24,7 @@ import { useEstimateSafeCreationGas } from '@/components/new-safe/create/useEsti
 import useSyncSafeCreationStep from '@/components/new-safe/create/useSyncSafeCreationStep'
 import ReviewRow from '@/components/new-safe/ReviewRow'
 import ErrorMessage from '@/components/tx/ErrorMessage'
+import { TempoGasTokenSafeCreationHint } from '@/components/tx/FeeTokenSettingsHint'
 import { ExecutionMethod, ExecutionMethodSelector } from '@/components/tx/ExecutionMethodSelector'
 import { useCurrentChain, useHasFeature } from '@/hooks/useChains'
 import useGasPrice from '@/hooks/useGasPrice'
@@ -40,9 +41,10 @@ import {
 } from '@/services/analytics'
 import { gtmSetChainId, gtmSetSafeAddress } from '@/services/analytics/gtm'
 import { asError } from '@safe-global/utils/services/exceptions/utils'
+import { sameAddress } from '@safe-global/utils/utils/addresses'
 import { useAppDispatch, useAppSelector } from '@/store'
 import { hasRemainingRelays } from '@/utils/relaying'
-import { isWalletRejection } from '@/utils/wallets'
+import { isSmartContract, isWalletRejection } from '@/utils/wallets'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import { Box, Button, CircularProgress, Divider, Grid, Tooltip, Typography } from '@mui/material'
 import { type Chain } from '@safe-global/store/gateway/AUTO_GENERATED/chains'
@@ -57,11 +59,14 @@ import { selectRpc } from '@/store/settingsSlice'
 import { AppRoutes } from '@/config/routes'
 import type { CreateSafeResult, ReplayedSafeProps } from '@safe-global/utils/features/counterfactual/store/types'
 import { createWeb3ReadOnly } from '@/hooks/wallets/web3'
+import { isTronChain } from '@/utils/tron'
 import { updateAddressBook } from '../../logic/address-book'
 import { FEATURES, hasFeature } from '@safe-global/utils/utils/chains'
 import { PayMethod } from '@safe-global/utils/features/counterfactual/types'
 import { type TransactionOptions } from '@safe-global/types-kit'
 import { getTotalFeeFormatted } from '@safe-global/utils/hooks/useDefaultGasPrice'
+
+const TRON_SALT_NONCE_MAX_ATTEMPTS = 3
 
 export const NetworkFee = ({
   totalFee,
@@ -236,19 +241,50 @@ const ReviewStep = ({ data, onSubmit, onBack, setStep }: StepRenderProps<NewSafe
 
       setIsCreating(true)
 
-      // Figure out the shared available nonce across chains
-      const nextAvailableNonce =
-        data.saltNonce !== undefined
-          ? data.saltNonce.toString()
-          : await getAvailableSaltNonce(customRPCs, { ...newSafeProps, saltNonce: '0' }, data.networks, knownAddresses)
-
-      const replayedSafeWithNonce = { ...newSafeProps, saltNonce: nextAvailableNonce }
-
       const customRpcUrl = customRpc[chain.chainId]
       const provider = createWeb3ReadOnly(chain, customRpcUrl)
       if (!provider) return
 
-      const safeAddress = await predictAddressBasedOnReplayData(replayedSafeWithNonce, provider)
+      // For Tron: use timestamp as salt nonce to avoid the RPC-heavy iteration loop.
+      // getAvailableSaltNonce makes 3+ RPC calls per iteration and recurses until it
+      // finds an unused address, which causes rate limiting on TronGrid. Still run a
+      // single lightweight collision check against the predicted address, bounded to
+      // a few attempts, instead of skipping detection entirely.
+      // For non-Tron: use the standard nonce validation flow.
+      const isTron = data.networks.some((n) => isTronChain(n.chainId))
+      let nextAvailableNonce: string
+      if (isTron) {
+        let candidateNonce = (data.saltNonce ?? Date.now()).toString()
+
+        for (let attempt = 0; attempt < TRON_SALT_NONCE_MAX_ATTEMPTS; attempt++) {
+          const candidateAddress = await predictAddressBasedOnReplayData(
+            { ...newSafeProps, saltNonce: candidateNonce },
+            provider,
+            chain.chainId,
+          )
+          const isKnown = knownAddresses.some((knownAddress) => sameAddress(knownAddress, candidateAddress))
+          if (!isKnown && !(await isSmartContract(candidateAddress, provider))) break
+          if (attempt === TRON_SALT_NONCE_MAX_ATTEMPTS - 1) {
+            setSubmitError('Could not find an unused Safe address. Please try again.')
+            return
+          }
+          candidateNonce = (Date.now() + attempt + 1).toString()
+        }
+
+        nextAvailableNonce = candidateNonce
+      } else {
+        const startingNonce = (data.saltNonce ?? 0).toString()
+        nextAvailableNonce = await getAvailableSaltNonce(
+          customRPCs,
+          { ...newSafeProps, saltNonce: startingNonce },
+          data.networks,
+          knownAddresses,
+        )
+      }
+
+      const replayedSafeWithNonce = { ...newSafeProps, saltNonce: nextAvailableNonce }
+
+      const safeAddress = await predictAddressBasedOnReplayData(replayedSafeWithNonce, provider, chain.chainId)
 
       const createSafeResults: CreateSafeResult[] = []
       for (const network of data.networks) {
@@ -372,7 +408,7 @@ const ReviewStep = ({ data, onSubmit, onBack, setStep }: StepRenderProps<NewSafe
       const error = asError(_err)
       const submitError = isWalletRejection(error)
         ? 'User rejected signing.'
-        : 'Error creating the Safe Account. Please try again later.'
+        : (error.reason ?? 'Error creating the Safe Account. Please try again later.')
       setSubmitError(submitError)
 
       if (isWalletRejection(error)) {
@@ -407,6 +443,8 @@ const ReviewStep = ({ data, onSubmit, onBack, setStep }: StepRenderProps<NewSafe
               payMethod={payMethod}
               setPayMethod={setPayMethod}
             />
+
+            <TempoGasTokenSafeCreationHint />
 
             {canRelay && payMethod === PayMethod.PayNow && (
               <>

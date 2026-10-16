@@ -24,6 +24,16 @@ describe('deployments', () => {
   describe('tryDeploymentVersions', () => {
     const getSafeSpy = jest.spyOn(safeDeployments, 'getSafeSingletonDeployment')
 
+    it.each([
+      ['728126428', '1.4.1'],
+      ['2494104990', '1.4.1'],
+      ['1', '1.5.0'],
+    ])('scopes ABI deployment selection to chain %s', (chainId, expected) => {
+      const getter = jest.fn()
+      deployments._tryDeploymentVersions(getter, chainBuilder().with({ chainId }).build(), '1.5.0')
+      expect(getter).toHaveBeenCalledWith({ version: expected, network: chainId })
+    })
+
     it('should call the deployment getter with a supported version/network', () => {
       deployments._tryDeploymentVersions(
         getSafeSpy as unknown as typeof safeDeployments.getSafeSingletonDeployment,

@@ -40,7 +40,7 @@ interface TxEvents {
   [TxEvent.SIGNATURE_PROPOSED]: { txId: string; nonce: number; signerAddress: string } & SafeContext
   [TxEvent.SIGNATURE_INDEXED]: { txId: string }
   [TxEvent.ONCHAIN_SIGNATURE_REQUESTED]: Id
-  [TxEvent.ONCHAIN_SIGNATURE_SUCCESS]: Id
+  [TxEvent.ONCHAIN_SIGNATURE_SUCCESS]: Id & SafeContext
   [TxEvent.NESTED_SAFE_TX_CREATED]: Id &
     SafeContext & {
       parentSafeAddress: string
@@ -57,7 +57,7 @@ interface TxEvents {
   [TxEvent.PROCESSING_MODULE]: Id & { txHash: string }
   [TxEvent.PROCESSED]: Id & SafeContext & { txHash?: string }
   [TxEvent.REVERTED]: Id & SafeContext & { error: Error }
-  [TxEvent.RELAYING]: Id & SafeContext & { taskId: string }
+  [TxEvent.RELAYING]: Id & SafeContext & { taskId: string; isSafePays?: boolean }
   [TxEvent.FAILED]: Id & SafeContext & { error: Error }
   [TxEvent.SUCCESS]: Id & SafeContext & { txHash?: string }
   [TxEvent.SAFE_APPS_REQUEST]: { safeAppRequestId: RequestId; safeTxHash: string; txId?: string }

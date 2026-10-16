@@ -12,6 +12,7 @@ import { Box, Stack } from '@mui/material'
 import { useChain } from '@/hooks/useChains'
 import { useAppSelector } from '@/store'
 import { selectSettings } from '@/store/settingsSlice'
+import useTronAddress from '@/hooks/useTronAddress'
 
 const SafeInfo = (): ReactElement => {
   const safeAddress = useSafeAddress()
@@ -22,8 +23,9 @@ const SafeInfo = (): ReactElement => {
   const settings = useAppSelector(selectSettings)
 
   const name = addressBookItem?.name || ens
+  const { displayAddress, copyAddress, isTron } = useTronAddress(safeAddress)
   const prefix = chain?.shortName
-  const copyPrefix = settings.shortName.copy
+  const copyPrefix = isTron ? false : settings.shortName.copy
 
   return (
     <Stack data-testid="tx-flow-safe-info" direction="row" gap={1} alignItems="center">
@@ -50,9 +52,9 @@ const SafeInfo = (): ReactElement => {
               </Typography>
             )}
             <Typography variant="body2">
-              <CopyAddressButton address={safeAddress} prefix={prefix} copyPrefix={copyPrefix}>
-                {prefix && <b>{prefix}:</b>}
-                {shortenAddress(safeAddress)}
+              <CopyAddressButton address={isTron ? copyAddress : safeAddress} prefix={prefix} copyPrefix={copyPrefix}>
+                {!isTron && prefix && <b>{prefix}:</b>}
+                {shortenAddress(isTron ? displayAddress : safeAddress)}
               </CopyAddressButton>
             </Typography>
           </>

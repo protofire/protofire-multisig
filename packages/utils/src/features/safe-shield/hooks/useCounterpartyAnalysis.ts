@@ -20,6 +20,7 @@ import { ErrorType, getErrorInfo } from '../utils/errors'
  * @param isInAddressBook - Function to check if address is in address book
  * @param ownedSafes - Array of Safe addresses owned by the user
  * @param web3ReadOnly - Read-only web3 provider for on-chain checks
+ * @param isTronChain - Whether the chain is a Tron chain, per the platform's FEATURES.TRON flag
  * @returns Object containing recipient and contract analysis results with loading and error states
  */
 export function useCounterpartyAnalysis({
@@ -29,6 +30,7 @@ export function useCounterpartyAnalysis({
   isInAddressBook,
   ownedSafes = [],
   web3ReadOnly,
+  isTronChain = false,
 }: {
   safeAddress: string
   chainId: string
@@ -36,6 +38,7 @@ export function useCounterpartyAnalysis({
   isInAddressBook: (address: string, chainId: string) => boolean
   ownedSafes: string[]
   web3ReadOnly?: JsonRpcProvider
+  isTronChain?: boolean
 }): {
   recipient: AsyncResult<RecipientAnalysisResults>
   contract: AsyncResult<ContractAnalysisResults>
@@ -100,7 +103,11 @@ export function useCounterpartyAnalysis({
 
   // Perform local checks on recipient addresses
   const addressBookCheck = useAddressBookCheck(chainId, recipientAddresses, isInAddressBook, ownedSafes)
-  const [activityCheck, activityCheckError, activityCheckLoading] = useAddressActivity(nonSafeRecipients, web3ReadOnly)
+  const [activityCheck, activityCheckError, activityCheckLoading] = useAddressActivity(
+    nonSafeRecipients,
+    web3ReadOnly,
+    isTronChain,
+  )
 
   const fetchError = useMemo(() => {
     if (error) {

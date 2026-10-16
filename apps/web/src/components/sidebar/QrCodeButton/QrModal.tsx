@@ -2,6 +2,7 @@ import { type ReactElement } from 'react'
 import { Box, Switch, DialogContent, FormControlLabel, Typography } from '@mui/material'
 import ModalDialog from '@/components/common/ModalDialog'
 import useSafeAddress from '@/hooks/useSafeAddress'
+import useTronAddress from '@/hooks/useTronAddress'
 import { useCurrentChain } from '@/hooks/useChains'
 import QRCode from '@/components/common/QRCode'
 import EthHashInfo from '@/components/common/EthHashInfo'
@@ -10,11 +11,12 @@ import { selectSettings, setQrShortName } from '@/store/settingsSlice'
 
 const QrModal = ({ onClose }: { onClose: () => void }): ReactElement => {
   const safeAddress = useSafeAddress()
+  const { displayAddress, isTron } = useTronAddress(safeAddress)
   const chain = useCurrentChain()
   const settings = useAppSelector(selectSettings)
   const dispatch = useAppDispatch()
   const qrPrefix = settings.shortName.qr ? `${chain?.shortName}:` : ''
-  const qrCode = `${qrPrefix}${safeAddress}`
+  const qrCode = isTron ? displayAddress : `${qrPrefix}${safeAddress}`
   const chainName = chain?.chainName || ''
   const nativeToken = chain?.nativeCurrency.symbol || ''
 
@@ -35,16 +37,18 @@ const QrModal = ({ onClose }: { onClose: () => void }): ReactElement => {
             <QRCode value={qrCode} size={164} />
           </Box>
 
-          <FormControlLabel
-            control={
-              <Switch checked={settings.shortName.qr} onChange={(e) => dispatch(setQrShortName(e.target.checked))} />
-            }
-            label={
-              <>
-                QR code with chain prefix (<b>{chain?.shortName}:</b>)
-              </>
-            }
-          />
+          {!isTron && (
+            <FormControlLabel
+              control={
+                <Switch checked={settings.shortName.qr} onChange={(e) => dispatch(setQrShortName(e.target.checked))} />
+              }
+              label={
+                <>
+                  QR code with chain prefix (<b>{chain?.shortName}:</b>)
+                </>
+              }
+            />
+          )}
 
           <Box mt={2}>
             <EthHashInfo

@@ -8,6 +8,7 @@ import type { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 
 interface ErrorWithStatus extends Error {
   status?: number | string
+  reason?: string
 }
 
 const isFetchBaseQueryError = (error: unknown): error is FetchBaseQueryError => {
@@ -29,10 +30,16 @@ export const asError = (thrown: unknown): ErrorWithStatus => {
   // like isUnauthorized() checks in the spaces feature
   if (isFetchBaseQueryError(thrown)) {
     let errorMessage: string
+    let reason: string | undefined
 
     // Extract message from the error
     if (typeof thrown.data === 'object' && thrown.data !== null && 'message' in thrown.data) {
-      errorMessage = String((thrown.data as Record<string, unknown>).message)
+      const rawMessage = (thrown.data as Record<string, unknown>).message
+      errorMessage = String(rawMessage)
+      // Server-provided message (e.g. gateway refusal) is user-facing; formatError() shows `reason` in notifications
+      if (typeof rawMessage === 'string') {
+        reason = rawMessage
+      }
     } else if (typeof thrown.data === 'string') {
       errorMessage = thrown.data
     } else if (typeof thrown.status === 'string') {
@@ -47,6 +54,7 @@ export const asError = (thrown: unknown): ErrorWithStatus => {
 
     const error = new Error(errorMessage) as ErrorWithStatus
     error.status = thrown.status
+    if (reason) error.reason = reason
     return error
   }
 

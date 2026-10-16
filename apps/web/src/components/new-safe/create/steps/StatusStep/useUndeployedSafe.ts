@@ -7,6 +7,7 @@ import { PayMethod } from '@safe-global/utils/features/counterfactual/types'
 const useUndeployedSafe = () => {
   const chainId = useChainId()
   const undeployedSafes = useAppSelector(selectUndeployedSafes)
+
   const undeployedSafe =
     undeployedSafes[chainId] &&
     Object.entries(undeployedSafes[chainId]).find((undeployedSafe) => {

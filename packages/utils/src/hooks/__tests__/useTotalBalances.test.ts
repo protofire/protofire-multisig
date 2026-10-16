@@ -243,6 +243,44 @@ describe('useTotalBalances', () => {
       expect(result.current.loading).toBe(true)
       expect(result.current.data).toBeUndefined()
     })
+
+    it('normalizes a native currency misreported as ERC20 (e.g. Celo) when nativeCurrency is passed', () => {
+      const portfolioWithMisreportedNative: Portfolio = {
+        totalBalanceFiat: '100',
+        totalTokenBalanceFiat: '100',
+        totalPositionsBalanceFiat: '0',
+        tokenBalances: [
+          {
+            tokenInfo: {
+              address: '0x471EcE3750Da237f93B8E339c536989b8978a438',
+              decimals: 18,
+              logoUri: '',
+              name: 'Celo',
+              symbol: 'celo',
+              type: 'ERC20' as const,
+              chainId: CHAIN_ID,
+              trusted: true,
+            },
+            balance: '80000000000000000',
+            balanceFiat: '100',
+            price: '1',
+            priceChangePercentage1d: '0',
+          },
+        ],
+        positionBalances: [],
+      }
+
+      jest
+        .spyOn(portfolioQueries, 'usePortfolioGetPortfolioV1Query')
+        .mockReturnValue(mockQueryResult({ currentData: portfolioWithMisreportedNative }))
+
+      const { result } = renderHook(() =>
+        useTotalBalances({ ...portfolioParams, nativeCurrency: { symbol: 'CELO', decimals: 18 } }),
+      )
+
+      expect(result.current.data?.items[0]?.tokenInfo.type).toBe('NATIVE_TOKEN')
+      expect(result.current.data?.items[0]?.tokenInfo.address).toBe('0x0000000000000000000000000000000000000000')
+    })
   })
 
   describe('all tokens merged mode', () => {

@@ -428,7 +428,11 @@ describe('useCounterpartyAnalysis', () => {
       )
 
       await waitFor(() => {
-        expect(mockUseAddressActivity).toHaveBeenCalledWith([getAddress(mockRecipientAddress1)], mockWeb3Provider)
+        expect(mockUseAddressActivity).toHaveBeenCalledWith(
+          [getAddress(mockRecipientAddress1)],
+          mockWeb3Provider,
+          false,
+        )
       })
     })
 
@@ -451,7 +455,41 @@ describe('useCounterpartyAnalysis', () => {
       )
 
       expect(mockUseAddressBookCheck).toHaveBeenCalledWith(mockChainId, [], mockIsInAddressBook, mockOwnedSafes)
-      expect(mockUseAddressActivity).toHaveBeenCalledWith([], undefined)
+      expect(mockUseAddressActivity).toHaveBeenCalledWith([], undefined, false)
+    })
+
+    it('should forward isTronChain to the address activity check', async () => {
+      const counterpartyData = {
+        recipient: {
+          [mockRecipientAddress1]: {
+            [StatusGroup.RECIPIENT_INTERACTION]: [RecipientAnalysisResultBuilder.newRecipient().build()],
+          },
+        },
+      }
+
+      mockUseSafeShieldAnalyzeCounterpartyV1Mutation.mockReturnValue([
+        mockTriggerAnalysis,
+        { data: counterpartyData, error: undefined, isLoading: false },
+      ] as any)
+
+      const mockSafeTx = createMockSafeTx(mockRecipientAddress1)
+      const mockWeb3Provider = {} as any
+
+      renderHook(() =>
+        useCounterpartyAnalysis({
+          safeAddress: mockSafeAddress,
+          chainId: mockChainId,
+          safeTx: mockSafeTx,
+          isInAddressBook: mockIsInAddressBook,
+          ownedSafes: mockOwnedSafes,
+          web3ReadOnly: mockWeb3Provider,
+          isTronChain: true,
+        }),
+      )
+
+      await waitFor(() => {
+        expect(mockUseAddressActivity).toHaveBeenCalledWith([getAddress(mockRecipientAddress1)], mockWeb3Provider, true)
+      })
     })
   })
 
@@ -1070,7 +1108,7 @@ describe('useCounterpartyAnalysis', () => {
 
       await waitFor(() => {
         // Safe addresses should not be passed to activity check
-        expect(mockUseAddressActivity).toHaveBeenCalledWith([], undefined)
+        expect(mockUseAddressActivity).toHaveBeenCalledWith([], undefined, false)
       })
     })
 
@@ -1102,6 +1140,7 @@ describe('useCounterpartyAnalysis', () => {
         expect(mockUseAddressActivity).toHaveBeenCalledWith(
           expect.arrayContaining([getAddress(mockRecipientAddress1), getAddress(mockRecipientAddress2)]),
           undefined,
+          false,
         )
       })
     })
@@ -1134,7 +1173,7 @@ describe('useCounterpartyAnalysis', () => {
 
       await waitFor(() => {
         // Only address2 should be passed (address1 already has activity results)
-        expect(mockUseAddressActivity).toHaveBeenCalledWith([getAddress(mockRecipientAddress2)], undefined)
+        expect(mockUseAddressActivity).toHaveBeenCalledWith([getAddress(mockRecipientAddress2)], undefined, false)
       })
     })
 
@@ -1169,7 +1208,7 @@ describe('useCounterpartyAnalysis', () => {
 
       await waitFor(() => {
         // Only address2 should be passed to activity check
-        expect(mockUseAddressActivity).toHaveBeenCalledWith([getAddress(mockRecipientAddress2)], undefined)
+        expect(mockUseAddressActivity).toHaveBeenCalledWith([getAddress(mockRecipientAddress2)], undefined, false)
       })
     })
 
@@ -1201,7 +1240,7 @@ describe('useCounterpartyAnalysis', () => {
 
       await waitFor(() => {
         // All addresses filtered out - empty array should be passed
-        expect(mockUseAddressActivity).toHaveBeenCalledWith([], undefined)
+        expect(mockUseAddressActivity).toHaveBeenCalledWith([], undefined, false)
       })
     })
 
@@ -1233,6 +1272,7 @@ describe('useCounterpartyAnalysis', () => {
         expect(mockUseAddressActivity).toHaveBeenCalledWith(
           expect.arrayContaining([getAddress(mockRecipientAddress1), getAddress(mockRecipientAddress2)]),
           undefined,
+          false,
         )
       })
     })
@@ -1329,7 +1369,7 @@ describe('useCounterpartyAnalysis', () => {
           mockOwnedSafes,
         )
         // But activity check should only be called with non-Safe addresses
-        expect(mockUseAddressActivity).toHaveBeenCalledWith([getAddress(mockRecipientAddress2)], undefined)
+        expect(mockUseAddressActivity).toHaveBeenCalledWith([getAddress(mockRecipientAddress2)], undefined, false)
       })
     })
   })

@@ -44,6 +44,7 @@ const useLoadBalances = (): AsyncResult<PortfolioBalances> => {
   const { safe, safeAddress } = useSafeInfo()
   const currency = useAppSelector(selectCurrency)
   const counterfactualResult = useCounterfactualBalances(safe)
+  const chain = useCurrentChain()
 
   const { data, error, loading } = useTotalBalances({
     safeAddress,
@@ -53,6 +54,7 @@ const useLoadBalances = (): AsyncResult<PortfolioBalances> => {
     hasPortfolioFeature,
     isAllTokensSelected,
     isDeployed: safe.deployed,
+    nativeCurrency: chain?.nativeCurrency,
     counterfactualResult,
     txServicePollingInterval: POLLING_INTERVAL,
     skipPollingIfUnfocused: true,

@@ -6,8 +6,9 @@ import { LowActivityAnalysisResult } from '../../config'
 import { useMemo } from 'react'
 
 describe('useAddressActivity', () => {
+  const isTronChain = false
   const mockProvider = (txCount: number) =>
-    ({ getTransactionCount: jest.fn().mockResolvedValue(txCount) }) as unknown as JsonRpcProvider
+    ({ getTransactionCount: jest.fn().mockResolvedValue(txCount) } as unknown as JsonRpcProvider)
 
   beforeEach(() => {
     jest.resetAllMocks()
@@ -17,7 +18,7 @@ describe('useAddressActivity', () => {
     const { result } = renderHook(() => {
       const addresses = useMemo(() => [], [])
       const provider = mockProvider(0)
-      return useAddressActivity(addresses, provider)
+      return useAddressActivity(addresses, provider, isTronChain)
     })
 
     await waitFor(() => {
@@ -34,7 +35,7 @@ describe('useAddressActivity', () => {
     const address = faker.finance.ethereumAddress()
     const { result } = renderHook(() => {
       const addresses = useMemo(() => [address], [])
-      return useAddressActivity(addresses)
+      return useAddressActivity(addresses, undefined, isTronChain)
     })
 
     await waitFor(() => {
@@ -52,7 +53,7 @@ describe('useAddressActivity', () => {
     const { result } = renderHook(() => {
       const addresses = useMemo(() => [address], [])
       const provider = mockProvider(0)
-      return useAddressActivity(addresses, provider)
+      return useAddressActivity(addresses, provider, isTronChain)
     })
 
     await waitFor(
@@ -74,7 +75,7 @@ describe('useAddressActivity', () => {
     const { result } = renderHook(() => {
       const addresses = useMemo(() => [address], [])
       const provider = mockProvider(3)
-      return useAddressActivity(addresses, provider)
+      return useAddressActivity(addresses, provider, isTronChain)
     })
 
     await waitFor(
@@ -95,7 +96,7 @@ describe('useAddressActivity', () => {
     const { result } = renderHook(() => {
       const addresses = useMemo(() => [address], [])
       const provider = mockProvider(250)
-      return useAddressActivity(addresses, provider)
+      return useAddressActivity(addresses, provider, isTronChain)
     })
 
     await waitFor(
@@ -110,7 +111,7 @@ describe('useAddressActivity', () => {
     expect(results?.[address]).toBeUndefined()
   })
 
-  it('should handle errors gracefully and not include failed addresses', async () => {
+  it('should surface an error instead of swallowing it on non-Tron chains', async () => {
     const address = faker.finance.ethereumAddress()
     const errorMessage = 'RPC error'
     const provider = {
@@ -121,17 +122,18 @@ describe('useAddressActivity', () => {
 
     const { result } = renderHook(() => {
       const addresses = useMemo(() => [address], [])
-      return useAddressActivity(addresses, provider)
+      return useAddressActivity(addresses, provider, isTronChain)
     })
 
     await waitFor(() => {
-      const [, , loading] = result.current
-      expect(loading).toBe(false)
+      const [, error] = result.current
+      expect(error).toBeDefined()
     })
 
-    const [results] = result.current
+    const [results, error] = result.current
     expect(results?.[address]).toBeUndefined()
-    expect(consoleErrorSpy).toHaveBeenCalledWith(`Address activity analysis error for ${address}:`, expect.any(Error))
+    expect(error?.message).toBe(errorMessage)
+    expect(consoleErrorSpy).toHaveBeenCalledWith(`Address activity analysis failed for ${address}:`, expect.any(Error))
 
     consoleErrorSpy.mockRestore()
   })
@@ -149,7 +151,7 @@ describe('useAddressActivity', () => {
 
     const { result } = renderHook(() => {
       const addresses = useMemo(() => [address1, address2], [])
-      return useAddressActivity(addresses, provider)
+      return useAddressActivity(addresses, provider, isTronChain)
     })
 
     await waitFor(
@@ -184,7 +186,7 @@ describe('useAddressActivity', () => {
     const { result, rerender } = renderHook(
       ({ addrs }) => {
         const addresses = useMemo(() => addrs, [addrs])
-        return useAddressActivity(addresses, provider)
+        return useAddressActivity(addresses, provider, isTronChain)
       },
       { initialProps: { addrs: [address1] } },
     )
@@ -214,5 +216,26 @@ describe('useAddressActivity', () => {
     expect(results2?.[address2]?.type).toBe('LOW_ACTIVITY')
     // Old address should not be in results anymore
     expect(results2?.[address1]).toBeUndefined()
+  })
+
+  it('should skip getTransactionCount and return undefined for all addresses when isTronChain is true', async () => {
+    const address1 = faker.finance.ethereumAddress()
+    const address2 = faker.finance.ethereumAddress()
+    const mockGetTransactionCount = jest.fn().mockResolvedValue(0)
+    const provider = { getTransactionCount: mockGetTransactionCount } as unknown as JsonRpcProvider
+
+    const { result } = renderHook(() => {
+      const addresses = useMemo(() => [address1, address2], [])
+      return useAddressActivity(addresses, provider, true)
+    })
+
+    await waitFor(() => {
+      const [, , loading] = result.current
+      expect(loading).toBe(false)
+    })
+
+    const [results] = result.current
+    expect(results).toEqual({ [address1]: undefined, [address2]: undefined })
+    expect(mockGetTransactionCount).not.toHaveBeenCalled()
   })
 })

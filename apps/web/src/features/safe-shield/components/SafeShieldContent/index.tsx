@@ -24,6 +24,7 @@ import { SAFE_SHIELD_EVENTS } from '@/services/analytics'
 import { HypernativeFeature, type HypernativeAuthStatus } from '@/features/hypernative'
 import { useLoadFeature } from '@/features/__core__'
 import { ThreatAnalysis } from '@/features/safe-shield/components/ThreatAnalysis'
+import { ClearSigningLookupCard } from '../ClearSigningLookupCard'
 
 export const SafeShieldContent = ({
   recipient,
@@ -130,6 +131,8 @@ export const SafeShieldContent = ({
               highlightedSeverity={highlightedSeverity}
             />
           )}
+
+          <ClearSigningLookupCard delay={simulationAnalysisDelay} />
         </Box>
       </Box>
     </Box>

@@ -9,7 +9,7 @@ import {
   isTransactionListItem,
 } from '@/utils/transaction-guards'
 import { txDispatch, TxEvent } from '@/services/tx/txEvents'
-import { clearPendingTx, selectPendingTxs } from './pendingTxsSlice'
+import { clearPendingTx, selectPendingTxIdsBySafe, selectPendingTxs } from './pendingTxsSlice'
 import { makeLoadableSlice } from './common'
 import { selectSafeInfo } from './slices'
 import { cgwApi } from '@safe-global/store/gateway/AUTO_GENERATED/owners'
@@ -33,20 +33,25 @@ export const txHistoryListener = (listenerMiddleware: typeof listenerMiddlewareI
         return
       }
 
-      const pendingTxs = selectPendingTxs(listenerApi.getState())
+      const state = listenerApi.getState()
+      const safe = selectSafeInfo(state).data
+      if (!safe) return
+
+      const pendingTxs = selectPendingTxs(state)
+      const pendingTxIds = selectPendingTxIdsBySafe(state, safe.chainId, safe.address.value)
 
       for (const result of action.payload.data.results) {
         if (!isTransactionListItem(result)) {
           continue
         }
 
-        const pendingTxByNonce = Object.entries(pendingTxs).find(([, pendingTx]) =>
+        const pendingTxId = pendingTxIds.find((txId) =>
           isMultisigExecutionInfo(result.transaction.executionInfo)
-            ? pendingTx.nonce === result.transaction.executionInfo.nonce
+            ? pendingTxs[txId].nonce === result.transaction.executionInfo.nonce
             : false,
         )
 
-        if (!pendingTxByNonce) continue
+        if (!pendingTxId) continue
 
         // Invalidate getOwnedSafe cache as nested Safe was (likely) created
         if (isCustomTxInfo(result.transaction.txInfo)) {
@@ -55,9 +60,8 @@ export const txHistoryListener = (listenerMiddleware: typeof listenerMiddlewareI
           const likelyDeployedSafe = method === 'multiSend'
 
           if (deployedSafe || likelyDeployedSafe) {
-            const safe = selectSafeInfo(listenerApi.getState())
-            const safeAddress = safe.data?.address?.value
-            const chainId = safe.data?.chainId
+            const safeAddress = safe.address.value
+            const chainId = safe.chainId
 
             if (chainId && safeAddress) {
               listenerApi.dispatch(
@@ -71,22 +75,19 @@ export const txHistoryListener = (listenerMiddleware: typeof listenerMiddlewareI
           }
         }
 
-        const txId = result.transaction.id
+        const pendingTx = pendingTxs[pendingTxId]
 
-        const [pendingTxId, pendingTx] = pendingTxByNonce
-
-        if (pendingTxId === txId) {
+        if (pendingTxId === result.transaction.id) {
           const txHash = 'txHash' in pendingTx ? pendingTx.txHash : undefined
           txDispatch(TxEvent.SUCCESS, {
             nonce: pendingTx.nonce,
-            txId,
+            txId: pendingTxId,
             chainId: pendingTx.chainId,
             safeAddress: pendingTx.safeAddress,
-            groupKey: pendingTxs[txId].groupKey,
+            groupKey: pendingTxs[pendingTxId]?.groupKey,
             txHash,
           })
         } else {
-          // There is a pending tx with the same nonce as a history tx but their txIds don't match
           listenerApi.dispatch(clearPendingTx({ txId: pendingTxId }))
         }
       }

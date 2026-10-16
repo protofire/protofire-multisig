@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux'
 import { selectActiveSafe } from '@/src/store/activeSafeSlice'
 import { useAppSelector } from '@/src/store/hooks'
 import { selectCurrency, selectTokenList, TOKEN_LISTS } from '@/src/store/settingsSlice'
-import { selectActiveChain } from '@/src/store/chains'
+import { selectActiveChain, selectActiveChainCurrency } from '@/src/store/chains'
 import { useHasFeature } from '@/src/hooks/useHasFeature'
 import { FEATURES, hasFeature } from '@safe-global/utils/utils/chains'
 import { POLLING_INTERVAL, POSITIONS_POLLING_INTERVAL } from '@/src/config/constants'
@@ -30,6 +30,7 @@ const useMobileTotalBalances = (): TotalBalancesResult => {
   const trusted = useTokenListSetting()
   const hasPortfolioFeature = useHasFeature(FEATURES.PORTFOLIO_ENDPOINT) ?? false
   const isAllTokensSelected = tokenList === TOKEN_LISTS.ALL
+  const nativeCurrency = useAppSelector(selectActiveChainCurrency)
 
   return useTotalBalances({
     safeAddress: activeSafe?.address ?? '',
@@ -39,6 +40,7 @@ const useMobileTotalBalances = (): TotalBalancesResult => {
     hasPortfolioFeature,
     isAllTokensSelected,
     isDeployed: true, // Mobile Safes are always deployed
+    nativeCurrency,
     portfolioPollingInterval: POSITIONS_POLLING_INTERVAL,
     txServicePollingInterval: POLLING_INTERVAL,
     skip: !activeSafe,

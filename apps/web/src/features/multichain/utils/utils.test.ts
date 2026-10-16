@@ -1,10 +1,57 @@
 import { faker } from '@faker-js/faker/locale/af_ZA'
-import { getDeviatingSetups, getSafeSetups, getSharedSetup, isMultiChainSafeItem } from './utils'
+import { getDeviatingSetups, getSafeSetups, getSharedSetup, isMultiChainSafeItem, predictSafeAddress } from './utils'
 import { PendingSafeStatus } from '@safe-global/utils/features/counterfactual/store/types'
 
 import { PayMethod } from '@safe-global/utils/features/counterfactual/types'
+import { getAddress, type Provider } from 'ethers'
+import { Safe_proxy_factory__factory } from '@safe-global/utils/types/contracts'
 
 describe('multiChain/utils', () => {
+  it('returns a checksummed Tron prediction that can look up the undeployed Safe', async () => {
+    const factoryAddress = '0x1234567890123456789012345678901234567890'
+    const singleton = '0x9876543210987654321098765432109876543210'
+    const provider = {
+      getNetwork: jest.fn().mockResolvedValue({ chainId: 2494104990n }),
+      call: jest
+        .fn()
+        .mockResolvedValue(
+          Safe_proxy_factory__factory.createInterface().encodeFunctionResult('proxyCreationCode', ['0x6000']),
+        ),
+    }
+
+    const predictedAddress = await predictSafeAddress(
+      { initializer: '0x1234', saltNonce: '1', singleton },
+      factoryAddress,
+      provider as unknown as Provider,
+      '2494104990',
+    )
+
+    expect(predictedAddress).toBe(getAddress(predictedAddress))
+    expect(
+      getSafeSetups(
+        [
+          {
+            address: predictedAddress,
+            chainId: '2494104990',
+            isReadOnly: false,
+            isPinned: false,
+            lastVisited: 0,
+            name: undefined,
+          },
+        ],
+        [],
+        {
+          '2494104990': {
+            [predictedAddress]: {
+              props: { safeAccountConfig: { owners: [factoryAddress], threshold: 1 } },
+              status: { status: PendingSafeStatus.AWAITING_EXECUTION, type: PayMethod.PayLater },
+            },
+          },
+        },
+      ),
+    ).toEqual([{ owners: [factoryAddress], threshold: 1, chainId: '2494104990' }])
+  })
+
   describe('isMultiChainSafeItem', () => {
     it('should return true for MultiChainSafeIem', () => {
       expect(

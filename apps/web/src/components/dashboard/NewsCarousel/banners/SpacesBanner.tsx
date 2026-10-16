@@ -21,7 +21,7 @@ export const SpacesBanner = ({ onDismiss }: { onDismiss: () => void }) => {
             New! Improved Spaces.
           </Typography>
 
-          <Typography variant="body2" color="static.light" className={css.bannerText}>
+          <Typography variant="body2" color="static.main" className={css.bannerText}>
             All your Safe Accounts, finally organized. Streamlined for teams and solo users alike
           </Typography>
 

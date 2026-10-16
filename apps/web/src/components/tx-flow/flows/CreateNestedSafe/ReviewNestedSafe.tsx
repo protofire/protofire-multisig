@@ -62,9 +62,9 @@ export function ReviewNestedSafe({
 
   const [predictedSafeAddress] = useAsync(async () => {
     if (provider && safeAccountConfig) {
-      return predictAddressBasedOnReplayData(safeAccountConfig, provider)
+      return predictAddressBasedOnReplayData(safeAccountConfig, provider, chain?.chainId)
     }
-  }, [provider, safeAccountConfig])
+  }, [provider, safeAccountConfig, chain?.chainId])
 
   useEffect(() => {
     if (!chain || !safeAccountConfig || !predictedSafeAddress) {

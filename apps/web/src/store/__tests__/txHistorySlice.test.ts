@@ -13,10 +13,10 @@ import type { RootState } from '..'
 import type { PendingTxsState } from '../pendingTxsSlice'
 import { PendingStatus } from '../pendingTxsSlice'
 import { txHistoryListener, txHistorySlice } from '../txHistorySlice'
-import { faker } from '@faker-js/faker'
 
 describe('txHistorySlice', () => {
   describe('txHistoryListener', () => {
+    const safeAddress = '0x0000000000000000000000000000000000000001'
     const listenerMiddlewareInstance = createListenerMiddleware<RootState>()
 
     const txDispatchSpy = jest.spyOn(txEvents, 'txDispatch')
@@ -28,10 +28,15 @@ describe('txHistorySlice', () => {
       jest.clearAllMocks()
     })
 
-    it('should dispatch SUCCESS event if tx is pending', () => {
-      const pendingTx = pendingTxBuilder().with({ nonce: 1, status: PendingStatus.INDEXING }).build()
+    it.each(['1', '728126428'])('should dispatch SUCCESS for the same transaction on chain %s', (chainId) => {
+      const pendingTx = pendingTxBuilder()
+        .with({ chainId, safeAddress, nonce: 1, status: PendingStatus.INDEXING })
+        .build()
       const state = {
+        safeInfo: { data: { chainId, address: { value: safeAddress } } },
         pendingTxs: {
+          otherChain: { ...pendingTx, chainId: chainId === '1' ? '728126428' : '1' },
+          otherSafe: { ...pendingTx, safeAddress: '0x0000000000000000000000000000000000000002' },
           '0x123': pendingTx,
         } as PendingTxsState,
       } as RootState
@@ -66,6 +71,8 @@ describe('txHistorySlice', () => {
 
       listenerMiddlewareInstance.middleware(listenerApi)(jest.fn())(action)
 
+      expect(txDispatchSpy).toHaveBeenCalledTimes(1)
+      expect(listenerApi.dispatch).not.toHaveBeenCalled()
       expect(txDispatchSpy).toHaveBeenCalledWith(txEvents.TxEvent.SUCCESS, {
         nonce: 1,
         txId: '0x123',
@@ -78,8 +85,9 @@ describe('txHistorySlice', () => {
 
     it('should not dispatch an event if the history slice is cleared', () => {
       const state = {
+        safeInfo: { data: { chainId: '1', address: { value: safeAddress } } },
         pendingTxs: {
-          '0x123': pendingTxBuilder().build(),
+          '0x123': pendingTxBuilder().with({ chainId: '1', safeAddress }).build(),
         } as PendingTxsState,
       } as RootState
 
@@ -101,8 +109,9 @@ describe('txHistorySlice', () => {
 
     it('should not dispatch an event for date labels, labels or conflict headers', () => {
       const state = {
+        safeInfo: { data: { chainId: '1', address: { value: safeAddress } } },
         pendingTxs: {
-          '0x123': pendingTxBuilder().build(),
+          '0x123': pendingTxBuilder().with({ chainId: '1', safeAddress }).build(),
         } as PendingTxsState,
       } as RootState
 
@@ -142,8 +151,9 @@ describe('txHistorySlice', () => {
 
     it('should not dispatch an event/invalidate owned Safes if tx is not pending', () => {
       const state = {
+        safeInfo: { data: { chainId: '1', address: { value: safeAddress } } },
         pendingTxs: {
-          '0x123': pendingTxBuilder().build(),
+          '0x123': pendingTxBuilder().with({ chainId: '1', safeAddress }).build(),
         } as PendingTxsState,
       } as RootState
 
@@ -182,15 +192,15 @@ describe('txHistorySlice', () => {
       expect(listenerApi.dispatch).not.toHaveBeenCalled()
     })
 
-    it('should clear a replaced pending transaction and invalidate owned Safes for Safe creations', () => {
+    it.each(['1', '728126428'])('should clear a replaced transaction without SUCCESS on chain %s', (chainId) => {
       const state = {
         pendingTxs: {
-          '0x123': pendingTxBuilder().with({ nonce: 1, status: PendingStatus.INDEXING }).build(),
+          '0x123': pendingTxBuilder().with({ chainId, safeAddress, nonce: 1, status: PendingStatus.INDEXING }).build(),
         } as PendingTxsState,
         safeInfo: {
           data: {
-            address: { value: faker.finance.ethereumAddress() },
-            chainId: 1,
+            address: { value: safeAddress },
+            chainId,
           },
         } as unknown as RootState['safeInfo'],
       } as RootState
@@ -226,6 +236,7 @@ describe('txHistorySlice', () => {
 
       listenerMiddlewareInstance.middleware(listenerApi)(jest.fn())(action)
 
+      expect(txDispatchSpy).not.toHaveBeenCalled()
       expect(listenerApi.dispatch).toHaveBeenCalledTimes(2)
       expect(listenerApi.dispatch).toHaveBeenNthCalledWith(1, {
         payload: [
@@ -236,7 +247,7 @@ describe('txHistorySlice', () => {
         type: 'api/invalidateTags',
       })
       expect(listenerApi.dispatch).toHaveBeenNthCalledWith(2, {
-        payload: expect.anything(),
+        payload: { txId: '0x123' },
         type: 'pendingTxs/clearPendingTx',
       })
     })

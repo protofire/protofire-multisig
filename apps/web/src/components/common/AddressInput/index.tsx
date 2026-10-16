@@ -26,6 +26,8 @@ import css from './styles.module.css'
 import inputCss from '@/styles/inputs.module.css'
 import Identicon from '../Identicon'
 import { FEATURES, hasFeature } from '@safe-global/utils/utils/chains'
+import { isTronChain, isTronBase58Address, fromTronBase58Sync } from '@/utils/tron'
+import useTronAddress from '@/hooks/useTronAddress'
 
 export type AddressInputProps = TextFieldProps & {
   name: string
@@ -65,6 +67,8 @@ const AddressInput = ({
   const rawValueRef = useRef<string>('')
   const watchedValue = useWatch({ name, control })
   const currentShortName = chain?.shortName || currentChain?.shortName || ''
+  const isTron = isTronChain(chain?.chainId || currentChain?.chainId || '')
+  const { displayAddress } = useTronAddress(watchedValue || '', chain?.chainId || currentChain?.chainId)
 
   const addressBook = useAddressBook()
 
@@ -85,6 +89,13 @@ const AddressInput = ({
 
   const transformAddressValue = useCallback(
     (value: string): string => {
+      // Convert Tron base58 addresses (T...) to 0x hex for internal use
+      if (isTron && isTronBase58Address(value.trim())) {
+        const hexAddr = fromTronBase58Sync(value.trim())
+        rawValueRef.current = hexAddr
+        return hexAddr
+      }
+
       // Clean the input value
       const cleanValue = cleanInputValue(value)
       rawValueRef.current = cleanValue
@@ -97,7 +108,7 @@ const AddressInput = ({
         return cleanValue
       }
     },
-    [validatePrefixed],
+    [validatePrefixed, isTron],
   )
 
   // Update the input value
@@ -163,7 +174,13 @@ const AddressInput = ({
         className={inputCss.input}
         autoComplete="off"
         autoFocus={props.focused}
-        label={<>{error?.message || props.label || `Recipient address${isDomainLookupEnabled ? ' or ENS' : ''}`}</>}
+        label={
+          <>
+            {error?.message ||
+              props.label ||
+              `Recipient address${isDomainLookupEnabled ? ' or ENS' : isTron ? ' (0x or T...)' : ''}`}
+          </>
+        }
         error={!!error}
         fullWidth
         onClick={resetName}
@@ -214,7 +231,8 @@ const AddressInput = ({
         })}
         // Workaround for a bug in react-hook-form when `register().value` is cached after `setValueAs`
         // Only seems to occur on the `/load` route
-        value={watchedValue}
+        // For Tron: display per the user's tronAddressFormat setting while keeping 0x in form state
+        value={displayAddress}
       />
     </>
   )

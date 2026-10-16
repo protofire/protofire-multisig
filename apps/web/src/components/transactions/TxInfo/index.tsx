@@ -8,6 +8,7 @@ import type {
   TransferTransactionInfo,
 } from '@safe-global/store/gateway/AUTO_GENERATED/transactions'
 import { type ReactElement } from 'react'
+import useTronAddress from '@/hooks/useTronAddress'
 import TokenAmount from '@/components/common/TokenAmount'
 import {
   isOrderTxInfo,
@@ -99,7 +100,8 @@ const CustomTx = ({ info }: { info: CustomTransactionInfo }): ReactElement => {
 }
 
 const CreationTx = ({ info }: { info: CreationTransactionInfo }): ReactElement => {
-  return <Box className={css.txInfo}>Created by {shortenAddress(info.creator.value)}</Box>
+  const { displayAddress } = useTronAddress(info.creator.value)
+  return <Box className={css.txInfo}>Created by {shortenAddress(displayAddress)}</Box>
 }
 
 const MultiSendTx = ({ info }: { info: MultiSendTransactionInfo }): ReactElement => {

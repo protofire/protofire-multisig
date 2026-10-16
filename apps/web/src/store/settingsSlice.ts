@@ -54,6 +54,7 @@ export type SettingsState = {
     blindSigning: boolean
   }
   transactionExecution: boolean
+  tronAddressFormat?: 'base58' | 'hex'
 }
 
 export const initialState: SettingsState = {
@@ -65,7 +66,7 @@ export const initialState: SettingsState = {
 
   curatedNestedSafes: {},
 
-  hideDust: true,
+  hideDust: false,
 
   hideSuspiciousTransactions: true,
 
@@ -90,6 +91,7 @@ export const initialState: SettingsState = {
     blindSigning: false,
   },
   transactionExecution: true,
+  tronAddressFormat: 'base58' as const,
 }
 
 export const settingsSlice = createSlice({
@@ -161,6 +163,9 @@ export const settingsSlice = createSlice({
     setBlindSigning: (state, { payload }: PayloadAction<boolean>) => {
       state.signing.blindSigning = payload
     },
+    setTronAddressFormat: (state, { payload }: PayloadAction<'base58' | 'hex'>) => {
+      state.tronAddressFormat = payload
+    },
     setSettings: (_, { payload }: PayloadAction<SettingsState>) => {
       // We must return as we are overwriting the entire state
       // Preserve default nested settings if importing without
@@ -185,6 +190,7 @@ export const {
   setOnChainSigning,
   setTransactionExecution,
   setBlindSigning,
+  setTronAddressFormat,
 } = settingsSlice.actions
 
 export const selectSettings = (state: RootState): SettingsState => state[settingsSlice.name]
@@ -252,3 +258,6 @@ export const selectIsCuratedNestedSafe = createSelector(
     )
   },
 )
+
+export const selectTronAddressFormat = (state: RootState): 'base58' | 'hex' =>
+  state[settingsSlice.name].tronAddressFormat ?? 'base58'

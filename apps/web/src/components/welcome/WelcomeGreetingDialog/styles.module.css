@@ -1,0 +1,88 @@
+.closeButton {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  z-index: 1;
+  color: var(--color-static-primary);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-5) var(--space-6) var(--space-4);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.logo {
+  width: 40px;
+  height: 40px;
+}
+
+.list {
+  width: 100%;
+  list-style-type: disc;
+  padding: 0 0 0 var(--space-3);
+}
+
+.listItem {
+  display: list-item;
+  padding: var(--space-1) 0;
+}
+
+.steps {
+  width: 100%;
+  list-style-type: decimal;
+  padding: 0 0 0 var(--space-6);
+}
+
+.chains {
+  display: flex;
+  justify-content: center;
+  padding-left: var(--space-1);
+}
+
+.chains img,
+.chains :global(.MuiSkeleton-root) {
+  margin-left: -8px;
+  border-radius: 50%;
+  outline: 2px solid var(--color-static-main);
+  background: var(--color-static-main);
+}
+
+.toggle {
+  color: var(--color-static-text-brand);
+  font-weight: 700;
+  text-decoration: underline;
+  text-transform: none;
+}
+
+.toggle:hover {
+  background: transparent;
+  text-decoration: underline;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+.collapse {
+  width: 100%;
+}
+
+.cta {
+  background-color: var(--color-static-text-brand);
+  color: var(--color-static-main);
+  font-weight: 700;
+}
+
+.cta:hover {
+  background-color: var(--color-static-text-brand);
+  filter: brightness(1.1);
+}

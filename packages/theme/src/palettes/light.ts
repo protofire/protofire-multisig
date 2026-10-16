@@ -12,15 +12,15 @@ const lightPalette: ColorPalette = {
     contrast: '#FFFFFF',
   },
   primary: {
-    dark: '#3c3c3c',
-    main: '#121312',
-    light: '#636669',
+    dark: '#0A1428',
+    main: '#0F1E3C',
+    light: '#2A3A55',
   },
   secondary: {
-    dark: '#0FDA6D',
-    main: '#12FF80',
-    light: '#B0FFC9',
-    background: '#EFFFF4',
+    dark: '#C9560A',
+    main: '#F5730D',
+    light: '#FFA24D',
+    background: '#FFF4EB',
   },
   border: {
     main: '#A1A3A7',
@@ -38,10 +38,10 @@ const lightPalette: ColorPalette = {
     contrastText: '#8A1C27',
   },
   success: {
-    dark: '#1C5538',
+    dark: '#028D4C',
     main: '#00B460',
-    light: '#84D9A0',
-    background: '#CBF2DB',
+    light: '#D3F2E4',
+    background: '#EFFAF1',
   },
   info: {
     dark: '#15566A',
@@ -65,7 +65,7 @@ const lightPalette: ColorPalette = {
     main: '#F4F4F4',
     sheet: '#F4F4F4',
     paper: '#FFFFFF',
-    light: '#EFFFF4',
+    light: '#FFF4EB',
     secondary: '#DDDEE0',
     skeleton: 'rgba(0, 0, 0, 0.04)',
     disabled: '#7878801F',
@@ -82,7 +82,11 @@ const lightPalette: ColorPalette = {
     light: '#636669',
     primary: '#FFFFFF',
     textSecondary: '#A1A3A7',
-    textBrand: '#12FF80',
+    textBrand: '#F5730D',
+    welcomeGradientStart: '#F04A0F',
+    welcomeGradientEnd: '#FBC21A',
+    welcomeFg: '#000000',
+    welcomeFgMuted: 'rgba(0, 0, 0, 0.65)',
   },
 }
 

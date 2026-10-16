@@ -134,6 +134,103 @@ describe('portfolioBalances helpers', () => {
 
       expect(result?.items[0]?.tokenInfo.logoUri).toBe('')
     })
+
+    describe('native currency normalization', () => {
+      // Mirrors Celo: the native gas currency is also a real ERC-20 contract, so
+      // providers like Zerion report it at its contract address instead of the
+      // app's zero-address NATIVE_TOKEN sentinel.
+      const misreportedNativePortfolio: Portfolio = {
+        totalBalanceFiat: '100',
+        totalTokenBalanceFiat: '100',
+        totalPositionsBalanceFiat: '0',
+        tokenBalances: [
+          {
+            tokenInfo: {
+              address: '0x471EcE3750Da237f93B8E339c536989b8978a438',
+              decimals: 18,
+              logoUri: '',
+              name: 'Celo',
+              symbol: 'celo',
+              type: 'ERC20' as const,
+              chainId: '42220',
+              trusted: true,
+            },
+            balance: '80000000000000000',
+            balanceFiat: '100',
+            price: '1',
+            priceChangePercentage1d: '0',
+          },
+        ],
+        positionBalances: [],
+      }
+
+      it('normalizes an ERC-20-reported entry matching the chain native currency to the NATIVE_TOKEN sentinel', () => {
+        const result = transformPortfolioToBalances(misreportedNativePortfolio, { symbol: 'CELO', decimals: 18 })
+
+        expect(result?.items).toHaveLength(1)
+        expect(result?.items[0]?.tokenInfo.type).toBe('NATIVE_TOKEN')
+        expect(result?.items[0]?.tokenInfo.address).toBe('0x0000000000000000000000000000000000000000')
+        // Non-address/type fields (symbol, name, balance) are preserved
+        expect(result?.items[0]?.tokenInfo.symbol).toBe('celo')
+        expect(result?.items[0]?.balance).toBe('80000000000000000')
+      })
+
+      it('matches the native currency symbol case-insensitively', () => {
+        const result = transformPortfolioToBalances(misreportedNativePortfolio, { symbol: 'Celo', decimals: 18 })
+
+        expect(result?.items[0]?.tokenInfo.type).toBe('NATIVE_TOKEN')
+      })
+
+      it('does not normalize when nativeCurrency is not provided', () => {
+        const result = transformPortfolioToBalances(misreportedNativePortfolio)
+
+        expect(result?.items[0]?.tokenInfo.type).toBe('ERC20')
+        expect(result?.items[0]?.tokenInfo.address).toBe('0x471EcE3750Da237f93B8E339c536989b8978a438')
+      })
+
+      it('does not normalize a token whose symbol matches but decimals differ', () => {
+        const result = transformPortfolioToBalances(misreportedNativePortfolio, { symbol: 'CELO', decimals: 6 })
+
+        expect(result?.items[0]?.tokenInfo.type).toBe('ERC20')
+      })
+
+      it('does not normalize a token whose decimals match but symbol differs', () => {
+        const result = transformPortfolioToBalances(misreportedNativePortfolio, { symbol: 'ETH', decimals: 18 })
+
+        expect(result?.items[0]?.tokenInfo.type).toBe('ERC20')
+      })
+
+      it('leaves items untouched when a NATIVE_TOKEN entry is already present', () => {
+        const portfolioWithNativeEntry: Portfolio = {
+          ...misreportedNativePortfolio,
+          tokenBalances: [
+            ...misreportedNativePortfolio.tokenBalances,
+            {
+              tokenInfo: {
+                address: '0x0000000000000000000000000000000000000000',
+                decimals: 18,
+                logoUri: '',
+                name: 'Celo',
+                symbol: 'CELO',
+                type: 'NATIVE_TOKEN' as const,
+                chainId: '42220',
+                trusted: true,
+              },
+              balance: '80000000000000000',
+              balanceFiat: '100',
+              price: '1',
+              priceChangePercentage1d: '0',
+            },
+          ],
+        }
+
+        const result = transformPortfolioToBalances(portfolioWithNativeEntry, { symbol: 'CELO', decimals: 18 })
+
+        expect(result?.items).toHaveLength(2)
+        expect(result?.items[0]?.tokenInfo.type).toBe('ERC20')
+        expect(result?.items[1]?.tokenInfo.type).toBe('NATIVE_TOKEN')
+      })
+    })
   })
 
   describe('calculateTokensFiatTotal', () => {

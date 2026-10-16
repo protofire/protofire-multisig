@@ -44,6 +44,13 @@ describe('Color Palettes', () => {
       expect(palette.background.secondary).toBeDefined()
     })
 
+    it('should have welcome panel colors on static palette', () => {
+      expect(palette.static.welcomeGradientStart).toBeDefined()
+      expect(palette.static.welcomeGradientEnd).toBeDefined()
+      expect(palette.static.welcomeFg).toBeDefined()
+      expect(palette.static.welcomeFgMuted).toBeDefined()
+    })
+
     it('should have all color values as valid hex or rgba', () => {
       const colorRegex = /^#[0-9A-Fa-f]{6}$|^#[0-9A-Fa-f]{8}$|^rgba?\(/
 

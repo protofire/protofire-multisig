@@ -28,6 +28,10 @@
   width: 100%;
 }
 
+.spender {
+  overflow: hidden;
+}
+
 .alert :global .MuiAlert-message {
   width: 100%;
 }

@@ -80,6 +80,25 @@ describe('useTxMonitor', () => {
     expect(mockWaitForTx).not.toHaveBeenCalled()
   })
 
+  it('restores Safe-pays polling mode and task identity from pending state', () => {
+    const monitor = jest.spyOn(txMonitor, 'waitForRelayedTx').mockImplementation(() => undefined)
+    renderHook(() => useTxMonitor(), {
+      initialReduxState: {
+        pendingTxs: {
+          '023': {
+            chainId: TEST_CHAIN_ID,
+            safeAddress: TEST_SAFE_ADDRESS,
+            nonce: 4,
+            status: PendingStatus.RELAYING,
+            taskId: 'oz-task',
+            isSafePays: true,
+          },
+        },
+      },
+    })
+    expect(monitor).toHaveBeenCalledWith('oz-task', ['023'], TEST_CHAIN_ID, TEST_SAFE_ADDRESS, 4, undefined, true)
+  })
+
   it('should not monitor already monitored transactions', () => {
     const mockWaitForTx = jest.spyOn(txMonitor, 'waitForTx')
 
@@ -283,6 +302,25 @@ describe('useTxPendingStatuses', () => {
       txId: mockTxId,
       taskId: mockTaskId,
     })
+  })
+
+  it('persists Safe-pays relay identity for subsequent monitoring', () => {
+    renderHook(() => useTxPendingStatuses())
+    txDispatch(TxEvent.RELAYING, {
+      nonce: 4,
+      txId: '023',
+      chainId: TEST_CHAIN_ID,
+      safeAddress: TEST_SAFE_ADDRESS,
+      taskId: 'oz-task',
+      isSafePays: true,
+    })
+    expect(setPendingTx).toHaveBeenCalledWith(
+      expect.objectContaining({
+        taskId: 'oz-task',
+        isSafePays: true,
+        status: PendingStatus.RELAYING,
+      }),
+    )
   })
 
   it('should clear the pending tx on SUCCESS', () => {

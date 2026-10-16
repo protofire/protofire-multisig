@@ -7,6 +7,7 @@ import { sortByIssueSeverity } from '@safe-global/utils/features/safe-shield/uti
 import { Box, Typography, Tooltip } from '@mui/material'
 import { useCurrentChain } from '@/hooks/useChains'
 import { getBlockExplorerLink } from '@safe-global/utils/utils/chains'
+import { formatAddressForExplorer } from '@/utils/tron'
 import ExplorerButton from '@/components/common/ExplorerButton'
 import { useState } from 'react'
 
@@ -72,7 +73,9 @@ export const AnalysisIssuesDisplay = ({ result, issueBackgroundColor }: Analysis
         issues.map((issue, index) => {
           const globalIndex = issueCounter++
           const explorerLink =
-            issue.address && currentChain ? getBlockExplorerLink(currentChain, issue.address) : undefined
+            issue.address && currentChain
+              ? getBlockExplorerLink(currentChain, formatAddressForExplorer(issue.address, currentChain.chainId))
+              : undefined
 
           return (
             <Box key={`${severity}-${index}`} sx={issueBoxStyles}>

@@ -1,6 +1,7 @@
 import type { TransactionDetails } from '@safe-global/store/gateway/AUTO_GENERATED/transactions'
 import { setSafeSDK } from '@/hooks/coreSDK/safeCoreSDK'
 import type Safe from '@safe-global/protocol-kit'
+import type { SafeTransactionData } from '@safe-global/types-kit'
 import type { MultiSendCallOnlyContractImplementationType } from '@safe-global/protocol-kit'
 import extractTxInfo from '../../extractTxInfo'
 import * as txEvents from '../../txEvents'
@@ -11,6 +12,7 @@ import {
   dispatchTxExecution,
   dispatchTxProposal,
   dispatchTxSigning,
+  dispatchTxRelay,
   dispatchBatchExecutionRelay,
 } from '..'
 import {
@@ -21,6 +23,10 @@ import {
   type JsonRpcSigner,
 } from 'ethers'
 import * as safeContracts from '@/services/contracts/safeContracts'
+import type { SafeState } from '@safe-global/store/gateway/AUTO_GENERATED/safes'
+import type { Chain } from '@safe-global/store/gateway/AUTO_GENERATED/chains'
+import { chainBuilder } from '@/tests/builders/chains'
+import { FEATURES } from '@/utils/featureToggled'
 
 import * as web3 from '@/hooks/wallets/web3'
 import { http, HttpResponse } from 'msw'
@@ -31,6 +37,10 @@ import { generatePreValidatedSignature } from '@safe-global/protocol-kit/dist/sr
 import { createMockSafeTransaction } from '@/tests/transactions'
 import { MockEip1193Provider } from '@/tests/mocks/providers'
 import { SimpleTxWatcher } from '@/utils/SimpleTxWatcher'
+
+jest.mock('@/services/tx/txMonitor', () => ({
+  waitForRelayedTx: jest.fn(),
+}))
 
 const SIGNER_ADDRESS = '0x1234567890123456789012345678901234567890'
 const TX_HASH = '0x1234567890'
@@ -528,6 +538,122 @@ describe('txSender', () => {
         chainId: '1',
         safeAddress: '0x123',
       })
+    })
+  })
+
+  describe('dispatchTxRelay', () => {
+    const safe = {
+      address: { value: '0x0000000000000000000000000000000000000123' },
+      chainId: '84532',
+      nonce: 7,
+      threshold: 2,
+      owners: [],
+      implementation: { value: '0x0000000000000000000000000000000000000456' },
+      implementationVersionState: 'UP_TO_DATE',
+    } as SafeState
+
+    const makeTx = (overrides: Partial<SafeTransactionData> = {}) => {
+      const tx = createMockSafeTransaction({ to: '0x1', data: '0x1234' })
+      Object.assign(tx.data, {
+        nonce: 7,
+        safeTxGas: '50000',
+        baseGas: '70000',
+        gasPrice: '0',
+        gasToken: '0x0000000000000000000000000000000000000000',
+        refundReceiver: '0x0000000000000000000000000000000000000000',
+        ...overrides,
+      })
+      tx.addSignature(generatePreValidatedSignature(SIGNER_ADDRESS))
+      return tx
+    }
+
+    const makeChain = (features: FEATURES[] = []): Chain => chainBuilder().with({ chainId: '84532', features }).build()
+
+    const mockRelayContract = (encoded = '0x1234') => {
+      const encode = jest.fn(() => encoded)
+      jest
+        .spyOn(safeContracts, 'getReadOnlyCurrentGnosisSafeContract')
+        .mockResolvedValue({ encode } as unknown as Awaited<
+          ReturnType<typeof safeContracts.getReadOnlyCurrentGnosisSafeContract>
+        >)
+      return encode
+    }
+
+    beforeEach(() => {
+      server.use(http.post(`${GATEWAY_URL}/v1/chains/84532/relay`, () => HttpResponse.json({ taskId: 'task-1' })))
+    })
+
+    it('preserves every Safe-pays fee field and signature in the encoded relay call', async () => {
+      const tx = makeTx({
+        safeTxGas: '51000',
+        baseGas: '71000',
+        gasPrice: '1',
+        gasToken: '0x036CbD53842c5426634e7929541eC2318f3dCF7e',
+        refundReceiver: '0x798D0d04E1c52020d298b6246D9A87ceb4C08b36',
+      })
+      const encode = mockRelayContract()
+
+      await dispatchTxRelay(tx, safe, 'tx-1', makeChain([FEATURES.PAY_FROM_SAFE]), '90000')
+
+      expect(encode).toHaveBeenCalledWith('execTransaction', [
+        tx.data.to,
+        tx.data.value,
+        tx.data.data,
+        tx.data.operation,
+        tx.data.safeTxGas,
+        tx.data.baseGas,
+        tx.data.gasPrice,
+        tx.data.gasToken,
+        tx.data.refundReceiver,
+        tx.encodedSignatures(),
+      ])
+    })
+
+    it.each(['0x036CbD53842c5426634e7929541eC2318f3dCF7e', '0x1111111111111111111111111111111111111111'])(
+      'marks gateway-accepted token %s as Safe-pays without a frontend allowlist',
+      async (gasToken) => {
+        const tx = makeTx({
+          gasPrice: '1',
+          gasToken,
+          refundReceiver: '0x798D0d04E1c52020d298b6246D9A87ceb4C08b36',
+        })
+        mockRelayContract()
+
+        await dispatchTxRelay(tx, safe, 'tx-2', makeChain([FEATURES.PAY_FROM_SAFE]))
+
+        expect(txEvents.txDispatch).toHaveBeenCalledWith(
+          'RELAYING',
+          expect.objectContaining({
+            txId: 'tx-2',
+            isSafePays: true,
+          }),
+        )
+      },
+    )
+
+    it('does not start monitoring a token refund rejected by the gateway', async () => {
+      server.use(http.post(`${GATEWAY_URL}/v1/chains/84532/relay`, () => new HttpResponse(null, { status: 422 })))
+      mockRelayContract()
+      const tx = makeTx({ gasPrice: '1', gasToken: '0x1111111111111111111111111111111111111111' })
+
+      await expect(dispatchTxRelay(tx, safe, 'rejected', makeChain([FEATURES.PAY_FROM_SAFE]))).rejects.toBeDefined()
+
+      expect(txEvents.txDispatch).not.toHaveBeenCalledWith('RELAYING', expect.anything())
+    })
+
+    it.each([
+      ['zero fee', makeTx(), makeChain([FEATURES.PAY_FROM_SAFE])],
+      [
+        'unsupported feature',
+        makeTx({ gasPrice: '1', gasToken: '0x036CbD53842c5426634e7929541eC2318f3dCF7e' }),
+        makeChain(),
+      ],
+    ])('does not mark %s as Safe-pays', async (_label, tx, chain) => {
+      mockRelayContract()
+
+      await dispatchTxRelay(tx, safe, `tx-${_label}`, chain)
+
+      expect(txEvents.txDispatch).toHaveBeenCalledWith('RELAYING', expect.not.objectContaining({ isSafePays: true }))
     })
   })
 

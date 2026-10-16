@@ -12,6 +12,7 @@ import { useCurrentChain } from '@/hooks/useChains'
 import Rocket from '@/public/images/common/rocket.svg'
 import { CREATE_SAFE_EVENTS, trackEvent } from '@/services/analytics'
 import { useAppDispatch } from '@/store'
+import { isTronChain } from '@/utils/tron-chains'
 import { Alert, AlertTitle, Box, Button, Paper, Stack, SvgIcon, Typography } from '@mui/material'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
@@ -27,6 +28,7 @@ export const CreateSafeStatus = ({
   setStepData,
 }: StepRenderProps<NewSafeFormData>) => {
   const [status, setStatus] = useState<SafeCreationEvent>(SafeCreationEvent.PROCESSING)
+  const [createdSafeAddress, setCreatedSafeAddress] = useState<string>()
   const [safeAddress, pendingSafe] = useUndeployedSafe()
   const router = useRouter()
   const chain = useCurrentChain()
@@ -38,8 +40,12 @@ export const CreateSafeStatus = ({
 
   useEffect(() => {
     const unsubFns = Object.entries(safeCreationPendingStatuses).map(([event]) =>
-      safeCreationSubscribe(event as SafeCreationEvent, async () => {
+      safeCreationSubscribe(event as SafeCreationEvent, async (detail) => {
         setStatus(event as SafeCreationEvent)
+
+        if ((event === SafeCreationEvent.SUCCESS || event === SafeCreationEvent.INDEXED) && 'safeAddress' in detail) {
+          setCreatedSafeAddress(detail.safeAddress)
+        }
       }),
     )
 
@@ -49,15 +55,18 @@ export const CreateSafeStatus = ({
   }, [])
 
   useEffect(() => {
-    if (!chain || !safeAddress) return
+    const resolvedAddress = createdSafeAddress || safeAddress
+    if (!chain || !resolvedAddress) return
 
-    if (status === SafeCreationEvent.SUCCESS) {
-      const redirect = getRedirect(chain.shortName, safeAddress, router.query?.safeViewRedirectURL)
+    const redirectStatus = isTronChain(chain.chainId) ? SafeCreationEvent.INDEXED : SafeCreationEvent.SUCCESS
+
+    if (status === redirectStatus) {
+      const redirect = getRedirect(chain.shortName, resolvedAddress, router.query?.safeViewRedirectURL)
       if (typeof redirect !== 'string' || redirect.startsWith('/')) {
         router.push(redirect)
       }
     }
-  }, [dispatch, chain, data.name, data.owners, data.threshold, router, safeAddress, status])
+  }, [dispatch, chain, data.name, data.owners, data.threshold, router, safeAddress, createdSafeAddress, status])
 
   useEffect(() => {
     if (!setProgressColor) return

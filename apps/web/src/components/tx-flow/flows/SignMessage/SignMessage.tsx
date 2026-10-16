@@ -35,6 +35,8 @@ import SuccessMessage from '@/components/tx/SuccessMessage'
 import useHighlightHiddenTab from '@/hooks/useHighlightHiddenTab'
 import InfoBox from '@/components/safe-messages/InfoBox'
 import { DecodedMsg } from '@/components/safe-messages/DecodedMsg'
+import { Erc7730Feature } from '@/features/erc7730'
+import { useLoadFeature } from '@/features/__core__'
 import TxCard from '@/components/tx-flow/common/TxCard'
 import { dispatchPreparedSignature } from '@/services/safe-messages/safeMsgNotifications'
 import { trackEvent } from '@/services/analytics'
@@ -255,6 +257,7 @@ const SignMessage = ({ message, origin, requestId }: SignMessageProps): ReactEle
   const { needsRiskConfirmation, isRiskConfirmed } = useSafeShield()
   const { palette } = useTheme()
   const { safe } = useSafeInfo()
+  const { ClearSigningTypedDataReview } = useLoadFeature(Erc7730Feature)
   const isOwner = useIsSafeOwner()
   const wallet = useWallet()
   useHighlightHiddenTab()
@@ -325,6 +328,7 @@ const SignMessage = ({ message, origin, requestId }: SignMessageProps): ReactEle
 
           {isEip712 && (
             <ErrorBoundary fallback={<div>Error parsing data</div>}>
+              <ClearSigningTypedDataReview account={safe.address.value} message={decodedMessage} />
               <ApprovalEditor safeMessage={decodedMessage} />
             </ErrorBoundary>
           )}

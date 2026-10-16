@@ -127,9 +127,9 @@ describe('useIsValidRecoveryExecution', () => {
       })
     })
 
-    it('should return whether the transaction is valid', async () => {
+    it.each(['1', '728126428'])('should return whether the transaction is valid on chain %s', async (chainId) => {
       mockUseWallet.mockReturnValue(connectedWalletBuilder().build())
-      mockUseSafeInfo.mockReturnValue({ safe: safeInfoBuilder().build() } as any)
+      mockUseSafeInfo.mockReturnValue({ safe: safeInfoBuilder().with({ chainId }).build() } as any)
       mockUseWeb3ReadOnly.mockReturnValue({} as any)
       mockUseIsRecoverer.mockReturnValue(true)
 
@@ -137,7 +137,7 @@ describe('useIsValidRecoveryExecution', () => {
         getSigner: () => ({}) as any,
       } as any)
 
-      const isValid = faker.datatype.boolean()
+      const isValid = false
       mockGetModuleInstance.mockReturnValue({
         connect: () => ({
           execTransactionFromModule: {
@@ -158,11 +158,12 @@ describe('useIsValidRecoveryExecution', () => {
       })
 
       expect(result.current).toEqual([isValid, undefined, false])
+      expect(mockGetModuleInstance).toHaveBeenCalledTimes(1)
     })
 
-    it('should otherwise return an error if the transaction validity check throws', async () => {
+    it.each(['1', '728126428'])('returns validation errors on chain %s', async (chainId) => {
       mockUseWallet.mockReturnValue(connectedWalletBuilder().build())
-      mockUseSafeInfo.mockReturnValue({ safe: safeInfoBuilder().build() } as any)
+      mockUseSafeInfo.mockReturnValue({ safe: safeInfoBuilder().with({ chainId }).build() } as any)
       mockUseWeb3ReadOnly.mockReturnValue({} as any)
       mockUseIsRecoverer.mockReturnValue(true)
 
@@ -268,9 +269,9 @@ describe('useIsValidRecoveryExecution', () => {
       })
     })
 
-    it('should return whether the transaction is valid', async () => {
+    it.each(['1', '728126428'])('should return whether the transaction is valid on chain %s', async (chainId) => {
       mockUseWallet.mockReturnValue(connectedWalletBuilder().build())
-      mockUseSafeInfo.mockReturnValue({ safe: safeInfoBuilder().build() } as any)
+      mockUseSafeInfo.mockReturnValue({ safe: safeInfoBuilder().with({ chainId }).build() } as any)
       mockUseWeb3ReadOnly.mockReturnValue({} as any)
       mockUseRecoveryTxState.mockReturnValue({ isExecutable: true } as any)
 
@@ -303,11 +304,12 @@ describe('useIsValidRecoveryExecution', () => {
       await waitFor(() => {
         expect(result.current).toEqual([true, undefined, false])
       })
+      expect(mockGetModuleInstance).toHaveBeenCalledTimes(1)
     })
 
-    it('should otherwise return an error if the transaction is invalid', async () => {
+    it.each(['1', '728126428'])('returns preflight errors on chain %s', async (chainId) => {
       mockUseWallet.mockReturnValue(connectedWalletBuilder().build())
-      mockUseSafeInfo.mockReturnValue({ safe: safeInfoBuilder().build() } as any)
+      mockUseSafeInfo.mockReturnValue({ safe: safeInfoBuilder().with({ chainId }).build() } as any)
       mockUseWeb3ReadOnly.mockReturnValue({} as any)
       mockUseRecoveryTxState.mockReturnValue({ isExecutable: true } as any)
 
@@ -422,9 +424,9 @@ describe('useIsValidRecoveryExecution', () => {
       expect(result.current).toEqual([undefined, undefined, false])
     })
 
-    it('should return true if the transaction is valid', async () => {
+    it.each(['1', '728126428'])('should return true if the transaction is valid on chain %s', async (chainId) => {
       mockUseWallet.mockReturnValue(connectedWalletBuilder().build())
-      mockUseSafeInfo.mockReturnValue({ safe: safeInfoBuilder().build() } as any)
+      mockUseSafeInfo.mockReturnValue({ safe: safeInfoBuilder().with({ chainId }).build() } as any)
       mockUseWeb3ReadOnly.mockReturnValue({} as any)
       mockUseRecoveryTxState.mockReturnValue({ isExpired: true } as any)
 
@@ -457,11 +459,12 @@ describe('useIsValidRecoveryExecution', () => {
       await waitFor(() => {
         expect(result.current).toEqual([true, undefined, false])
       })
+      expect(mockGetModuleInstance).toHaveBeenCalledTimes(1)
     })
 
-    it('should otherwise return an error if the transaction is invalid', async () => {
+    it.each(['1', '728126428'])('returns preflight errors on chain %s', async (chainId) => {
       mockUseWallet.mockReturnValue(connectedWalletBuilder().build())
-      mockUseSafeInfo.mockReturnValue({ safe: safeInfoBuilder().build() } as any)
+      mockUseSafeInfo.mockReturnValue({ safe: safeInfoBuilder().with({ chainId }).build() } as any)
       mockUseWeb3ReadOnly.mockReturnValue({} as any)
       mockUseRecoveryTxState.mockReturnValue({ isExpired: true } as any)
 

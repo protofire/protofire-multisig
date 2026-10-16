@@ -45,6 +45,7 @@ import { FEATURES } from '@safe-global/utils/utils/chains'
 import { sameAddress } from '@safe-global/utils/utils/addresses'
 import DecodedData from './TxData/DecodedData'
 import { QueuedTxSimulation } from '../QueuedTxSimulation'
+import { ClearSigningLookupProvider, Erc7730Feature } from '@/features/erc7730'
 import { HypernativeFeature } from '@/features/hypernative'
 
 export const NOT_AVAILABLE = 'n/a'
@@ -57,6 +58,7 @@ type TxDetailsProps = {
 const TxDetailsBlock = ({ txSummary, txDetails }: TxDetailsProps): ReactElement => {
   const txNotes = useLoadFeature(TxNotesFeature)
   const hn = useLoadFeature(HypernativeFeature)
+  const { ClearSigningCheck, ClearSigningLookupButton } = useLoadFeature(Erc7730Feature)
   const isPending = useIsPending(txSummary.id)
   const hasDefaultTokenlist = useHasFeature(FEATURES.DEFAULT_TOKENLIST)
   const isQueue = isTxQueued(txSummary.txStatus)
@@ -119,12 +121,14 @@ const TxDetailsBlock = ({ txSummary, txDetails }: TxDetailsProps): ReactElement 
         <div className={css.detailsWrapper}>
           {isQueue && (
             <div className={css.inlineSimulation}>
+              <ClearSigningLookupButton />
               <QueuedTxSimulation transaction={txDetails} />
             </div>
           )}
 
           <div className={css.txData}>
             <ErrorBoundary fallback={<div>Error parsing data</div>}>
+              {txDetails.txData && <ClearSigningCheck txData={txDetails.txData} />}
               <TxData
                 txData={txDetails.txData}
                 txInfo={txDetails.txInfo}
@@ -270,7 +274,9 @@ const TxDetails = ({
   return (
     <div className={css.container}>
       {txDetailsData ? (
-        <TxDetailsBlock txSummary={txSummary} txDetails={txDetailsData} />
+        <ClearSigningLookupProvider>
+          <TxDetailsBlock txSummary={txSummary} txDetails={txDetailsData} />
+        </ClearSigningLookupProvider>
       ) : loading ? (
         <div className={css.loading}>
           <CircularProgress />

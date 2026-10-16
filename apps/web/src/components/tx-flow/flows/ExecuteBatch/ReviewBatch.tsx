@@ -132,7 +132,15 @@ export const ReviewBatch = ({ params }: { params: ExecuteBatchFlowProps }) => {
   }, [txsWithDetails, multiSendTxs])
 
   const onExecute = useCallback(async () => {
-    if (!userNonce || !onboard || !wallet || !multiSendTxData || !multiSendContract || !txsWithDetails || !gasPrice)
+    if (
+      userNonce == null ||
+      !onboard ||
+      !wallet ||
+      !multiSendTxData ||
+      !multiSendContract ||
+      !txsWithDetails ||
+      !gasPrice
+    )
       return
 
     const overrides = buildGasOverrides(isEIP1559, gasPrice.maxFeePerGas, gasPrice.maxPriorityFeePerGas, userNonce)

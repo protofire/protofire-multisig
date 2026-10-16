@@ -30,7 +30,11 @@ const getGnosisSafeContract = async (safe: SafeState, safeProvider: SafeProvider
     version = safeSDK?.getContractVersion() ?? null
   }
 
-  return getSafeContractInstance(_getValidatedGetContractProps(version).safeVersion, safeProvider, safe.address.value)
+  return getSafeContractInstance(
+    _getValidatedGetContractProps(version, safe.chainId).safeVersion,
+    safeProvider,
+    safe.address.value,
+  )
 }
 
 export const getReadOnlyCurrentGnosisSafeContract = async (safe: SafeState): Promise<SafeBaseContract<any>> => {
@@ -59,15 +63,10 @@ export const getReadOnlyGnosisSafeContract = async (
 
   const safeProvider = getSafeProvider()
 
-  const isL1SafeSingleton = isL1 ?? !_isL2(chain, _getValidatedGetContractProps(version).safeVersion)
+  const abiVersion = _getValidatedGetContractProps(version, chain.chainId).safeVersion
+  const isL1SafeSingleton = isL1 ?? !_isL2(chain, abiVersion)
 
-  return getSafeContractInstance(
-    _getValidatedGetContractProps(version).safeVersion,
-    safeProvider,
-    undefined,
-    undefined,
-    isL1SafeSingleton,
-  )
+  return getSafeContractInstance(abiVersion, safeProvider, undefined, undefined, isL1SafeSingleton)
 }
 
 // MultiSend
@@ -106,7 +105,7 @@ export const getReadOnlyMultiSendCallOnlyContract = async (
   }
 
   return getMultiSendCallOnlyContractInstance(
-    _getValidatedGetContractProps(version).safeVersion,
+    _getValidatedGetContractProps(version, (await safeProvider.getChainId()).toString()).safeVersion,
     safeProvider,
     customContractAddress,
   )
@@ -125,7 +124,7 @@ export const getReadOnlyProxyFactoryContract = async (safeVersion: SafeState['ve
   }
 
   return getSafeProxyFactoryContractInstance(
-    _getValidatedGetContractProps(version).safeVersion,
+    _getValidatedGetContractProps(version, (await safeProvider.getChainId()).toString()).safeVersion,
     safeProvider,
     contractAddress,
   )
@@ -144,7 +143,7 @@ export const getReadOnlyFallbackHandlerContract = async (safeVersion: SafeState[
   }
 
   return getCompatibilityFallbackHandlerContractInstance(
-    _getValidatedGetContractProps(version).safeVersion,
+    _getValidatedGetContractProps(version, (await safeProvider.getChainId()).toString()).safeVersion,
     safeProvider,
   )
 }
@@ -162,5 +161,8 @@ export const getReadOnlySignMessageLibContract = async (safeVersion: SafeState['
   // For unsupported mastercopies, use the SDK version if available
   const version = safeVersion ?? safeSDK.getContractVersion()
 
-  return getSignMessageLibContractInstance(_getValidatedGetContractProps(version).safeVersion, safeProvider)
+  return getSignMessageLibContractInstance(
+    _getValidatedGetContractProps(version, (await safeProvider.getChainId()).toString()).safeVersion,
+    safeProvider,
+  )
 }

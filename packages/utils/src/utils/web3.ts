@@ -4,6 +4,7 @@ import { TypedDataEncoder } from 'ethers'
 import type { TypedDataDomain } from 'ethers'
 import { adjustVInSignature } from '@safe-global/protocol-kit/dist/src/utils/signatures'
 import { SigningMethod } from '@safe-global/protocol-kit'
+import { isTronChain } from '@safe-global/utils/utils/chains'
 
 export const hashTypedData = (typedData: TypedData): string => {
   // `ethers` doesn't require `EIP712Domain` and otherwise throws
@@ -47,6 +48,10 @@ export const signTypedData = async (signer: JsonRpcSigner, typedData: TypedData)
     } else {
       throw e
     }
+  }
+  // TronLink's TRON-prefixed signature uses v=58/59. Keep Safe's validation for all other inputs.
+  if (isTronChain(String(typedData.domain.chainId)) && /^0x[0-9a-f]{128}(3a|3b)$/i.test(signature)) {
+    return signature
   }
   return adjustVInSignature(SigningMethod.ETH_SIGN_TYPED_DATA, signature)
 }

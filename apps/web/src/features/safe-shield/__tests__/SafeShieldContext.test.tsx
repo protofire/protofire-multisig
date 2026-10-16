@@ -1,9 +1,16 @@
-import { renderHook, waitFor, act } from '@testing-library/react'
+import { renderHook, waitFor, act } from '@/tests/test-utils'
 import { SafeShieldProvider, useSafeShield } from '../SafeShieldContext'
 import { Severity, StatusGroup, ThreatStatus } from '@safe-global/utils/features/safe-shield/types'
 import type { SafeTransaction } from '@safe-global/types-kit'
 import { SafeTxContext } from '@/components/tx-flow/SafeTxProvider'
 import type { ReactNode } from 'react'
+import { Provider } from 'react-redux'
+import { makeStore } from '@/store'
+
+jest.mock('@/hooks/useChains', () => ({
+  useHasFeature: jest.fn(() => false),
+  useCurrentChain: jest.fn(() => ({ chainId: '1' })),
+}))
 
 jest.mock('../hooks', () => ({
   useRecipientAnalysis: jest.fn(() => undefined),
@@ -32,6 +39,10 @@ jest.mock('@/features/myAccounts', () => ({
   useTrustSafe: jest.fn(() => ({ trustSafe: jest.fn() })),
 }))
 
+jest.mock('@/features/erc7730', () => ({
+  ClearSigningLookupProvider: ({ children }: { children: ReactNode }) => children,
+}))
+
 const mockSafeTxContextValue = {
   safeTx: undefined,
   setSafeTx: jest.fn(),
@@ -45,6 +56,7 @@ const mockSafeTxContextValue = {
 }
 
 const mockUseThreatAnalysis = jest.requireMock('../hooks').useThreatAnalysis
+const mockUseHasFeature = jest.requireMock('@/hooks/useChains').useHasFeature
 
 const buildSafeTransaction = (data: string): SafeTransaction => ({
   addSignature: jest.fn(),
@@ -83,15 +95,18 @@ const buildThreatResult = (severity: Severity) => [
 describe('SafeShieldContext', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    mockUseHasFeature.mockReturnValue(false)
   })
 
   it('should require risk confirmation for critical threats', async () => {
     mockUseThreatAnalysis.mockReturnValue(buildThreatResult(Severity.CRITICAL))
 
     const wrapper = ({ children }: { children: ReactNode }) => (
-      <SafeTxContext.Provider value={mockSafeTxContextValue}>
-        <SafeShieldProvider>{children}</SafeShieldProvider>
-      </SafeTxContext.Provider>
+      <Provider store={makeStore(undefined, { skipBroadcast: true })}>
+        <SafeTxContext.Provider value={mockSafeTxContextValue}>
+          <SafeShieldProvider>{children}</SafeShieldProvider>
+        </SafeTxContext.Provider>
+      </Provider>
     )
 
     const { result } = renderHook(() => useSafeShield(), { wrapper })
@@ -114,9 +129,11 @@ describe('SafeShieldContext', () => {
     mockUseThreatAnalysis.mockReturnValue(buildThreatResult(Severity.OK))
 
     const wrapper = ({ children }: { children: ReactNode }) => (
-      <SafeTxContext.Provider value={mockSafeTxContextValue}>
-        <SafeShieldProvider>{children}</SafeShieldProvider>
-      </SafeTxContext.Provider>
+      <Provider store={makeStore(undefined, { skipBroadcast: true })}>
+        <SafeTxContext.Provider value={mockSafeTxContextValue}>
+          <SafeShieldProvider>{children}</SafeShieldProvider>
+        </SafeTxContext.Provider>
+      </Provider>
     )
 
     const { result } = renderHook(() => useSafeShield(), { wrapper })
@@ -134,13 +151,61 @@ describe('SafeShieldContext', () => {
     )
   })
 
+  it('should not require risk confirmation on Tron', async () => {
+    mockUseHasFeature.mockReturnValue(true)
+    mockUseThreatAnalysis.mockReturnValue(buildThreatResult(Severity.CRITICAL))
+
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <Provider store={makeStore(undefined, { skipBroadcast: true })}>
+        <SafeTxContext.Provider value={mockSafeTxContextValue}>
+          <SafeShieldProvider>{children}</SafeShieldProvider>
+        </SafeTxContext.Provider>
+      </Provider>
+    )
+
+    const { result } = renderHook(() => useSafeShield(), { wrapper })
+
+    act(() => {
+      result.current.setSafeTx(buildSafeTransaction('0x1234'))
+    })
+
+    await waitFor(() => {
+      expect(result.current.needsRiskConfirmation).toBe(false)
+    })
+  })
+
+  it('keeps risk confirmation enabled while the chain feature is unresolved', async () => {
+    mockUseHasFeature.mockReturnValue(undefined)
+    mockUseThreatAnalysis.mockReturnValue(buildThreatResult(Severity.CRITICAL))
+
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <Provider store={makeStore(undefined, { skipBroadcast: true })}>
+        <SafeTxContext.Provider value={mockSafeTxContextValue}>
+          <SafeShieldProvider>{children}</SafeShieldProvider>
+        </SafeTxContext.Provider>
+      </Provider>
+    )
+
+    const { result } = renderHook(() => useSafeShield(), { wrapper })
+
+    act(() => {
+      result.current.setSafeTx(buildSafeTransaction('0x1234'))
+    })
+
+    await waitFor(() => {
+      expect(result.current.needsRiskConfirmation).toBe(true)
+    })
+  })
+
   it('should reset risk confirmation when transaction changes', async () => {
     mockUseThreatAnalysis.mockReturnValue(buildThreatResult(Severity.CRITICAL))
 
     const wrapper = ({ children }: { children: ReactNode }) => (
-      <SafeTxContext.Provider value={mockSafeTxContextValue}>
-        <SafeShieldProvider>{children}</SafeShieldProvider>
-      </SafeTxContext.Provider>
+      <Provider store={makeStore(undefined, { skipBroadcast: true })}>
+        <SafeTxContext.Provider value={mockSafeTxContextValue}>
+          <SafeShieldProvider>{children}</SafeShieldProvider>
+        </SafeTxContext.Provider>
+      </Provider>
     )
 
     const { result } = renderHook(() => useSafeShield(), { wrapper })

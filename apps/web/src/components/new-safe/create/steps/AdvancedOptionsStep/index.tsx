@@ -69,8 +69,8 @@ const AdvancedOptionsStep = ({ onSubmit, onBack, data, setStep }: StepRenderProp
 
     const replayedSafeWithNonce = { ...newSafeProps, saltNonce: selectedSaltNonce.toString() }
 
-    return predictAddressBasedOnReplayData(replayedSafeWithNonce, provider)
-  }, [provider, newSafeProps, selectedSaltNonce])
+    return predictAddressBasedOnReplayData(replayedSafeWithNonce, provider, chain?.chainId)
+  }, [provider, newSafeProps, selectedSaltNonce, chain?.chainId])
 
   const [isDeployed] = useAsync(
     async () => (predictedSafeAddress ? await isSmartContract(predictedSafeAddress) : false),

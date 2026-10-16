@@ -11,11 +11,13 @@ export type AddressActivityResult = Record<string, AnalysisResult<RecipientStatu
 /**
  * React hook to analyze activity for multiple addresses
  * @param addresses - Array of Ethereum addresses to analyze
+ * @param isTronChain - Whether the chain is a Tron chain, per the platform's FEATURES.TRON flag
  * @returns Object containing activity results for each address, loading state, and error
  */
 export const useAddressActivity = (
   addresses: string[],
-  web3ReadOnly?: JsonRpcProvider,
+  web3ReadOnly: JsonRpcProvider | undefined,
+  isTronChain: boolean,
 ): AsyncResult<AddressActivityResult | undefined> => {
   const previousRecipientsRef = useRef<Set<string>>(new Set())
   const [results, setResults] = useState<AddressActivityResult | undefined>(undefined)
@@ -48,6 +50,12 @@ export const useAddressActivity = (
       return undefined
     }
 
+    // Tron /jsonrpc does not support eth_getTransactionCount (and poisons batched
+    // RPC calls sharing the request) — skip activity analysis before calling it.
+    if (isTronChain) {
+      return Object.fromEntries(addressesToFetch.map((address) => [address, undefined]))
+    }
+
     const activityResults: AddressActivityResult = {}
 
     await Promise.all(
@@ -65,14 +73,16 @@ export const useAddressActivity = (
           // Only add result if the address has low activity
           activityResults[address] = txCount < ACTIVITY_THRESHOLD_LOW ? LowActivityAnalysisResult : undefined
         } catch (err) {
-          console.error(`Address activity analysis error for ${address}:`, err)
+          // This branch only runs for non-Tron chains (Tron short-circuits above), so a
+          // failure here is a genuine RPC issue and should surface, not be swallowed.
+          console.error(`Address activity analysis failed for ${address}:`, err)
           throw err
         }
       }),
     )
 
     return activityResults
-  }, [addressesToFetch, web3ReadOnly])
+  }, [addressesToFetch, web3ReadOnly, isTronChain])
 
   // Update results to only include addresses that are in the given addresses array
   useEffectDeepCompare(() => {

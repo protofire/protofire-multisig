@@ -16,6 +16,7 @@ import { getTxLink } from '@/utils/tx-link'
 import { useLazyTransactionsGetTransactionByIdV1Query } from '@safe-global/store/gateway/AUTO_GENERATED/transactions'
 import { getExplorerLink } from '@safe-global/utils/utils/gateway'
 import { getGuardErrorInfo } from '@/utils/transaction-errors'
+import { isTronChain, toTronBase58Sync } from '@/utils/tron'
 
 const TxNotifications = {
   [TxEvent.SIGN_FAILED]: 'Failed to sign. Please try again.',
@@ -84,6 +85,13 @@ const useTxNotifications = (): void => {
             const { data: txDetails } = await trigger({ chainId: chain.chainId, id })
             humanDescription = txDetails?.txInfo.humanDescription || humanDescription
           } catch {}
+        }
+
+        // Replace 0x addresses with base58 in notification text for Tron chains
+        if (isTronChain(chain.chainId)) {
+          humanDescription = humanDescription.replace(/0x[0-9a-fA-F]{4,40}/g, (match) =>
+            match.length === 42 ? toTronBase58Sync(match) : match,
+          )
         }
 
         dispatch(

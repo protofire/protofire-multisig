@@ -3,18 +3,26 @@ import { SafeShieldDisplay } from './components/SafeShieldDisplay'
 import { useSafeShield } from './SafeShieldContext'
 import { SAFE_SHIELD_EVENTS, trackEvent } from '@/services/analytics'
 import { useHypernativeOAuth, useIsHypernativeEligible } from '@/features/hypernative'
+import { useHasFeature } from '@/hooks/useChains'
+import { FEATURES } from '@safe-global/utils/utils/chains'
 
-const SafeShieldWidget = (): ReactElement => {
+const SafeShieldWidget = (): ReactElement | null => {
   const { recipient, contract, threat, safeTx, safeAnalysis, addToTrustedList } = useSafeShield()
   const hypernativeAuth = useHypernativeOAuth()
   const { isHypernativeEligible, isHypernativeGuard, loading: eligibilityLoading } = useIsHypernativeEligible()
   const showHnInfo = !eligibilityLoading && isHypernativeEligible
   const showHnActiveStatus = !eligibilityLoading && isHypernativeGuard
+  const isTron = useHasFeature(FEATURES.TRON) === true
 
   // Track when a transaction flow is started
   useEffect(() => {
-    trackEvent(SAFE_SHIELD_EVENTS.TRANSACTION_STARTED)
-  }, [])
+    if (!isTron) {
+      trackEvent(SAFE_SHIELD_EVENTS.TRANSACTION_STARTED)
+    }
+  }, [isTron])
+
+  // Safe Shield analysis is not available on Tron chains
+  if (isTron) return null
 
   return (
     <SafeShieldDisplay

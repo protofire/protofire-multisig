@@ -3,6 +3,7 @@ import ErrorCodes from '@safe-global/utils/services/exceptions/ErrorCodes'
 import { migrateAddedSafes } from '@/services/ls-migration/addedSafes'
 import { migrateAddressBook } from '@/services/ls-migration/addressBook'
 import { isChecksummedAddress } from '@safe-global/utils/utils/addresses'
+import type { LOCAL_STORAGE_DATA } from '@/services/ls-migration/common'
 import type { AddressBook, AddressBookState } from '@/store/addressBookSlice'
 import type { AddedSafesState } from '@/store/addedSafesSlice'
 import type { SafeAppsState } from '@/store/safeAppsSlice'
@@ -72,7 +73,7 @@ export const _filterValidAbEntries = (ab?: AddressBookState): AddressBookState |
  * @returns data to import and some insights about it
  */
 
-type Data = {
+export type ParsedImportData = {
   addedSafes?: AddedSafesState
   addressBook?: AddressBookState
   settings?: SettingsState
@@ -84,76 +85,92 @@ type Data = {
   addedSafesCount: number
 }
 
-export const useGlobalImportJsonParser = (jsonData: string | undefined): Data => {
+export type GlobalExportFile = {
+  version?: string
+  data?: Record<string, unknown>
+}
+
+const emptyParsedImportData = (): ParsedImportData => ({
+  addressBookEntriesCount: 0,
+  addedSafesCount: 0,
+  addressBook: undefined,
+  addedSafes: undefined,
+  settings: undefined,
+  safeApps: undefined,
+  undeployedSafes: undefined,
+  visitedSafes: undefined,
+})
+
+/**
+ * Core parse/validate logic, decoupled from `File`/`FileReader` and from `JSON.parse`
+ * so it can run on an already-decoded object too (e.g. a postMessage payload from the
+ * data-migration bridge), not just on a manually uploaded/parsed export file.
+ */
+export const parseGlobalImportData = (parsedFile: GlobalExportFile): ParsedImportData => {
+  const data = emptyParsedImportData()
+
+  if (!parsedFile.data || Object.keys(parsedFile.data).length === 0) {
+    data.error = ImportErrors.NO_IMPORT_DATA_FOUND
+    return data
+  }
+
+  switch (parsedFile.version) {
+    case SAFE_EXPORT_VERSION.V1: {
+      const legacyData = parsedFile.data as LOCAL_STORAGE_DATA
+      data.addressBook = migrateAddressBook(legacyData) ?? undefined
+      data.addedSafes = migrateAddedSafes(legacyData) ?? undefined
+
+      break
+    }
+
+    case SAFE_EXPORT_VERSION.V2: {
+      data.addressBook = _filterValidAbEntries(parsedFile.data.addressBook as AddressBookState | undefined)
+      data.addedSafes = parsedFile.data.addedSafes as AddedSafesState | undefined
+      data.settings = parsedFile.data.settings as SettingsState | undefined
+      data.safeApps = parsedFile.data.safeApps as SafeAppsState | undefined
+      data.undeployedSafes = parsedFile.data.undeployedSafes as UndeployedSafesState | undefined
+
+      break
+    }
+
+    case SAFE_EXPORT_VERSION.V3: {
+      data.addressBook = _filterValidAbEntries(parsedFile.data.addressBook as AddressBookState | undefined)
+      data.addedSafes = parsedFile.data.addedSafes as AddedSafesState | undefined
+      data.settings = parsedFile.data.settings as SettingsState | undefined
+      data.safeApps = parsedFile.data.safeApps as SafeAppsState | undefined
+      data.undeployedSafes = parsedFile.data.undeployedSafes as UndeployedSafesState | undefined
+      data.visitedSafes = parsedFile.data.visitedSafes as VisitedSafesState | undefined
+
+      break
+    }
+
+    default: {
+      data.error = ImportErrors.INVALID_VERSION
+    }
+  }
+
+  data.addressBookEntriesCount = data.addressBook ? countEntries(data.addressBook) : 0
+  data.addedSafesCount = data.addedSafes ? countEntries(data.addedSafes) : 0
+
+  return data
+}
+
+export const useGlobalImportJsonParser = (jsonData: string | undefined): ParsedImportData => {
   return useMemo(() => {
-    const data: Data = {
-      addressBookEntriesCount: 0,
-      addedSafesCount: 0,
-      addressBook: undefined,
-      addedSafes: undefined,
-      settings: undefined,
-      safeApps: undefined,
-      undeployedSafes: undefined,
-      visitedSafes: undefined,
-    }
-
     if (!jsonData) {
-      return data
+      return emptyParsedImportData()
     }
 
-    let parsedFile
+    let parsedFile: GlobalExportFile
 
     try {
       parsedFile = JSON.parse(jsonData)
     } catch (err) {
       logError(ErrorCodes._704, err)
 
-      data.error = ImportErrors.INVALID_JSON_FORMAT
-      return data
+      return { ...emptyParsedImportData(), error: ImportErrors.INVALID_JSON_FORMAT }
     }
 
-    if (!parsedFile.data || Object.keys(parsedFile.data).length === 0) {
-      data.error = ImportErrors.NO_IMPORT_DATA_FOUND
-      return data
-    }
-
-    switch (parsedFile.version) {
-      case SAFE_EXPORT_VERSION.V1: {
-        data.addressBook = migrateAddressBook(parsedFile.data) ?? undefined
-        data.addedSafes = migrateAddedSafes(parsedFile.data) ?? undefined
-
-        break
-      }
-
-      case SAFE_EXPORT_VERSION.V2: {
-        data.addressBook = _filterValidAbEntries(parsedFile.data.addressBook)
-        data.addedSafes = parsedFile.data.addedSafes
-        data.settings = parsedFile.data.settings
-        data.safeApps = parsedFile.data.safeApps
-        data.undeployedSafes = parsedFile.data.undeployedSafes
-
-        break
-      }
-
-      case SAFE_EXPORT_VERSION.V3: {
-        data.addressBook = _filterValidAbEntries(parsedFile.data.addressBook)
-        data.addedSafes = parsedFile.data.addedSafes
-        data.settings = parsedFile.data.settings
-        data.safeApps = parsedFile.data.safeApps
-        data.undeployedSafes = parsedFile.data.undeployedSafes
-        data.visitedSafes = parsedFile.data.visitedSafes
-
-        break
-      }
-
-      default: {
-        data.error = ImportErrors.INVALID_VERSION
-      }
-    }
-
-    data.addressBookEntriesCount = data.addressBook ? countEntries(data.addressBook) : 0
-    data.addedSafesCount = data.addedSafes ? countEntries(data.addedSafes) : 0
-
-    return data
+    return parseGlobalImportData(parsedFile)
   }, [jsonData])
 }

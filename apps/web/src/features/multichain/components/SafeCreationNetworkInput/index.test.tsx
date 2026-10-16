@@ -8,6 +8,8 @@ import { act } from 'react'
 import userEvent from '@testing-library/user-event'
 import * as router from 'next/router'
 import { FEATURES } from '@safe-global/utils/utils/chains'
+import * as useWallet from '@/hooks/wallets/useWallet'
+import type { ConnectedWallet } from '@/hooks/wallets/useOnboard'
 
 const TestForm = ({ isAdvancedFlow = false }: { isAdvancedFlow?: boolean }) => {
   const formMethods = useForm<{ networks: Chain[] }>({
@@ -65,6 +67,38 @@ describe('NetworkMultiSelector', () => {
       .with({ recommendedMasterCopyVersion: '1.4.1' })
       .build(),
   ]
+
+  it('disables networks of the other chain family than the connected wallet and says which wallet they need', async () => {
+    const tronChain = chainBuilder()
+      .with({ chainId: '728126428' })
+      .with({ chainName: 'Tron Mainnet' })
+      .with({ shortName: 'tron' })
+      .with({ features: [FEATURES.TRON] as any })
+      .build()
+    const configs = [mockChains[0], tronChain]
+    jest.spyOn(useChains, 'useCurrentChain').mockReturnValue(mockChains[0])
+    jest.spyOn(useChains, 'default').mockReturnValue({ configs, loading: false })
+    jest.spyOn(useChains, 'useChain').mockImplementation((chainId) => configs.find((c) => c.chainId === chainId))
+    jest.spyOn(useWallet, 'default').mockReturnValue({ label: 'MetaMask', chainId: '1' } as ConnectedWallet)
+
+    const { getByRole, getAllByRole, queryByText } = render(<TestForm />)
+
+    // Nothing about Tron until the user opens the list
+    expect(queryByText(/TronLink/)).toBeNull()
+
+    act(() => {
+      userEvent.click(getByRole('combobox'))
+    })
+
+    await waitFor(() => {
+      const [ethereum, tron] = getAllByRole('option')
+      expect(ethereum).toHaveAttribute('aria-disabled', 'false')
+      expect(ethereum).not.toHaveTextContent('Needs')
+      expect(tron).toHaveTextContent('Tron Mainnet')
+      expect(tron).toHaveTextContent('Needs TronLink')
+      expect(tron).toHaveAttribute('aria-disabled', 'true')
+    })
+  })
 
   it('should be possible to select and deselect networks', async () => {
     jest.spyOn(useChains, 'useCurrentChain').mockReturnValue(mockChains[0])

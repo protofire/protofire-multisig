@@ -88,6 +88,7 @@ describe('HiddenTokenToggle', () => {
             blindSigning: false,
           },
           transactionExecution: true,
+          tronAddressFormat: 'base58' as const,
           curatedNestedSafes: {},
         },
       },

@@ -33,7 +33,7 @@ export const getAvailableSaltNonce = async (
     if (!web3ReadOnly) {
       throw new Error('Could not initiate RPC')
     }
-    const safeAddress = await predictAddressBasedOnReplayData(replayedSafe, web3ReadOnly)
+    const safeAddress = await predictAddressBasedOnReplayData(replayedSafe, web3ReadOnly, chain.chainId)
 
     const isKnown = knownSafeAddresses.some((knownAddress) => sameAddress(knownAddress, safeAddress))
     if (isKnown || (await isSmartContract(safeAddress, web3ReadOnly))) {

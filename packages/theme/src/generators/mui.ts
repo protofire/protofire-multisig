@@ -415,7 +415,7 @@ export function generateMuiTheme(mode: PaletteMode): Theme {
         styleOverrides: { root: ({ theme }) => ({ backgroundColor: alpha(theme.palette.backdrop.main, 0.75) }) },
       },
       MuiSwitch: {
-        defaultProps: { color: 'success' },
+        defaultProps: { color: 'primary' },
         styleOverrides: {
           root: ({ theme }) => ({
             width: 28,
@@ -432,7 +432,7 @@ export function generateMuiTheme(mode: PaletteMode): Theme {
               '&.Mui-checked': {
                 transform: 'translateX(12px)',
                 color: '#FFFFFF',
-                '& + .MuiSwitch-track': { opacity: 1, backgroundColor: theme.palette.success.main },
+                '& + .MuiSwitch-track': { opacity: 1, backgroundColor: theme.palette.primary.main },
               },
               '&.Mui-disabled .MuiSwitch-thumb': { color: theme.palette.text.disabled },
               '&.Mui-disabled + .MuiSwitch-track': { opacity: isDarkMode ? 0.3 : 0.7 },

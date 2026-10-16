@@ -20,6 +20,11 @@ export const GATEWAY_URL_PRODUCTION =
   process.env.NEXT_PUBLIC_GATEWAY_URL_PRODUCTION || 'https://safe-client.safe.global'
 export const GATEWAY_URL_STAGING = process.env.NEXT_PUBLIC_GATEWAY_URL_STAGING || 'https://safe-client.staging.5afe.dev'
 
+// Indexing status page
+export const STATUS_PAGE = `https://tx-status-app.safe.protofire.io/?serviceUrl=${
+  IS_PRODUCTION ? GATEWAY_URL_PRODUCTION : GATEWAY_URL_STAGING
+}`
+
 // Status page
 export const STATUS_PAGE_URL = process.env.NEXT_PUBLIC_SAFE_STATUS_PAGE_URL || 'https://status.safe.global'
 
@@ -136,6 +141,9 @@ export enum SafeAppsName {
 export const IS_OFFICIAL_HOST = process.env.NEXT_PUBLIC_IS_OFFICIAL_HOST === 'true'
 export const OFFICIAL_HOSTS = /app\.safe\.global|.+\.5afe\.dev|localhost:3000|localhost:4000|localhost:6006/
 export const IPFS_HOSTS = /app\.safe\.eth\.limo|app\.5afedev\.eth\.limo/
+// Hosts allowed to serve the Superchain migration landing page (Protofire shared UI only)
+export const PROTOFIRE_HOSTS =
+  /^app\.safe\.protofire\.io$|^app\.stage\.safe\.protofire\.io$|^app\.dev\.safe\.protofire\.io$|^localhost:3000$|^localhost:4000$|^localhost:6006$/
 export const BRAND_NAME = process.env.NEXT_PUBLIC_BRAND_NAME || (IS_OFFICIAL_HOST ? 'Safe{Wallet}' : 'Wallet fork')
 export const BRAND_LOGO = process.env.NEXT_PUBLIC_BRAND_LOGO || ''
 

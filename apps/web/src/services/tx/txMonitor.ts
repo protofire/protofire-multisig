@@ -1,6 +1,7 @@
+import { isTronChain } from '@/utils/tron'
 import { didRevert, type EthersError } from '@/utils/ethers-utils'
 
-import { txDispatch, TxEvent } from '@/services/tx/txEvents'
+import { txDispatch, txSubscribe, TxEvent } from '@/services/tx/txEvents'
 
 import { POLLING_INTERVAL } from '@/config/constants'
 import { getSafeTransaction } from '@/utils/transactions'
@@ -15,6 +16,33 @@ export function _getRemainingTimeout(defaultTimeout: number, submittedAt?: numbe
   const timeSinceSubmission = submittedAt !== undefined ? Date.now() - submittedAt : 0
 
   return Math.max(timeoutInMs - timeSinceSubmission, 1)
+}
+
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+/**
+ * Poll for transaction receipt on Tron.
+ * ethers.js provider.on('block') and TransactionResponse.wait() don't work
+ * reliably on Tron because Tron's nonce/block semantics differ from Ethereum.
+ */
+async function waitForTronReceipt(
+  provider: JsonRpcProvider,
+  txHash: string,
+  maxAttempts = 40,
+): Promise<TransactionReceipt | null> {
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      const receipt = await provider.getTransactionReceipt(txHash)
+      if (receipt !== null) {
+        return receipt
+      }
+    } catch (e) {
+      // getTransactionReceipt may fail on Tron; keep polling
+      console.warn('waitForTronReceipt: getTransactionReceipt failed, retrying', e)
+    }
+    await delay(3000)
+  }
+  return null
 }
 
 // Provider must be passed as an argument as it is undefined until initialised by `useInitWeb3`
@@ -86,17 +114,27 @@ export const waitForTx = async (
 
         clearInterval(interval)
 
-        const receipt = await SimpleTxWatcher.getInstance().watchTxHash(
-          safeTx.txHash,
-          walletAddress,
-          walletNonce,
-          provider,
-        )
-        processReceipt(receipt, txIds)
+        if (isTronChain(chainId)) {
+          const receipt = await waitForTronReceipt(provider, safeTx.txHash)
+          processReceipt(receipt, txIds)
+        } else {
+          const receipt = await SimpleTxWatcher.getInstance().watchTxHash(
+            safeTx.txHash,
+            walletAddress,
+            walletNonce,
+            provider,
+          )
+          processReceipt(receipt, txIds)
+        }
       }, POLLING_INTERVAL)
     } else {
-      const receipt = await SimpleTxWatcher.getInstance().watchTxHash(txHash, walletAddress, walletNonce, provider)
-      processReceipt(receipt, txIds)
+      if (isTronChain(chainId)) {
+        const receipt = await waitForTronReceipt(provider, txHash)
+        processReceipt(receipt, txIds)
+      } else {
+        const receipt = await SimpleTxWatcher.getInstance().watchTxHash(txHash, walletAddress, walletNonce, provider)
+        processReceipt(receipt, txIds)
+      }
     }
   } catch (error) {
     processError(error, txIds)
@@ -104,6 +142,7 @@ export const waitForTx = async (
 }
 
 const WAIT_FOR_RELAY_TIMEOUT = 3 * 60_000 // 3 minutes
+const activeSafePaysTasks = new Set<string>()
 
 export const waitForRelayedTx = (
   taskId: string,
@@ -112,6 +151,7 @@ export const waitForRelayedTx = (
   safeAddress: string,
   nonce: number,
   groupKey?: string,
+  isSafePays = false,
 ): void => {
   const baseUrl = getBaseUrl()
   if (!baseUrl) {
@@ -128,11 +168,34 @@ export const waitForRelayedTx = (
     return
   }
 
+  const taskKey = `${chainId}:${taskId}`
+  if (isSafePays && activeSafePaysTasks.has(taskKey)) return
+  if (isSafePays) activeSafePaysTasks.add(taskKey)
+
   let intervalId: NodeJS.Timeout
-  let failAfterTimeoutId: NodeJS.Timeout
+  let failAfterTimeoutId: NodeJS.Timeout | undefined
+  let stopped = false
+  let fetching = false
+  let unsubscribe: (() => void) | undefined
+  const stop = () => {
+    stopped = true
+    clearInterval(intervalId)
+    clearTimeout(failAfterTimeoutId)
+    if (isSafePays) activeSafePaysTasks.delete(taskKey)
+    unsubscribe?.()
+  }
+  if (isSafePays) {
+    unsubscribe = txSubscribe(TxEvent.SUCCESS, (detail) => {
+      if (detail.chainId === chainId && detail.txId && txIds.includes(detail.txId)) stop()
+    })
+  }
 
   intervalId = setInterval(async () => {
-    const relayStatus = await getRelayTxStatus(baseUrl, chainId, taskId)
+    if (fetching || stopped) return
+    fetching = true
+    const relayStatus = await getRelayTxStatus(baseUrl, chainId, taskId).catch(() => undefined)
+    fetching = false
+    if (stopped) return
 
     // Request failed or not found yet
     if (!relayStatus) {
@@ -141,6 +204,7 @@ export const waitForRelayedTx = (
 
     switch (relayStatus.status) {
       case RelayStatus.Included:
+        if (isSafePays && !relayStatus.receipt?.transactionHash) return
         txIds.forEach((txId) =>
           txDispatch(TxEvent.PROCESSED, {
             nonce,
@@ -181,9 +245,11 @@ export const waitForRelayedTx = (
         return
     }
 
-    clearTimeout(failAfterTimeoutId)
-    clearInterval(intervalId)
+    stop()
   }, POLLING_INTERVAL)
+
+  // OZ owns expiry and resubmission. A browser timeout does not mean the transaction failed.
+  if (isSafePays) return
 
   failAfterTimeoutId = setTimeout(() => {
     txIds.forEach((txId) =>
@@ -201,6 +267,6 @@ export const waitForRelayedTx = (
       }),
     )
 
-    clearInterval(intervalId)
+    stop()
   }, WAIT_FOR_RELAY_TIMEOUT)
 }

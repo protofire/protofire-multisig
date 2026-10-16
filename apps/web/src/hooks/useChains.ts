@@ -5,9 +5,11 @@ import useChainId from './useChainId'
 import type { FEATURES } from '@safe-global/utils/utils/chains'
 import { hasFeature } from '@safe-global/utils/utils/chains'
 import { getRtkQueryErrorMessage } from '@/utils/rtkQuery'
+import { STATIC_CHAINS_REQUEST_ID_PREFIX } from '@/store'
 
-const useChains = (): { configs: Chain[]; error?: string; loading?: boolean } => {
-  const { data, error, isLoading } = useGetChainsConfigQuery()
+const useChains = (): { configs: Chain[]; error?: string; loading?: boolean; isRuntimeData?: boolean } => {
+  const result = useGetChainsConfigQuery()
+  const { data, error, isLoading } = result
 
   const configs = useMemo(() => {
     if (!data) return []
@@ -15,13 +17,26 @@ const useChains = (): { configs: Chain[]; error?: string; loading?: boolean } =>
     return data.ids.map((id) => data.entities[id]!)
   }, [data])
 
+  // requestId is rewritten the instant a runtime fetch starts (store/index.ts's seed keeps its
+  // static-prefixed id only until then), so a non-static id alone means "fetching", not
+  // "fetched" — gate on the request having settled: fulfilled (isSuccess && !isFetching) with a
+  // non-static requestId, or rejected (isError), in which case we fall back to initialising off
+  // the snapshot (degraded but usable) rather than blocking wallet setup forever.
+  const isRuntimeData =
+    (result.isSuccess &&
+      !result.isFetching &&
+      !!result.requestId &&
+      !result.requestId.startsWith(STATIC_CHAINS_REQUEST_ID_PREFIX)) ||
+    result.isError
+
   return useMemo(
     () => ({
       configs,
       error: error ? getRtkQueryErrorMessage(error) : undefined,
       loading: isLoading,
+      isRuntimeData,
     }),
-    [configs, error, isLoading],
+    [configs, error, isLoading, isRuntimeData],
   )
 }
 

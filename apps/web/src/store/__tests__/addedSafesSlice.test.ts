@@ -1,5 +1,5 @@
 import type { SafeState } from '@safe-global/store/gateway/AUTO_GENERATED/safes'
-import { addOrUpdateSafe, removeSafe, addedSafesSlice } from '../addedSafesSlice'
+import { addOrUpdateSafe, removeSafe, upsertAddedSafe, addedSafesSlice } from '../addedSafesSlice'
 
 describe('addedSafesSlice', () => {
   describe('addOrUpdateSafe', () => {
@@ -25,6 +25,35 @@ describe('addedSafesSlice', () => {
           ['0x2']: { owners: [{ value: '0x789' }], threshold: 1 },
         },
         '4': { ['0x1']: { threshold: 1, owners: [{ value: '0x456' }] } },
+      })
+    })
+  })
+
+  describe('upsertAddedSafe', () => {
+    it('should add a Safe without touching other chains/addresses already in the store', () => {
+      const state = { '1': { '0x0': { owners: [{ value: '0x123' }], threshold: 1 } } }
+
+      const result = addedSafesSlice.reducer(
+        state,
+        upsertAddedSafe({ chainId: '4', address: '0x1', safe: { owners: [{ value: '0x456' }], threshold: 2 } }),
+      )
+
+      expect(result).toEqual({
+        '1': { '0x0': { owners: [{ value: '0x123' }], threshold: 1 } },
+        '4': { '0x1': { owners: [{ value: '0x456' }], threshold: 2 } },
+      })
+    })
+
+    it('should update an existing Safe while preserving fields not present in the import', () => {
+      const state = { '1': { '0x0': { owners: [{ value: '0x123' }], threshold: 1, ethBalance: '42' } } }
+
+      const result = addedSafesSlice.reducer(
+        state,
+        upsertAddedSafe({ chainId: '1', address: '0x0', safe: { owners: [{ value: '0x789' }], threshold: 2 } }),
+      )
+
+      expect(result).toEqual({
+        '1': { '0x0': { owners: [{ value: '0x789' }], threshold: 2, ethBalance: '42' } },
       })
     })
   })

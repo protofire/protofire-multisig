@@ -23,6 +23,7 @@ jest.mock('@/hooks/wallets/useWallet', () => ({
 // mock useCurrentChain
 jest.mock('@/hooks/useChains', () => ({
   __esModule: true,
+  default: jest.fn(() => ({ configs: [] })),
   useCurrentChain: jest.fn(() => chainBuilder().build()),
 }))
 

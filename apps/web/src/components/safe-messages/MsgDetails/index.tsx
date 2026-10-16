@@ -19,12 +19,21 @@ import txDetailsCss from '@/components/transactions/TxDetails/styles.module.css'
 import singleTxDecodedCss from '@/components/transactions/TxDetails/TxData/DecodedData/SingleTxDecoded/styles.module.css'
 import infoDetailsCss from '@/components/transactions/InfoDetails/styles.module.css'
 import { DecodedMsg } from '../DecodedMsg'
+import { ClearSigningLookupProvider, Erc7730Feature } from '@/features/erc7730'
+import { useLoadFeature } from '@/features/__core__'
+import useSafeInfo from '@/hooks/useSafeInfo'
 import CopyButton from '@/components/common/CopyButton'
 import NamedAddressInfo from '@/components/common/NamedAddressInfo'
 import MsgShareLink from '../MsgShareLink'
 
 const MsgDetails = ({ msg }: { msg: MessageItem }): ReactElement => {
   const wallet = useWallet()
+  const { safe } = useSafeInfo()
+  const {
+    ClearSigningLookupButton,
+    ClearSigningTypedDataReview,
+    $isReady: isClearSigningReady,
+  } = useLoadFeature(Erc7730Feature)
   const isConfirmed = msg.status === 'CONFIRMED'
   const safeMessage = useMemo(() => {
     try {
@@ -71,6 +80,14 @@ const MsgDetails = ({ msg }: { msg: MessageItem }): ReactElement => {
             }
           >
             <ErrorBoundary fallback={<div>Error decoding message</div>}>
+              {isClearSigningReady && isEIP712TypedData(msg.message) && (
+                <ClearSigningLookupProvider>
+                  <Box display="flex" justifyContent="flex-end">
+                    <ClearSigningLookupButton />
+                  </Box>
+                  <ClearSigningTypedDataReview account={safe.address.value} message={msg.message} />
+                </ClearSigningLookupProvider>
+              )}
               <DecodedMsg message={msg.message} />
             </ErrorBoundary>
           </InfoDetails>

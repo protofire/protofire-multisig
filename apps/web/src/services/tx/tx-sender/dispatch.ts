@@ -34,6 +34,8 @@ import { createWeb3, getUserNonce } from '@/hooks/wallets/web3'
 import { asError } from '@safe-global/utils/services/exceptions/utils'
 import chains from '@/config/chains'
 import { createExistingTx } from './create'
+import { isSafePaysTx } from '../gasTokenFee'
+import { FEATURES } from '@/utils/featureToggled'
 
 import { getLatestSafeVersion } from '@safe-global/utils/utils/chains'
 
@@ -511,7 +513,10 @@ export const dispatchTxRelay = async (
       throw new Error('Transaction could not be relayed')
     }
 
+    // CGW has validated the fee token and refund receiver before accepting this relay.
+    const isSafePays = chain.features.includes(FEATURES.PAY_FROM_SAFE) && isSafePaysTx(safeTx)
     txDispatch(TxEvent.RELAYING, {
+      ...(isSafePays && { isSafePays: true }),
       taskId,
       txId,
       nonce: safeTx.data.nonce,
@@ -520,7 +525,7 @@ export const dispatchTxRelay = async (
     })
 
     // Monitor relay tx
-    waitForRelayedTx(taskId, [txId], safe.chainId, safe.address.value, safeTx.data.nonce)
+    waitForRelayedTx(taskId, [txId], safe.chainId, safe.address.value, safeTx.data.nonce, undefined, isSafePays)
   } catch (error) {
     txDispatch(TxEvent.FAILED, {
       txId,

@@ -1,30 +1,41 @@
-import { useCallback, type ReactElement } from 'react'
+import { useCallback, useMemo, type ReactElement, type ReactNode } from 'react'
 import { Checkbox, Autocomplete, TextField, Chip, Box, Typography } from '@mui/material'
 import type { Chain } from '@safe-global/store/gateway/AUTO_GENERATED/chains'
+import partition from 'lodash/partition'
 import ChainIndicator from '../ChainIndicator'
 import css from './styles.module.css'
 import { useFormContext } from 'react-hook-form'
 import useChains from '@/hooks/useChains'
+import NetworkGroupDivider from './NetworkGroupDivider'
+import NewNetworkChip from './NewNetworkChip'
+import { NETWORK_GROUP, getNetworkGroup } from './utils'
 
 type NetworkMultiSelectorInputProps = {
   value: Chain[]
   name: string
   onNetworkChange?: (networks: Chain[]) => void
   isOptionDisabled?: (network: Chain) => boolean
+  getOptionNote?: (network: Chain) => string | undefined
   error?: boolean
   helperText?: string
+  placeholder?: string
   showSelectAll?: boolean
 }
 
 const SELECT_ALL_OPTION = { chainId: 'select-all', chainName: 'Select All' } as Chain
+// MUI groupBy only groups contiguous options. SELECT_ALL_OPTION must stay first in the
+// pre-sorted options array ([...prodNets, ...testNets]) so its empty-string group stays separate.
+const SELECT_ALL_GROUP = ''
 
 const NetworkMultiSelectorInput = ({
   value,
   name,
   onNetworkChange,
   isOptionDisabled,
+  getOptionNote,
   error,
   helperText,
+  placeholder,
   showSelectAll = false,
 }: NetworkMultiSelectorInputProps): ReactElement => {
   const { configs } = useChains()
@@ -64,7 +75,13 @@ const NetworkMultiSelectorInput = ({
     }
   }, [isAllSelected, handleChange, configs])
 
-  const options = showSelectAll ? [SELECT_ALL_OPTION, ...configs] : configs
+  const hasTestnetsInList = useMemo(() => configs.some((config) => config.isTestnet), [configs])
+
+  const options = useMemo(() => {
+    const [testNets, prodNets] = partition(configs, (config) => config.isTestnet)
+    const sortedConfigs = [...prodNets, ...testNets]
+    return showSelectAll ? [SELECT_ALL_OPTION, ...sortedConfigs] : sortedConfigs
+  }, [configs, showSelectAll])
 
   const renderTags = useCallback(
     (selectedOptions: (Chain | typeof SELECT_ALL_OPTION)[]) => {
@@ -110,14 +127,39 @@ const NetworkMultiSelectorInput = ({
         )
       }
 
+      const note = getOptionNote?.(chain)
+
       return (
         <Box component="li" key={key} {...rest}>
           <Checkbox data-testid="network-checkbox" size="small" checked={selected} />
           <ChainIndicator chainId={chain.chainId} inline />
+          <NewNetworkChip chain={chain} />
+          {note && (
+            <Typography variant="caption" ml="auto" pl={1}>
+              {note}
+            </Typography>
+          )}
         </Box>
       )
     },
-    [showSelectAll, isAllSelected, toggleSelectAll],
+    [showSelectAll, isAllSelected, toggleSelectAll, getOptionNote],
+  )
+
+  const renderGroup = useCallback(
+    (params: { group: string; key: string; children?: ReactNode }) => {
+      const showDivider =
+        params.group === NETWORK_GROUP.testnets || (params.group === NETWORK_GROUP.mainnets && hasTestnetsInList)
+
+      return (
+        <li key={params.key}>
+          {showDivider && <NetworkGroupDivider label={params.group} />}
+          <Box component="ul" sx={{ p: 0, m: 0 }}>
+            {params.children}
+          </Box>
+        </li>
+      )
+    },
+    [hasTestnetsInList],
   )
 
   return (
@@ -126,13 +168,19 @@ const NetworkMultiSelectorInput = ({
       value={value || []}
       disableCloseOnSelect
       options={options}
+      groupBy={(option) =>
+        showSelectAll && option.chainId === SELECT_ALL_OPTION.chainId ? SELECT_ALL_GROUP : getNetworkGroup(option)
+      }
       renderTags={renderTags}
       renderOption={renderOption}
+      renderGroup={renderGroup}
       getOptionLabel={(option) => option.chainName}
       getOptionDisabled={(option) =>
         showSelectAll && option.chainId === SELECT_ALL_OPTION.chainId ? false : getOptionDisabled(option)
       }
-      renderInput={(params) => <TextField {...params} error={error} helperText={helperText} />}
+      renderInput={(params) => (
+        <TextField {...params} placeholder={placeholder} error={error} helperText={helperText} />
+      )}
       filterOptions={(options, { inputValue }) => {
         if (!inputValue) return options
         return options.filter(

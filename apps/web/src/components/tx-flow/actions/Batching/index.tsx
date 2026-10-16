@@ -16,8 +16,9 @@ import { Box, Divider } from '@mui/material'
 import commonCss from '@/components/tx-flow/common/styles.module.css'
 import { isMultiSendCalldata } from '@/utils/transaction-calldata'
 import { SafeAppsName } from '@/config/constants'
+import { isSafePaysTx } from '@/services/tx/gasTokenFee'
 
-const Batching = ({
+export const Batching = ({
   onSubmit,
   onSubmitSuccess,
   options = [],
@@ -34,7 +35,7 @@ const Batching = ({
   const handleSubmit = async (e: SyntheticEvent) => {
     e.preventDefault()
 
-    if (!safeTx) return
+    if (!safeTx || isSafePaysTx(safeTx)) return
 
     onSubmit?.()
 
@@ -85,6 +86,7 @@ const useShouldRegisterSlot = () => {
   const { isBatch, isProposing, willExecuteThroughRole, isCreation, isBatchable, data } = useContext(TxFlowContext)
   const isOwner = useIsSafeOwner()
   const { safeTx } = useContext(SafeTxContext)
+  if (isSafePaysTx(safeTx)) return false
   const isDelegateCall = safeTx ? checkIsDelegateCall(safeTx) : false
   const isMultiSend = Boolean(safeTx && isMultiSendCalldata(safeTx?.data.data))
   const isFromTxBuilder = data?.app?.name === SafeAppsName.TRANSACTION_BUILDER

@@ -4,6 +4,7 @@ import { type Balances, useBalancesGetBalancesV1Query } from '@safe-global/store
 import type { AsyncResult } from '@safe-global/utils/hooks/useAsync'
 import {
   type PortfolioBalances,
+  type NativeCurrencyIdentity,
   transformPortfolioToBalances,
   createPortfolioBalances,
   calculateTokensFiatTotal,
@@ -17,6 +18,7 @@ export interface UseTotalBalancesParams {
   hasPortfolioFeature: boolean
   isAllTokensSelected: boolean
   isDeployed: boolean
+  nativeCurrency?: NativeCurrencyIdentity
   counterfactualResult?: AsyncResult<Balances>
   skip?: boolean
   portfolioPollingInterval?: number
@@ -227,7 +229,10 @@ const useTotalBalances = (params: UseTotalBalancesParams): TotalBalancesResult =
     },
   )
 
-  const memoizedPortfolioBalances = useMemo(() => transformPortfolioToBalances(portfolioData), [portfolioData])
+  const memoizedPortfolioBalances = useMemo(
+    () => transformPortfolioToBalances(portfolioData, params.nativeCurrency),
+    [portfolioData, params.nativeCurrency],
+  )
 
   // 4. Counterfactual override (web-only, injected as param)
   const [cfData, cfError, cfLoading] = params.counterfactualResult ?? [undefined, undefined, false]

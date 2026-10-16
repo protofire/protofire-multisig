@@ -1,5 +1,6 @@
 import { createSelector, createSlice, type PayloadAction } from '@reduxjs/toolkit'
 import { validateAddress } from '@safe-global/utils/utils/validation'
+import { checksumAddress } from '@safe-global/utils/utils/addresses'
 import pickBy from 'lodash/pickBy'
 import type { RootState } from '.'
 
@@ -29,16 +30,25 @@ export const addressBookSlice = createSlice({
       if (name.trim() === '') {
         return
       }
+      // Normalize to EIP-55 checksum before writing. The read selector
+      // (selectAddressBookByChain) filters keys through validateAddress, which
+      // requires checksummed casing. On Tron, addresses arrive here as
+      // lowercase hex (from fromTronBase58Sync) and would be silently dropped
+      // on read — surfacing as "Save did nothing" (BUG-04 / GSD-12881).
+      const normalizedAddress = checksumAddress(address)
       chainIds.forEach((chainId) => {
         if (!state[chainId]) state[chainId] = {}
-        state[chainId][address] = name
+        state[chainId][normalizedAddress] = name
       })
     },
 
     removeAddressBookEntry: (state, action: PayloadAction<{ chainId: string; address: string }>) => {
       const { chainId, address } = action.payload
       if (!state[chainId]) return state
-      delete state[chainId][address]
+      // Match the checksumming done by upsertAddressBookEntries so removal
+      // works regardless of the caller's casing.
+      const normalizedAddress = checksumAddress(address)
+      delete state[chainId][normalizedAddress]
       if (Object.keys(state[chainId]).length > 0) return state
       delete state[chainId]
     },

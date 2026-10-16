@@ -1,7 +1,7 @@
 import type { SafeState } from '@safe-global/store/gateway/AUTO_GENERATED/safes'
 import { type GetContractProps } from '@safe-global/protocol-kit'
 import type { SafeVersion } from '@safe-global/types-kit'
-import { assertValidSafeVersion } from '@safe-global/utils/services/contracts/utils'
+import { assertValidSafeVersion, getSafeAbiVersion } from '@safe-global/utils/services/contracts/utils'
 import { getSafeMigrationDeployment } from '@safe-global/safe-deployments'
 import { SAFE_TO_L2_MIGRATION_VERSION } from '@safe-global/utils/config/constants'
 import type { BytecodeComparisonResult } from './bytecodeComparison'
@@ -45,7 +45,9 @@ export const canMigrateUnsupportedMastercopy = (
 
 export const _getValidatedGetContractProps = (
   safeVersion: SafeState['version'],
+  chainId?: string,
 ): Pick<GetContractProps, 'safeVersion'> => {
+  safeVersion = getSafeAbiVersion(safeVersion, chainId)
   assertValidSafeVersion(safeVersion)
 
   // SDK request here: https://github.com/safe-global/safe-core-sdk/issues/261

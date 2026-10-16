@@ -9,6 +9,10 @@
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import dotenv from 'dotenv'
+import { fetchAllChains } from './utils/fetchChains.js'
+
+dotenv.config()
 
 const IS_PRODUCTION = process.env.NEXT_PUBLIC_IS_PRODUCTION === 'true'
 const GATEWAY_URL_PRODUCTION = process.env.NEXT_PUBLIC_GATEWAY_URL_PRODUCTION || 'https://safe-client.safe.global'
@@ -20,37 +24,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const OUTPUT_DIR = path.join(__dirname, '..', 'src', 'config', '__generated__')
 const OUTPUT_FILE = path.join(OUTPUT_DIR, 'chains.json')
 
-type ChainPage = {
-  results: unknown[]
-  next?: string | null
-}
-
-async function fetchAllChains(): Promise<unknown[]> {
-  const allChains: unknown[] = []
-  let url: string | null = `${GATEWAY_URL}/v1/chains?cursor=limit%3D50%26offset%3D0`
-
-  while (url) {
-    const response = await fetch(url)
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch chains: ${response.status} ${response.statusText}`)
-    }
-
-    const data: ChainPage = await response.json()
-    allChains.push(...data.results)
-
-    url = data.next ?? null
-  }
-
-  return allChains
-}
-
 async function main() {
   fs.mkdirSync(OUTPUT_DIR, { recursive: true })
 
   try {
     console.log(`Fetching chains from ${GATEWAY_URL}...`)
-    const chains = await fetchAllChains()
+    const chains = await fetchAllChains(GATEWAY_URL)
     fs.writeFileSync(OUTPUT_FILE, JSON.stringify(chains, null, 2))
     console.log(`Wrote ${chains.length} chains to ${path.relative(process.cwd(), OUTPUT_FILE)}`)
   } catch (error) {

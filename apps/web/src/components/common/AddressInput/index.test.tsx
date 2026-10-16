@@ -11,6 +11,7 @@ import { chainBuilder } from '@/tests/builders/chains'
 import { FEATURES } from '@safe-global/store/gateway/types'
 import userEvent from '@testing-library/user-event'
 import { ContactSource } from '@/hooks/useAllAddressBooks'
+import * as tronUtils from '@/utils/tron'
 
 const mockChain = chainBuilder()
   .with({ features: [FEATURES.DOMAIN_LOOKUP] })
@@ -19,6 +20,8 @@ const mockChain = chainBuilder()
 
 // mock useCurrentChain
 jest.mock('@/hooks/useChains', () => ({
+  __esModule: true,
+  default: jest.fn(() => ({ configs: [] })),
   useCurrentChain: jest.fn(() => mockChain),
   useChain: jest.fn(() => mockChain),
   useHasFeature: jest.fn(() => false),
@@ -229,6 +232,44 @@ describe('AddressInput tests', () => {
     await waitFor(() => expect(input.value).toBe(TEST_ADDRESS_A))
 
     expect(input.previousElementSibling?.textContent).toBe(`${mockChain.shortName}:`)
+  })
+
+  it('should show the Tron chain prefix in the adornment', () => {
+    ;(useCurrentChain as jest.Mock).mockReturnValue(
+      chainBuilder().with({ chainId: '728126428', shortName: 'trx', features: [] }).build(),
+    )
+    const { input } = setup(TEST_ADDRESS_B)
+    expect(input.previousElementSibling?.textContent).toBe('trx:')
+  })
+
+  it('should display the base58 address on a Tron chain when the format setting is base58', async () => {
+    const base58Address = 'TB2c4z3BMsxhY6EsmkqcktUuonyVYXWFhC'
+    jest.spyOn(tronUtils, 'toTronBase58Sync').mockReturnValue(base58Address)
+    ;(useCurrentChain as jest.Mock).mockReturnValue(
+      chainBuilder().with({ chainId: '728126428', shortName: 'trx', features: [] }).build(),
+    )
+
+    const utils = render(<TestForm address={TEST_ADDRESS_B} />, {
+      initialReduxState: { settings: { tronAddressFormat: 'base58' } } as any,
+    })
+    const input = utils.getByLabelText('Recipient address', { exact: false }) as HTMLInputElement
+
+    await waitFor(() => expect(input.value).toBe(base58Address))
+  })
+
+  it('should keep the hex address on a Tron chain when the format setting is hex', async () => {
+    const toTronBase58SyncSpy = jest.spyOn(tronUtils, 'toTronBase58Sync')
+    ;(useCurrentChain as jest.Mock).mockReturnValue(
+      chainBuilder().with({ chainId: '728126428', shortName: 'trx', features: [] }).build(),
+    )
+
+    const utils = render(<TestForm address={TEST_ADDRESS_B} />, {
+      initialReduxState: { settings: { tronAddressFormat: 'hex' } } as any,
+    })
+    const input = utils.getByLabelText('Recipient address', { exact: false }) as HTMLInputElement
+
+    await waitFor(() => expect(input.value).toBe(TEST_ADDRESS_B))
+    expect(toTronBase58SyncSpy).not.toHaveBeenCalled()
   })
 
   // TODO: Fix this test

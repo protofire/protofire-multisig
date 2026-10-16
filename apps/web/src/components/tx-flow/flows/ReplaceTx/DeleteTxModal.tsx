@@ -29,6 +29,7 @@ import { trackEvent } from '@/services/analytics'
 import { isWalletRejection } from '@/utils/wallets'
 import CheckWallet from '@/components/common/CheckWallet'
 import ChainSwitcher from '@/components/common/ChainSwitcher'
+import { asError } from '@safe-global/utils/services/exceptions/utils'
 
 type DeleteTxModalProps = {
   safeTxHash: string
@@ -73,7 +74,7 @@ const InternalDeleteTxModal = ({
       })
     } catch (error) {
       setIsLoading(false)
-      setError(error as Error)
+      setError(asError(error))
       trackEvent(isWalletRejection(error as Error) ? REJECT_TX_EVENTS.DELETE_CANCEL : REJECT_TX_EVENTS.DELETE_FAIL)
       return
     }

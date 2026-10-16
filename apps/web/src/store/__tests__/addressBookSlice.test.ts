@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker'
+import { checksumAddress } from '@safe-global/utils/utils/addresses'
 import {
   addressBookSlice,
   setAddressBook,
@@ -62,6 +63,11 @@ describe('addressBookSlice', () => {
 
   it('should insert an multichain entry in the address book', () => {
     const address = faker.finance.ethereumAddress()
+    // The slice normalizes the key to EIP-55 checksum on write so the read
+    // selector (selectAddressBookByChain) does not silently drop it. This is
+    // what makes BUG-04 (GSD-12881) — Tron addresses arriving as lowercase
+    // hex from TronWeb — actually appear in the list.
+    const checksummed = checksumAddress(address)
     const state = addressBookSlice.reducer(
       initialState,
       upsertAddressBookEntries({
@@ -71,11 +77,11 @@ describe('addressBookSlice', () => {
       }),
     )
     expect(state).toEqual({
-      '1': { '0x0': 'Alice', '0x1': 'Bob', [address]: 'Max' },
+      '1': { '0x0': 'Alice', '0x1': 'Bob', [checksummed]: 'Max' },
       '4': { '0x0': 'Charlie', '0x1': 'Dave' },
-      '10': { [address]: 'Max' },
-      '100': { [address]: 'Max' },
-      '137': { [address]: 'Max' },
+      '10': { [checksummed]: 'Max' },
+      '100': { [checksummed]: 'Max' },
+      '137': { [checksummed]: 'Max' },
     })
   })
 

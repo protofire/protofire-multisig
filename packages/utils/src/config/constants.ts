@@ -48,7 +48,7 @@ export const HelpCenterArticle = {
   SWAP_WIDGET_FEES: `${HELP_CENTER_URL}/en/articles/178530-how-does-the-widget-fee-work-for-native-swaps`,
   VERIFY_TX_DETAILS: `${HELP_CENTER_URL}/en/articles/276343-how-to-perform-basic-transactions-checks-on-safe-wallet`,
   BULK_IMPORT_OLD_DATA: `${HELP_CENTER_URL}/en/articles/359254-new-mobile-apps-bulk-import-of-old-app-data-ios-only`,
-  SAFE_SHIELD: `${HELP_CENTER_URL}/en/articles/461021-understanding-safe-shield-transaction-checks`,
+  SAFE_SHIELD: `${HELP_CENTER_URL}/articles/6434169802-understanding-safe-shield-copilot?lang=en`,
   ADDRESS_POISONING: `${HELP_CENTER_URL}/en/articles/180783-what-is-address-poisoning-and-how-does-safe-wallet-battle-it`,
 } as const
 export const HelperCenterArticleTitles = {

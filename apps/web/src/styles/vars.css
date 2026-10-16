@@ -5,13 +5,13 @@
   --color-text-secondary: #a1a3a7;
   --color-text-disabled: #dddee0;
   --color-text-contrast: #ffffff;
-  --color-primary-dark: #3c3c3c;
-  --color-primary-main: #121312;
-  --color-primary-light: #636669;
-  --color-secondary-dark: #0fda6d;
-  --color-secondary-main: #12ff80;
-  --color-secondary-light: #b0ffc9;
-  --color-secondary-background: #effff4;
+  --color-primary-dark: #0a1428;
+  --color-primary-main: #0f1e3c;
+  --color-primary-light: #2a3a55;
+  --color-secondary-dark: #c9560a;
+  --color-secondary-main: #f5730d;
+  --color-secondary-light: #ffa24d;
+  --color-secondary-background: #fff4eb;
   --color-border-main: #a1a3a7;
   --color-border-light: #dcdee0;
   --color-border-background: #f4f4f4;
@@ -40,7 +40,7 @@
   --color-background-main: #f4f4f4;
   --color-background-sheet: #f4f4f4;
   --color-background-paper: #ffffff;
-  --color-background-light: #effff4;
+  --color-background-light: #fff4eb;
   --color-background-secondary: #dddee0;
   --color-background-skeleton: rgba(0, 0, 0, 0.04);
   --color-background-disabled: #7878801f;
@@ -51,7 +51,11 @@
   --color-static-light: #636669;
   --color-static-primary: #ffffff;
   --color-static-text-secondary: #a1a3a7;
-  --color-static-text-brand: #12ff80;
+  --color-static-text-brand: #f5730d;
+  --color-static-welcome-gradient-start: #f04a0f;
+  --color-static-welcome-gradient-end: #fbc21a;
+  --color-static-welcome-fg: #000000;
+  --color-static-welcome-fg-muted: rgba(0, 0, 0, 0.65);
   --space-1: 8px;
   --space-2: 16px;
   --space-3: 24px;
@@ -71,13 +75,13 @@
   --color-text-secondary: #636669;
   --color-text-disabled: #636669;
   --color-text-contrast: #000000;
-  --color-primary-dark: #0cb259;
-  --color-primary-main: #12ff80;
-  --color-primary-light: #a1a3a7;
-  --color-secondary-dark: #636669;
-  --color-secondary-main: #ffffff;
-  --color-secondary-light: #b0ffc9;
-  --color-secondary-background: #1b2a22;
+  --color-primary-dark: #c9560a;
+  --color-primary-main: #ff8a2b;
+  --color-primary-light: #ffb067;
+  --color-secondary-dark: #8b96a8;
+  --color-secondary-main: #f2f4f7;
+  --color-secondary-light: #2a3a55;
+  --color-secondary-background: #1a1410;
   --color-border-main: #636669;
   --color-border-light: #303033;
   --color-border-background: #121312;
@@ -106,7 +110,7 @@
   --color-background-main: #121312;
   --color-background-sheet: #121312;
   --color-background-paper: #1c1c1c;
-  --color-background-light: #1b2a22;
+  --color-background-light: #1a1410;
   --color-background-secondary: #303033;
   --color-background-skeleton: rgba(255, 255, 255, 0.04);
   --color-background-disabled: #7878801f;
@@ -117,7 +121,11 @@
   --color-static-light: #636669;
   --color-static-primary: #ffffff;
   --color-static-text-secondary: #a1a3a7;
-  --color-static-text-brand: #12ff80;
+  --color-static-text-brand: #ff8a2b;
+  --color-static-welcome-gradient-start: #f04a0f;
+  --color-static-welcome-gradient-end: #fbc21a;
+  --color-static-welcome-fg: #000000;
+  --color-static-welcome-fg-muted: rgba(0, 0, 0, 0.65);
 }
 
 /* The same as above for the brief moment before JS loads */
@@ -127,13 +135,13 @@
     --color-text-secondary: #636669;
     --color-text-disabled: #636669;
     --color-text-contrast: #000000;
-    --color-primary-dark: #0cb259;
-    --color-primary-main: #12ff80;
-    --color-primary-light: #a1a3a7;
-    --color-secondary-dark: #636669;
-    --color-secondary-main: #ffffff;
-    --color-secondary-light: #b0ffc9;
-    --color-secondary-background: #1b2a22;
+    --color-primary-dark: #c9560a;
+    --color-primary-main: #ff8a2b;
+    --color-primary-light: #ffb067;
+    --color-secondary-dark: #8b96a8;
+    --color-secondary-main: #f2f4f7;
+    --color-secondary-light: #2a3a55;
+    --color-secondary-background: #1a1410;
     --color-border-main: #636669;
     --color-border-light: #303033;
     --color-border-background: #121312;
@@ -162,7 +170,7 @@
     --color-background-main: #121312;
     --color-background-sheet: #121312;
     --color-background-paper: #1c1c1c;
-    --color-background-light: #1b2a22;
+    --color-background-light: #1a1410;
     --color-background-secondary: #303033;
     --color-background-skeleton: rgba(255, 255, 255, 0.04);
     --color-background-disabled: #7878801f;
@@ -173,6 +181,10 @@
     --color-static-light: #636669;
     --color-static-primary: #ffffff;
     --color-static-text-secondary: #a1a3a7;
-    --color-static-text-brand: #12ff80;
+    --color-static-text-brand: #ff8a2b;
+    --color-static-welcome-gradient-start: #f04a0f;
+    --color-static-welcome-gradient-end: #fbc21a;
+    --color-static-welcome-fg: #000000;
+    --color-static-welcome-fg-muted: rgba(0, 0, 0, 0.65);
   }
 }

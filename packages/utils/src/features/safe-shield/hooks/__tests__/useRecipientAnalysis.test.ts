@@ -129,7 +129,30 @@ describe('useRecipientAnalysis', () => {
       mockIsInAddressBook,
       mockOwnedSafes,
     )
-    expect(mockUseAddressActivity).toHaveBeenCalledWith([mockAddress1.toLowerCase()], undefined)
+    expect(mockUseAddressActivity).toHaveBeenCalledWith([mockAddress1.toLowerCase()], undefined, false)
+  })
+
+  it('should forward isTronChain to the address activity check', async () => {
+    const backendResults = {
+      [mockAddress1.toLowerCase()]: { isSafe: false },
+    }
+    mockUseFetchRecipientAnalysis.mockReturnValue([backendResults, undefined, false])
+
+    renderHook(() => {
+      const recipients = useMemo(() => [mockAddress1], [])
+      return useRecipientAnalysis({
+        safeAddress: mockSafeAddress,
+        chainId: mockChainId,
+        recipients,
+        isInAddressBook: mockIsInAddressBook,
+        ownedSafes: mockOwnedSafes,
+        isTronChain: true,
+      })
+    })
+
+    await waitFor(() => {
+      expect(mockUseAddressActivity).toHaveBeenCalledWith([mockAddress1.toLowerCase()], undefined, true)
+    })
   })
 
   it('should normalize addresses to lowercase', async () => {
@@ -526,7 +549,7 @@ describe('useRecipientAnalysis', () => {
       })
 
       // Safe addresses should not be passed to activity check
-      expect(mockUseAddressActivity).toHaveBeenCalledWith([], undefined)
+      expect(mockUseAddressActivity).toHaveBeenCalledWith([], undefined, false)
     })
 
     it('should pass non-Safe addresses to useAddressActivity', async () => {
@@ -557,7 +580,7 @@ describe('useRecipientAnalysis', () => {
       })
 
       // Non-Safe addresses should be passed to activity check
-      expect(mockUseAddressActivity).toHaveBeenCalledWith([mockAddress1, mockAddress2], undefined)
+      expect(mockUseAddressActivity).toHaveBeenCalledWith([mockAddress1, mockAddress2], undefined, false)
     })
 
     it('should not pass addresses with existing RECIPIENT_ACTIVITY to useAddressActivity', async () => {
@@ -591,7 +614,7 @@ describe('useRecipientAnalysis', () => {
       })
 
       // Only address2 should be passed (address1 already has activity results)
-      expect(mockUseAddressActivity).toHaveBeenCalledWith([mockAddress2], undefined)
+      expect(mockUseAddressActivity).toHaveBeenCalledWith([mockAddress2], undefined, false)
     })
 
     it('should handle mixed Safe and non-Safe addresses correctly', async () => {
@@ -628,7 +651,7 @@ describe('useRecipientAnalysis', () => {
       })
 
       // Only address2 should be passed to activity check
-      expect(mockUseAddressActivity).toHaveBeenCalledWith([mockAddress2], undefined)
+      expect(mockUseAddressActivity).toHaveBeenCalledWith([mockAddress2], undefined, false)
     })
 
     it('should pass empty array to useAddressActivity when all addresses are filtered out', async () => {
@@ -662,7 +685,7 @@ describe('useRecipientAnalysis', () => {
       })
 
       // All addresses filtered out - empty array should be passed
-      expect(mockUseAddressActivity).toHaveBeenCalledWith([], undefined)
+      expect(mockUseAddressActivity).toHaveBeenCalledWith([], undefined, false)
     })
 
     it('should include addresses without isSafe property in activity check', async () => {
@@ -693,7 +716,7 @@ describe('useRecipientAnalysis', () => {
       })
 
       // Both addresses should be passed (undefined isSafe is treated as non-Safe)
-      expect(mockUseAddressActivity).toHaveBeenCalledWith([mockAddress1, mockAddress2], undefined)
+      expect(mockUseAddressActivity).toHaveBeenCalledWith([mockAddress1, mockAddress2], undefined, false)
     })
 
     it('should preserve existing RECIPIENT_ACTIVITY results from backend in final output', async () => {

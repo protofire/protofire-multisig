@@ -1,3 +1,4 @@
+import { getSafeAbiVersion } from '@safe-global/utils/services/contracts/utils'
 import semverSatisfies from 'semver/functions/satisfies'
 import {
   getSafeSingletonDeployment,
@@ -26,8 +27,11 @@ const toNetworkAddressList = (addresses: string | string[]) => (Array.isArray(ad
 type DeploymentRecord = Record<string, { address: string; codeHash: string }>
 
 const SAFE_L2_CODE_HASHES = new Set<string>(
-  (_SAFE_L2_DEPLOYMENTS as SingletonDeploymentJSON[]).flatMap((deployment) =>
-    Object.values(deployment.deployments as DeploymentRecord).map(({ codeHash }) => codeHash.toLowerCase()),
+  (_SAFE_L2_DEPLOYMENTS as SingletonDeploymentJSON[]).flatMap(
+    (deployment) =>
+      Object.values(deployment.deployments as DeploymentRecord)
+        .map(({ codeHash }) => codeHash?.toLowerCase())
+        .filter(Boolean) as string[],
   ),
 )
 
@@ -132,7 +136,7 @@ export const _tryDeploymentVersions = (
 
   // Supported Safe version
   return getDeployment({
-    version,
+    version: getSafeAbiVersion(version, network.chainId) ?? undefined,
     network: network.chainId,
   })
 }

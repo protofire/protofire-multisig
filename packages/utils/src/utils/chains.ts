@@ -17,6 +17,7 @@ export enum FEATURES {
   RELAYING = 'RELAYING',
   EIP1271 = 'EIP1271',
   RISK_MITIGATION = 'RISK_MITIGATION',
+  TRON = 'TRON',
   PUSH_NOTIFICATIONS = 'PUSH_NOTIFICATIONS',
   NATIVE_WALLETCONNECT = 'NATIVE_WALLETCONNECT',
   RECOVERY = 'RECOVERY',
@@ -44,6 +45,11 @@ export enum FEATURES {
   EARN = 'EARN',
   EARN_PROMO = 'EARN_PROMO',
   MIXPANEL = 'MIXPANEL',
+  NATIVE_SWAPS_LIFI = 'NATIVE_SWAPS_LIFI',
+  HIDE_NATIVE_TOKEN = 'HIDE_NATIVE_TOKEN',
+  TEMPO_GAS_TOKEN = 'TEMPO_GAS_TOKEN',
+  OZ_SAFE_UTILS = 'OZ_SAFE_UTILS',
+  PROTOFIRE_FORK_OZ_SAFE_UTILS = 'PROTOFIRE_FORK_OZ_SAFE_UTILS',
   POSITIONS = 'POSITIONS',
   PORTFOLIO_ENDPOINT = 'PORTFOLIO_ENDPOINT',
   NATIVE_COW_SWAP_FEE_V2 = 'NATIVE_COW_SWAP_FEE_V2',
@@ -55,6 +61,11 @@ export enum FEATURES {
   HYPERNATIVE_QUEUE_SCAN = 'HYPERNATIVE_QUEUE_SCAN',
   EURCV_BOOST = 'EURCV_BOOST',
   MY_ACCOUNTS = 'MY_ACCOUNTS',
+  SUNSET_BANNER = 'SUNSET_BANNER',
+  ERC7730_CLEAR_SIGNING = 'ERC7730_CLEAR_SIGNING',
+  PAY_FROM_SAFE = 'PAY_FROM_SAFE', // pay the network fee from the Safe in a stablecoin via our relayer (feature 023)
+  NEW_NETWORK = 'NEW_NETWORK',
+  OASIS_SIGNED_ETH_CALL_GAS_ESTIMATION = 'OASIS_SIGNED_ETH_CALL_GAS_ESTIMATION', // Oasis Sapphire: validate transactions via signed eth_call
 }
 
 const MIN_SAFE_VERSION = '1.3.0'
@@ -63,12 +74,20 @@ export const hasFeature = (chain: Pick<Chain, 'features'>, feature: FEATURES): b
   return (chain.features as string[]).includes(feature)
 }
 
+// Tron block explorers don't accept 0x-prefixed hashes/addresses
+// Kept in sync with the chain ids covered by apps/web/tron-deployments.json (mainnet, Shasta).
+// Nile testnet (3448148188) is deliberately excluded: it has no deployment addresses there yet.
+export const TRON_CHAIN_IDS: ReadonlySet<string> = new Set(['2494104990', '728126428'])
+
+export const isTronChain = (chainId: string): boolean => TRON_CHAIN_IDS.has(chainId)
+
 export const getBlockExplorerLink = (
-  chain: Pick<Chain, 'blockExplorerUriTemplate'>,
+  chain: Pick<Chain, 'blockExplorerUriTemplate' | 'chainId'>,
   address: string,
 ): { href: string; title: string } | undefined => {
   if (chain.blockExplorerUriTemplate) {
-    return getExplorerLink(address, chain.blockExplorerUriTemplate)
+    const hash = TRON_CHAIN_IDS.has(chain.chainId) ? address.replace(/^0x/, '') : address
+    return getExplorerLink(hash, chain.blockExplorerUriTemplate)
   }
 }
 /** This version is used if a network does not have the LATEST_SAFE_VERSION deployed yet */

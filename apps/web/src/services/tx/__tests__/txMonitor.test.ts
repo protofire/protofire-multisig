@@ -225,6 +225,50 @@ describe('txMonitor', () => {
       expect(txDispatchSpy).not.toHaveBeenCalled()
     })
 
+    it.each([200, 400, 500])('keeps Safe-pays pending past three minutes until provider status %s', async (status) => {
+      const taskId = `safe-pays-${status}`
+      mockGetRelayTxStatus.mockResolvedValue({ status: 110 })
+      waitForRelayedTx(taskId, ['0x2'], chainId, safeAddress, 1, undefined, true)
+      // The pending-status hook can start a second watcher after submission or remount.
+      waitForRelayedTx(taskId, ['0x2'], chainId, safeAddress, 1, undefined, true)
+      await jest.advanceTimersByTimeAsync(4 * 60_000)
+      expect(mockGetRelayTxStatus).toHaveBeenCalledTimes(16)
+      expect(txDispatchSpy).not.toHaveBeenCalled()
+
+      mockGetRelayTxStatus.mockResolvedValue({ status, receipt: { transactionHash: '0xlate' } })
+      await jest.advanceTimersByTimeAsync(15_000)
+      expect(txDispatchSpy).toHaveBeenCalledTimes(1)
+      expect(txDispatchSpy).toHaveBeenCalledWith(
+        status === 200 ? 'PROCESSED' : status === 400 ? 'FAILED' : 'REVERTED',
+        expect.objectContaining({ txId: '0x2', chainId, safeAddress }),
+      )
+      const calls = mockGetRelayTxStatus.mock.calls.length
+      await jest.advanceTimersByTimeAsync(60_000)
+      expect(mockGetRelayTxStatus).toHaveBeenCalledTimes(calls)
+    })
+
+    it('preserves Safe-pays tracking across transient status errors and missing receipts', async () => {
+      mockGetRelayTxStatus
+        .mockRejectedValueOnce(new Error('Network error'))
+        .mockResolvedValueOnce({ status: 200 })
+        .mockResolvedValue({ status: 200, receipt: { transactionHash: '0xrecovered' } })
+      waitForRelayedTx('transient-safe-pays', ['0x2'], chainId, safeAddress, 1, undefined, true)
+      await jest.advanceTimersByTimeAsync(30_000)
+      expect(txDispatchSpy).not.toHaveBeenCalled()
+      await jest.advanceTimersByTimeAsync(15_000)
+      expect(txDispatchSpy).toHaveBeenCalledWith('PROCESSED', expect.objectContaining({ txHash: '0xrecovered' }))
+    })
+
+    it('stops Safe-pays polling when transaction history confirms execution', async () => {
+      mockGetRelayTxStatus.mockResolvedValue({ status: 110 })
+      waitForRelayedTx('indexed-safe-pays', ['0x2'], chainId, safeAddress, 1, undefined, true)
+      await jest.advanceTimersByTimeAsync(15_000)
+      txDispatchSpy.mockRestore()
+      txEvents.txDispatch(txEvents.TxEvent.SUCCESS, { txId: '0x2', nonce: 1, chainId, safeAddress })
+      await jest.advanceTimersByTimeAsync(60_000)
+      expect(mockGetRelayTxStatus).toHaveBeenCalledTimes(1)
+    })
+
     it('emits a FAILED event if the tx relaying timed out', async () => {
       const mockResponse: RelayTaskStatus = {
         status: 110,

@@ -1,6 +1,7 @@
 import { type ReactElement } from 'react'
 import * as hooks from '@/components/tx/shared/hooks'
 import * as useValidateTxData from '@/hooks/useValidateTxData'
+import * as useChains from '@/hooks/useChains'
 import { SignForm } from '../SignForm'
 import { render as renderTestUtils } from '@/tests/test-utils'
 import { createMockSafeTransaction } from '@/tests/transactions'
@@ -71,6 +72,26 @@ describe('SignForm', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     jest.spyOn(useValidateTxData, 'useValidateTxData').mockReturnValue([undefined, undefined, false])
+  })
+
+  afterEach(() => {
+    jest.restoreAllMocks()
+  })
+
+  it('clears a rejection left by another step when the Oasis flag is on', () => {
+    jest.spyOn(useChains, 'useHasFeature').mockReturnValue(true)
+    const setIsRejectedByUser = jest.fn()
+    render(<SignForm {...defaultProps} />, { isRejectedByUser: true, setIsRejectedByUser })
+
+    expect(setIsRejectedByUser).toHaveBeenCalledWith(false)
+  })
+
+  it('keeps the rejection when the Oasis flag is off', () => {
+    jest.spyOn(useChains, 'useHasFeature').mockReturnValue(false)
+    const setIsRejectedByUser = jest.fn()
+    render(<SignForm {...defaultProps} />, { isRejectedByUser: true, setIsRejectedByUser })
+
+    expect(setIsRejectedByUser).not.toHaveBeenCalled()
   })
 
   it('displays a warning if connected wallet already signed the tx', () => {

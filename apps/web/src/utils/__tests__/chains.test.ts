@@ -50,6 +50,25 @@ describe('chains', () => {
         title: 'View on etherscan.io',
       })
     })
+
+    it('strips the 0x prefix from a tx hash on a Tron chain', () => {
+      const tronChain = {
+        ...CONFIG_SERVICE_CHAINS[0],
+        chainId: '728126428',
+        blockExplorerUriTemplate: {
+          address: 'https://tronscan.org/#/address/{{address}}',
+          txHash: 'https://tronscan.org/#/transaction/{{txHash}}',
+          api: '',
+        },
+      }
+
+      expect(
+        getBlockExplorerLink(tronChain, '0xcfa9e0a83c6302603f1974b5aa4d48d406dfddabc176bb2f3763a8f3fece280f'),
+      ).toEqual({
+        href: 'https://tronscan.org/#/transaction/cfa9e0a83c6302603f1974b5aa4d48d406dfddabc176bb2f3763a8f3fece280f',
+        title: 'View on tronscan.org',
+      })
+    })
   })
 
   describe('getChainConfig', () => {

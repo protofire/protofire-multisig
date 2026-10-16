@@ -1,16 +1,14 @@
 import type { MessageItem, TypedData } from '@safe-global/store/gateway/AUTO_GENERATED/messages'
-import { hashMessage, type TypedDataDomain, type JsonRpcSigner } from 'ethers'
+import { hashMessage, type JsonRpcSigner } from 'ethers'
 import { gte } from 'semver'
-import { adjustVInSignature } from '@safe-global/protocol-kit/dist/src/utils/signatures'
 
-import { hashTypedData } from '@safe-global/utils/utils/web3'
+import { hashTypedData, signTypedData } from '@safe-global/utils/utils/web3'
 import { isValidAddress } from '@safe-global/utils/utils/validation'
 import { type Chain } from '@safe-global/store/gateway/AUTO_GENERATED/chains'
 import { type SafeState } from '@safe-global/store/gateway/AUTO_GENERATED/safes'
 import { FEATURES } from '@safe-global/utils/utils/chains'
 
 import { hasFeature } from '@safe-global/utils/utils/chains'
-import { SigningMethod } from '@safe-global/protocol-kit'
 
 /*
  * From v1.3.0, EIP-1271 support was moved to the CompatibilityFallbackHandler.
@@ -112,8 +110,5 @@ export const tryOffChainMsgSigning = async (
   message: MessageItem['message'],
 ): Promise<string> => {
   const typedData = generateSafeMessageTypedData(safe, message)
-  const signature = await signer.signTypedData(typedData.domain as TypedDataDomain, typedData.types, typedData.message)
-
-  // V needs adjustment when signing with ledger / trezor through metamask
-  return adjustVInSignature(SigningMethod.ETH_SIGN_TYPED_DATA, signature)
+  return signTypedData(signer, typedData)
 }

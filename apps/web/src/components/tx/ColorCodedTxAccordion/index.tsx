@@ -37,7 +37,7 @@ const TxInfoColors: Record<ColorLevel, { main: string; mainDark?: string; backgr
     main: 'success.main',
     mainDark: 'primary.main',
     background: 'background.light',
-    border: 'success.light',
+    border: 'secondary.light',
   },
 }
 

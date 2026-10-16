@@ -35,10 +35,11 @@ import {
   Safe_proxy_factory__factory,
   Safe_to_l2_setup__factory,
 } from '@safe-global/utils/types/contracts'
-import { createWeb3 } from '@/hooks/wallets/web3'
+import { createWeb3, getRpcServiceUrl } from '@/hooks/wallets/web3'
 import { hasMultiChainCreationFeatures } from '@/features/multichain'
 import { getLatestSafeVersion } from '@safe-global/utils/utils/chains'
-
+import { isTronChain } from '@/utils/tron'
+import { getUncheckedSigner } from '@/services/tx/tx-sender/sdk'
 // Type for the lazy-loaded activateReplayedSafe function
 export type ActivateReplayedSafeFn = (
   chain: Chain,
@@ -69,15 +70,38 @@ export const createNewSafe = async (
 ): Promise<void> => {
   let txResponse: TransactionResponse
   if (isPredictedSafeProps(undeployedSafeProps)) {
-    const safe = await Safe.init({
-      predictedSafe: undeployedSafeProps,
-      provider,
-      isL1SafeSingleton,
-    })
+    // Safe.init accepts string URL or Eip1193Provider.
+    // For Tron: use the RPC URL string so the SDK creates its own provider.
+    // For other chains: use the wallet's EIP-1193 provider directly.
+    const sdkProvider = isTronChain(chain.chainId) ? getRpcServiceUrl(chain.rpcUri) : provider
 
-    const creationTx = await safe.createSafeDeploymentTransaction()
+    // Safe.init makes RPC calls for contract verification. On Tron, TronGrid
+    // may rate-limit (429) these calls, so retry with backoff.
+    const initWithRetry = async (attempts = 3) => {
+      for (let i = 0; i < attempts; i++) {
+        try {
+          const safe = await Safe.init({
+            predictedSafe: undeployedSafeProps,
+            provider: sdkProvider as string | Eip1193Provider,
+            isL1SafeSingleton,
+          })
+          return safe.createSafeDeploymentTransaction()
+        } catch (err) {
+          if (i === attempts - 1) throw err
+          // Wait before retrying (3s, 6s)
+          await new Promise((r) => setTimeout(r, (i + 1) * 3000))
+        }
+      }
+      throw new Error('Safe.init failed after retries')
+    }
 
-    const signer = await createWeb3(provider).getSigner()
+    const creationTx = await initWithRetry()
+
+    // On Tron the hash goes straight to the creation monitoring: ethers would otherwise poll the
+    // read endpoint for the sent transaction without a bound.
+    const signer = isTronChain(chain.chainId)
+      ? await getUncheckedSigner(provider)
+      : await createWeb3(provider).getSigner()
 
     txResponse = await signer?.sendTransaction({
       ...creationTx,

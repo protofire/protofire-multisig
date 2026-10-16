@@ -8,6 +8,7 @@ import {
 } from '@safe-global/protocol-kit/dist/src/contracts/safeDeploymentContracts'
 import { initSafeSDK } from '../safeCoreSDK'
 import { isValidSafeVersion } from '@safe-global/utils/services/contracts/utils'
+import * as contractNetworks from '@safe-global/utils/hooks/coreSDK/contractNetworks'
 
 jest.mock('@/services/contracts/safeContracts', () => {
   return {
@@ -106,6 +107,36 @@ describe('safeCoreSDK', () => {
     })
 
     describe('Supported contracts', () => {
+      it.each([
+        ['Tron', '728126428', '1.4.1', false],
+        ['Ethereum', '1', '1.5.0', true],
+      ])('%s keeps the correct SDK version for registry selection', async (_, chainId, expectedVersion, isL1) => {
+        jest.clearAllMocks()
+        const canonicalNetworks = jest.spyOn(contractNetworks, 'getCanonicalMultiSendContractNetworks')
+        const mockProvider = new JsonRpcProvider()
+        const version = jest.mocked(Gnosis_safe__factory.connect(MAINNET_MASTER_COPY, mockProvider).VERSION)
+        version.mockResolvedValueOnce('1.5.0')
+        mockProvider.getNetwork = jest.fn().mockReturnValue({ chainId: BigInt(chainId) })
+
+        await initSafeSDK({
+          provider: mockProvider,
+          chainId,
+          address: toBeHex('0x1', 20),
+          version: null,
+          implementation: MAINNET_MASTER_COPY,
+          implementationVersionState: ImplementationVersionState.UP_TO_DATE,
+        })
+
+        expect(version).toHaveBeenCalled()
+        expect(canonicalNetworks).toHaveBeenCalledWith(expect.objectContaining({ safeVersion: expectedVersion }))
+        expect(Safe.init).toHaveBeenCalledWith({
+          isL1SafeSingleton: isL1,
+          provider: expect.anything(),
+          safeAddress: expect.anything(),
+        })
+        canonicalNetworks.mockRestore()
+      })
+
       it('should return an SDK instance', async () => {
         const chainId = '1'
         const version = '1.3.0'

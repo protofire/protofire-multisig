@@ -1,12 +1,37 @@
 import { faker } from '@faker-js/faker'
 import type { EIP1193Provider, OnboardAPI, WalletState } from '@web3-onboard/core'
 import type { Chain } from '@safe-global/store/gateway/AUTO_GENERATED/chains'
-import { getConnectedWallet, switchWallet, trackWalletType } from '../useOnboard'
+import { getConnectedWallet, switchWallet, trackWalletType, useInitOnboard, useIsWalletReady } from '../useOnboard'
 import { trackEvent } from '@/services/analytics'
+import { renderHook, waitFor } from '@/tests/test-utils'
+import * as useChainsHook from '@/hooks/useChains'
+import * as store from '@/store'
+import { chainBuilder } from '@/tests/builders/chains'
+import * as onboardService from '@/services/onboard'
+import * as chainIdHooks from '@/hooks/useChainId'
 
 // mock wallets
 jest.mock('@/hooks/wallets/wallets', () => ({
   getDefaultWallets: jest.fn(() => []),
+  getSupportedWallets: jest.fn(() => []),
+  getAllWallets: jest.fn(() => []),
+}))
+
+// mock last-wallet storage so useInitOnboard's silent reconnect has something to reconnect to
+jest.mock('@/services/local-storage/local', () => ({
+  __esModule: true,
+  default: { getItem: jest.fn(() => null), setItem: jest.fn(), removeItem: jest.fn() },
+  localItem: jest.fn(() => ({
+    get: jest.fn(() => 'MetaMask'),
+    set: jest.fn(),
+    remove: jest.fn(),
+  })),
+}))
+
+// mock wallet-unlock check so connectLastWallet proceeds
+jest.mock('@/utils/wallets', () => ({
+  ...(jest.requireActual('@/utils/wallets') as object),
+  isWalletUnlocked: jest.fn().mockResolvedValue(true),
 }))
 
 // mock analytics - using jest.requireActual to avoid hoisting issues
@@ -239,6 +264,95 @@ describe('useOnboard', () => {
         action: 'wallet_connect',
         label: 'Trust Wallet',
       })
+    })
+  })
+
+  describe('useInitOnboard', () => {
+    const mockChain = chainBuilder().with({ chainId: '1' }).build()
+
+    const mockOnboardApi = {
+      state: {
+        select: jest.fn(() => ({ subscribe: jest.fn(() => ({ unsubscribe: jest.fn() })) })),
+        actions: { setWalletModules: jest.fn() },
+        get: jest.fn(() => ({ wallets: [] })),
+      },
+      connectWallet: jest.fn().mockResolvedValue([]),
+    } as unknown as OnboardAPI
+
+    beforeEach(() => {
+      jest.clearAllMocks()
+      jest.spyOn(onboardService, 'createOnboard').mockReturnValue(mockOnboardApi)
+      jest.spyOn(store, 'useAppSelector').mockReturnValue(undefined)
+      jest.spyOn(store, 'useAppDispatch').mockReturnValue(jest.fn())
+    })
+
+    // `useOnboard`'s internal ExternalStore is a module-level singleton shared by every test in
+    // this file (initOnboard only calls createOnboard once and reuses that instance after), so
+    // this single test drives isRuntimeData through both states on the one onboard instance
+    // rather than trying to get a fresh mock per test.
+    it('inits onboard and the wallet module list immediately, but only silently reconnects once runtime chains data has arrived', async () => {
+      // createOnboard/setWalletModules must not be gated on isRuntimeData — the chains fetch
+      // retries for up to ~2 min on a CGW blip, and the picker/module list re-run anyway once
+      // configs updates to the runtime data, so there's no reason to leave the "Connect wallet"
+      // button dead for that whole window.
+      // Same configs array reference throughout: if isRuntimeData were dropped from the effect's
+      // deps, a `configs` swap would be the only thing left to trigger the second setWalletModules
+      // call — keeping the same reference forces the assertion through isRuntimeData actually
+      // being in the deps array.
+      const configs = [mockChain]
+      jest.spyOn(useChainsHook, 'default').mockReturnValue({
+        configs,
+        loading: false,
+        isRuntimeData: false,
+      })
+      jest.spyOn(useChainsHook, 'useCurrentChain').mockReturnValue(mockChain)
+
+      const { result, rerender } = renderHook(() => {
+        useInitOnboard()
+        return useIsWalletReady()
+      })
+
+      await waitFor(() => {
+        expect(onboardService.createOnboard).toHaveBeenCalled()
+      })
+      await waitFor(() => {
+        expect(mockOnboardApi.state.actions.setWalletModules).toHaveBeenCalledTimes(1)
+      })
+      // Give the enableWallets().then(...) chain a chance to run before asserting the negatives
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      expect(mockOnboardApi.connectWallet).not.toHaveBeenCalled()
+      expect(result.current).not.toBe(true)
+
+      // Runtime chains fetch settles — same configs reference, only isRuntimeData flips
+      jest.spyOn(useChainsHook, 'default').mockReturnValue({
+        configs,
+        loading: false,
+        isRuntimeData: true,
+      })
+      rerender()
+
+      await waitFor(() => {
+        expect(mockOnboardApi.state.actions.setWalletModules).toHaveBeenCalledTimes(2)
+      })
+      await waitFor(() => {
+        expect(mockOnboardApi.connectWallet).toHaveBeenCalledTimes(1)
+      })
+      expect(mockOnboardApi.connectWallet).toHaveBeenCalledWith(
+        expect.objectContaining({ autoSelect: expect.objectContaining({ label: 'MetaMask' }) }),
+      )
+      await waitFor(() => {
+        expect(result.current).toBe(true)
+      })
+
+      // A link to a Tron chain must not silently reconnect the last (EVM) wallet
+      jest.spyOn(chainIdHooks, 'useUrlChainId').mockReturnValue('728126428')
+      rerender()
+
+      await waitFor(() => {
+        expect(mockOnboardApi.state.actions.setWalletModules).toHaveBeenCalledTimes(3)
+      })
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      expect(mockOnboardApi.connectWallet).toHaveBeenCalledTimes(1)
     })
   })
 })

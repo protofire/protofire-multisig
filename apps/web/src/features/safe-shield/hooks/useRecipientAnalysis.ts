@@ -6,6 +6,8 @@ import useSafeAddress from '@/hooks/useSafeAddress'
 import { useRecipientAnalysis as useRecipientAnalysisUtils } from '@safe-global/utils/features/safe-shield/hooks'
 import useOwnedSafes from '@/hooks/useOwnedSafes'
 import { useMergedAddressBooks } from '@/hooks/useAllAddressBooks'
+import { useHasFeature } from '@/hooks/useChains'
+import { FEATURES } from '@safe-global/utils/utils/chains'
 
 export function useRecipientAnalysis(
   recipients: string[] | undefined,
@@ -15,6 +17,7 @@ export function useRecipientAnalysis(
   const web3ReadOnly = useWeb3ReadOnly()
   const mergedAddressBooks = useMergedAddressBooks(chainId)
   const ownedSafesByChain = useOwnedSafes(chainId)
+  const isTronChain = useHasFeature(FEATURES.TRON) === true
 
   const ownedSafes = ownedSafesByChain[chainId] || []
 
@@ -25,5 +28,6 @@ export function useRecipientAnalysis(
     web3ReadOnly,
     ownedSafes,
     isInAddressBook: mergedAddressBooks.has,
+    isTronChain,
   })
 }

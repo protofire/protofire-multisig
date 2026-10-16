@@ -10,7 +10,11 @@ const staticColors: StaticColors = {
   light: '#636669',
   primary: '#FFFFFF',
   textSecondary: '#A1A3A7',
-  textBrand: '#12FF80',
+  textBrand: '#F5730D',
+  welcomeGradientStart: '#F04A0F',
+  welcomeGradientEnd: '#FBC21A',
+  welcomeFg: '#000000',
+  welcomeFgMuted: 'rgba(0, 0, 0, 0.65)',
 }
 
 export default staticColors

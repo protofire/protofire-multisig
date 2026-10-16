@@ -1,5 +1,5 @@
 import ExternalLink from '@/components/common/ExternalLink'
-import LoadingSpinner, { SpinnerStatus } from '@/components/new-safe/create/steps/StatusStep/LoadingSpinner'
+import LoadingSpinnerCheck, { SpinnerStatus } from '@/components/new-safe/create/steps/StatusStep/LoadingSpinnerCheck'
 import { SafeCreationEvent } from '@/features/counterfactual/services'
 import { useCurrentChain } from '@/hooks/useChains'
 import { getBlockExplorerLink } from '@safe-global/utils/utils/chains'
@@ -18,7 +18,7 @@ const getStep = (status: SafeCreationEvent) => {
     case SafeCreationEvent.RELAYING:
       return {
         description: 'We are activating your account',
-        instruction: 'It can take some minutes to create your account, but you can check the progress below.',
+        instruction: 'It can take some minutes to create your account.',
       }
     case SafeCreationEvent.FAILED:
       return {
@@ -65,7 +65,7 @@ const StatusMessage = ({
     <>
       <Box data-testid="safe-status-info" px={3} mt={3}>
         <Box width="160px" height="160px" display="flex" m="auto">
-          {isError ? <FailedIcon /> : <LoadingSpinner status={spinnerStatus} />}
+          {isError ? <FailedIcon /> : <LoadingSpinnerCheck status={spinnerStatus} />}
         </Box>
         <Typography variant="h3" mt={2} fontWeight={700}>
           {stepInfo.description}

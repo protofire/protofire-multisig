@@ -6,6 +6,8 @@ import useChainId from '@/hooks/useChainId'
 import useSafeAddress from '@/hooks/useSafeAddress'
 import useOwnedSafes from '@/hooks/useOwnedSafes'
 import { useMergedAddressBooks } from '@/hooks/useAllAddressBooks'
+import { useHasFeature } from '@/hooks/useChains'
+import { FEATURES } from '@safe-global/utils/utils/chains'
 import type { RecipientAnalysisResults, ContractAnalysisResults } from '@safe-global/utils/features/safe-shield/types'
 import type { AsyncResult } from '@safe-global/utils/hooks/useAsync'
 import type { SafeTransaction } from '@safe-global/types-kit'
@@ -20,6 +22,7 @@ export function useCounterpartyAnalysis(overrideSafeTx?: SafeTransaction): {
   const mergedAddressBooks = useMergedAddressBooks(chainId)
   const ownedSafesByChain = useOwnedSafes(chainId)
   const { safeTx } = useContext(SafeTxContext)
+  const isTronChain = useHasFeature(FEATURES.TRON) === true
 
   const ownedSafes = ownedSafesByChain[chainId] || []
 
@@ -30,5 +33,6 @@ export function useCounterpartyAnalysis(overrideSafeTx?: SafeTransaction): {
     isInAddressBook: mergedAddressBooks.has,
     ownedSafes,
     web3ReadOnly,
+    isTronChain,
   })
 }

@@ -6,6 +6,8 @@ import { useDefinedActiveSafe } from '@/src/store/hooks/activeSafe'
 import { useWeb3ReadOnly } from '@/src/hooks/wallets/web3'
 import { selectAddressBookState } from '@/src/store/addressBookSlice'
 import { selectAllSafes } from '@/src/store/safesSlice'
+import { useHasFeature } from '@/src/hooks/useHasFeature'
+import { FEATURES } from '@safe-global/utils/utils/chains'
 import type { RecipientAnalysisResults, ContractAnalysisResults } from '@safe-global/utils/features/safe-shield/types'
 import type { AsyncResult } from '@safe-global/utils/hooks/useAsync'
 import type { SafeTransaction } from '@safe-global/types-kit'
@@ -20,6 +22,7 @@ export function useCounterpartyAnalysis(overrideSafeTx?: SafeTransaction): {
   const web3ReadOnly = useWeb3ReadOnly()
   const addressBookState = useAppSelector(selectAddressBookState)
   const allSafes = useAppSelector(selectAllSafes)
+  const isTronChain = useHasFeature(FEATURES.TRON) === true
 
   // Create isInAddressBook function that checks if address exists in address book for the given chainId
   const isInAddressBook = useMemo(() => {
@@ -69,5 +72,6 @@ export function useCounterpartyAnalysis(overrideSafeTx?: SafeTransaction): {
     isInAddressBook,
     ownedSafes,
     web3ReadOnly,
+    isTronChain,
   })
 }

@@ -1,5 +1,40 @@
 import { renderHook } from '@/tests/test-utils'
-import { ImportErrors, useGlobalImportJsonParser, _filterValidAbEntries } from '../useGlobalImportFileParser'
+import {
+  ImportErrors,
+  SAFE_EXPORT_VERSION,
+  parseGlobalImportData,
+  useGlobalImportJsonParser,
+  _filterValidAbEntries,
+} from '../useGlobalImportFileParser'
+
+describe('parseGlobalImportData', () => {
+  it('parses an already-decoded object directly, without going through JSON.parse', () => {
+    const address = '0xAecDFD3A19f777F0c03e6bf99AAfB59937d6467b'
+
+    const data = parseGlobalImportData({
+      version: SAFE_EXPORT_VERSION.V3,
+      data: {
+        addressBook: { '1': { [address]: 'Alice' } },
+      },
+    })
+
+    expect(data.error).toBeUndefined()
+    expect(data.addressBookEntriesCount).toEqual(1)
+    expect(data.addressBook).toStrictEqual({ '1': { [address]: 'Alice' } })
+  })
+
+  it('reports missing data for an object with an empty data field', () => {
+    const data = parseGlobalImportData({ version: SAFE_EXPORT_VERSION.V3, data: {} })
+
+    expect(data.error).toEqual(ImportErrors.NO_IMPORT_DATA_FOUND)
+  })
+
+  it('reports an invalid version for an unknown version field', () => {
+    const data = parseGlobalImportData({ version: '99.0', data: { addressBook: {} } })
+
+    expect(data.error).toEqual(ImportErrors.INVALID_VERSION)
+  })
+})
 
 describe('filterValidAbEntries', () => {
   it('it should return undefined if no address book is provided', () => {

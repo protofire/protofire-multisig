@@ -7,6 +7,7 @@ import { getGuardErrorInfo } from '@/utils/transaction-errors'
 import { getBlockExplorerLink } from '@/utils/chains'
 import useSafeInfo from '@/hooks/useSafeInfo'
 import { useCurrentChain } from '@/hooks/useChains'
+import { formatAddressForExplorer } from '@/utils/tron'
 import ExternalLink from '@/components/common/ExternalLink'
 import css from './styles.module.css'
 
@@ -34,7 +35,9 @@ const ErrorMessage = ({
   // Check if this is a Guard error that should get special treatment
   const guardErrorName = error && context ? getGuardErrorInfo(error) : undefined
   const guardExplorerLink =
-    guardErrorName && safe.guard && chain ? getBlockExplorerLink(chain, safe.guard.value) : undefined
+    guardErrorName && safe.guard && chain
+      ? getBlockExplorerLink(chain, formatAddressForExplorer(safe.guard.value, chain.chainId))
+      : undefined
 
   const onDetailsToggle = (e: SyntheticEvent) => {
     e.preventDefault()
@@ -98,7 +101,10 @@ const ErrorMessage = ({
 
           {error && showDetails && (
             <Typography variant="body2" className={css.details}>
-              {error.message.replace(ETHERS_PREFIX, '').trim().slice(0, 500)}
+              {String(error.message ?? error)
+                .replace(ETHERS_PREFIX, '')
+                .trim()
+                .slice(0, 500)}
             </Typography>
           )}
         </div>

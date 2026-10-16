@@ -92,5 +92,26 @@ describe('utils', () => {
       expect(result.message).toBe('HTTP Error 500')
       expect(result.status).toBe(500)
     })
+
+    it('sets reason from an RTK error message so notifications can show it', () => {
+      const error = asError({
+        status: 422,
+        data: { code: 'BUDGET_EXHAUSTED', message: "Today's sponsored gas on this network is used up." },
+      })
+      expect(error.message).toBe("Today's sponsored gas on this network is used up.")
+      expect((error as Error & { reason?: string }).reason).toBe("Today's sponsored gas on this network is used up.")
+    })
+
+    it('does not set reason for status-only RTK errors', () => {
+      expect((asError({ status: 'FETCH_ERROR', error: 'x' }) as Error & { reason?: string }).reason).toBeUndefined()
+    })
+
+    it('does not set reason when data.message is not a string', () => {
+      const result = asError({ status: 422, data: { message: ['not', 'a', 'string'] } }) as Error & {
+        reason?: string
+      }
+      expect(result.reason).toBeUndefined()
+      expect(result.message).toBe('not,a,string')
+    })
   })
 })

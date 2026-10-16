@@ -1,5 +1,8 @@
+import { GasTokenFeeSummary } from '../../features/GasTokenFeeSummary'
+import { useGasTokenSupport } from '@/hooks/useGasTokenSupport'
+import { isGasTokenRelayTx } from '@/services/tx/gasTokenFee'
 import madProps from '@/utils/mad-props'
-import { type ReactElement, type SyntheticEvent, useContext } from 'react'
+import { type ReactElement, type SyntheticEvent, useContext, useEffect } from 'react'
 import { Box, Divider, Stack } from '@mui/material'
 import ErrorMessage from '@/components/tx/ErrorMessage'
 import { trackError, Errors } from '@/services/exceptions'
@@ -15,6 +18,7 @@ import { isWalletRejection } from '@/utils/wallets'
 import { useSigner } from '@/hooks/wallets/useWallet'
 import { NestedTxSuccessScreenFlow } from '@/components/tx-flow/flows'
 import { TxFlowContext } from '@/components/tx-flow/TxFlowProvider'
+import { useIsOasisSignedEthCallEnabled } from '@/features/oasis-signed-eth-call'
 import { TxCardActions } from '@/components/tx-flow/common/TxCard'
 import SplitMenuButton from '@/components/common/SplitMenuButton'
 import type { SlotComponentProps, SlotName } from '../../slots'
@@ -49,9 +53,18 @@ export const SignForm = ({
   const { setTxFlow } = useContext(TxModalContext)
   const { isSubmitDisabled, isSubmitLoading, setIsSubmitLoading, setSubmitError, setIsRejectedByUser } =
     useContext(TxFlowContext)
+  // Errors from another step (e.g. a cancelled sign) must not carry over when this step is shown again
+  const isSignedEthCallEnabled = useIsOasisSignedEthCallEnabled()
+  useEffect(() => {
+    if (!isSignedEthCallEnabled) return
+    setIsRejectedByUser(false)
+    setSubmitError(undefined)
+  }, [isSignedEthCallEnabled, setIsRejectedByUser, setSubmitError])
   const { needsRiskConfirmation, isRiskConfirmed } = txSecurity
   const hasSigned = useAlreadySigned(safeTx)
   const signer = useSigner()
+  const { gasToken, refundReceiver, isSupported } = useGasTokenSupport(safeTx?.data.gasToken)
+  const isSafePays = isSupported && isGasTokenRelayTx(safeTx, gasToken, refundReceiver)
 
   const handleOptionChange = (option: string) => {
     onChange?.(option)
@@ -108,6 +121,15 @@ export const SignForm = ({
       {hasSigned && <ErrorMessage level="warning">You have already signed this transaction.</ErrorMessage>}
 
       {cannotPropose && <NonOwnerError />}
+      {isSafePays && safeTx && gasToken && (
+        <Box px={3}>
+          <GasTokenFeeSummary data={safeTx.data} token={gasToken} />
+          <ErrorMessage level="info">
+            Signing does not send the transaction. It can be sent through the relayer once the required confirmations
+            are collected.
+          </ErrorMessage>
+        </Box>
+      )}
 
       <Box>
         <Divider className={commonCss.nestedDivider} />

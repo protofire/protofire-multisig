@@ -3,6 +3,7 @@ import type { DataDecoded, TransactionDetails } from '@safe-global/store/gateway
 import { predictSafeAddress } from '@/features/multichain'
 import useAsync from '@safe-global/utils/hooks/useAsync'
 import { useWeb3ReadOnly } from './wallets/web3'
+import { useCurrentChain } from './useChains'
 
 export function _getSetupFromDataDecoded(dataDecoded: DataDecoded) {
   if (dataDecoded?.method !== 'createProxyWithNonce') {
@@ -30,6 +31,7 @@ function isCreateProxyWithNonce(dataDecoded?: DataDecoded) {
 
 export function usePredictSafeAddressFromTxDetails(txDetails: TransactionDetails | undefined) {
   const web3 = useWeb3ReadOnly()
+  const chain = useCurrentChain()
 
   return useAsync(() => {
     const txData = txDetails?.txData
@@ -68,6 +70,6 @@ export function usePredictSafeAddressFromTxDetails(txDetails: TransactionDetails
       return
     }
 
-    return predictSafeAddress(setup, factoryAddress, web3)
-  }, [txDetails?.txData, web3])
+    return predictSafeAddress(setup, factoryAddress, web3, chain?.chainId)
+  }, [txDetails?.txData, web3, chain?.chainId])
 }

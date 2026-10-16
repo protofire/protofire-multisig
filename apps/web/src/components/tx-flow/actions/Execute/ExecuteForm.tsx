@@ -1,9 +1,12 @@
+import { GasTokenFeeSummary } from '../../features/GasTokenFeeSummary'
+import useSafeInfo from '@/hooks/useSafeInfo'
 import useWalletCanPay from '@/hooks/useWalletCanPay'
 import madProps from '@/utils/mad-props'
 import { type ReactElement, type SyntheticEvent, useContext, useState, useEffect } from 'react'
-import { Box, CardActions, Divider, Tooltip } from '@mui/material'
+import { Box, CardActions, CircularProgress, Divider, Stack, Tooltip, Typography } from '@mui/material'
 import classNames from 'classnames'
 import ErrorMessage from '@/components/tx/ErrorMessage'
+import { FeeTokenSettingsHint } from '@/components/tx/FeeTokenSettingsHint'
 import { trackError, Errors } from '@/services/exceptions'
 import { useCurrentChain } from '@/hooks/useChains'
 import { getTxOptions } from '@/utils/transactions'
@@ -15,10 +18,15 @@ import useWalletCanRelay from '@/hooks/useWalletCanRelay'
 import { ExecutionMethod, ExecutionMethodSelector } from '@/components/tx/ExecutionMethodSelector'
 import { useNoFeeCampaignEligibility, useGasTooHigh, useIsNoFeeCampaignEnabled } from '@/features/no-fee-campaign'
 import { hasRemainingRelays } from '@/utils/relaying'
+import { isGasTokenRelayTx, isSafePaysTx } from '@/services/tx/gasTokenFee'
+import { useGasTokenSupport } from '@/hooks/useGasTokenSupport'
+import { FEATURES } from '@/utils/featureToggled'
+import { sameAddress } from '@safe-global/utils/utils/addresses'
 import type { SafeTransaction } from '@safe-global/types-kit'
 import { TxModalContext } from '@/components/tx-flow'
 import { SuccessScreenFlow } from '@/components/tx-flow/flows'
 import useGasLimit from '@/hooks/useGasLimit'
+import { useIsOasisSignedEthCallEnabled } from '@/features/oasis-signed-eth-call'
 import AdvancedParams, { useAdvancedParams } from '@/components/tx/AdvancedParams'
 import { asError } from '@safe-global/utils/services/exceptions/utils'
 import { isWalletRejection } from '@/utils/wallets'
@@ -63,11 +71,19 @@ export const ExecuteForm = ({
 }): ReactElement => {
   // Hooks
   const currentChain = useCurrentChain()
+  const { safe } = useSafeInfo()
   const { executeTx } = txActions
   const { setTxFlow } = useContext(TxModalContext)
   const { needsRiskConfirmation, isRiskConfirmed } = txSecurity
   const { isSubmitDisabled, isSubmitLoading, setIsSubmitLoading, setSubmitError, setIsRejectedByUser } =
     useContext(TxFlowContext)
+  // Errors from another step (e.g. a cancelled sign) must not carry over when this step is shown again
+  const isSignedEthCallEnabled = useIsOasisSignedEthCallEnabled()
+  useEffect(() => {
+    if (!isSignedEthCallEnabled) return
+    setIsRejectedByUser(false)
+    setSubmitError(undefined)
+  }, [isSignedEthCallEnabled, setIsRejectedByUser, setSubmitError])
 
   // SC wallets can relay fully signed transactions
   const [walletCanRelay] = useWalletCanRelay(safeTx)
@@ -75,22 +91,48 @@ export const ExecuteForm = ({
   const { isEligible: isNoFeeCampaign, remaining, limit, blockedAddress } = useNoFeeCampaignEligibility()
   const isNoFeeCampaignEnabled = useIsNoFeeCampaignEnabled()
   const gasTooHigh = useGasTooHigh(safeTx)
+  const {
+    isSupported: gasTokenSupported,
+    isLoading: gasTokenSupportLoading,
+    gasToken,
+    refundReceiver,
+    error: gasTokenSupportError,
+  } = useGasTokenSupport(safeTx?.data.gasToken)
 
   // We default to relay, but the option is only shown if we canRelay
   const [executionMethod, setExecutionMethod] = useState(ExecutionMethod.RELAY)
 
+  // The Safe refunds the relayer in a token: always relayed and never paid by the wallet
+  const isSafePays = isGasTokenRelayTx(safeTx, gasToken, refundReceiver) && gasTokenSupported
+  const gasTokenSupportBlocked =
+    isSafePaysTx(safeTx) &&
+    (gasTokenSupportLoading ||
+      !!gasTokenSupportError ||
+      (!isSafePays && sameAddress(safeTx?.data.refundReceiver, refundReceiver ?? undefined)) ||
+      (!!currentChain?.features.includes(FEATURES.PAY_FROM_SAFE) && !gasTokenSupported))
+
   // No-fee Campaign REPLACES relay when eligible AND not blocked AND gas is not too high AND has remaining
-  const canRelay = (!isNoFeeCampaign || !isNoFeeCampaignEnabled) && walletCanRelay && hasRemainingRelays(relays[0])
+  const canRelay = isSafePays
+    ? walletCanRelay
+    : (!isNoFeeCampaign || !isNoFeeCampaignEnabled) && walletCanRelay && hasRemainingRelays(relays[0])
   const canNoFeeCampaign =
-    isNoFeeCampaignEnabled && isNoFeeCampaign && !blockedAddress && !gasTooHigh && !!remaining && remaining > 0
+    !isSafePays &&
+    isNoFeeCampaignEnabled &&
+    isNoFeeCampaign &&
+    !blockedAddress &&
+    !gasTooHigh &&
+    !!remaining &&
+    remaining > 0
   const isLimitReached = isNoFeeCampaignEnabled && isNoFeeCampaign && !blockedAddress && remaining === 0
 
   // If gas is too high or limit reached, force WALLET method
   useEffect(() => {
-    if (gasTooHigh || isLimitReached) {
+    if (isSafePays) {
+      setExecutionMethod(ExecutionMethod.RELAY)
+    } else if (gasTooHigh || isLimitReached) {
       setExecutionMethod(ExecutionMethod.WALLET)
     }
-  }, [gasTooHigh, isLimitReached])
+  }, [isSafePays, gasTooHigh, isLimitReached])
 
   // Handle execution method changes
   const handleExecutionMethodChange = (method: ExecutionMethod | ((prev: ExecutionMethod) => ExecutionMethod)) => {
@@ -102,10 +144,11 @@ export const ExecuteForm = ({
   // Also show if gas is too high but feature is otherwise available (to show disabled state)
   // Or if limit is reached (to show 0/X available state)
   const showExecutionSelector =
-    canNoFeeCampaign ||
-    canRelay ||
-    (isNoFeeCampaignEnabled && isNoFeeCampaign && !blockedAddress && gasTooHigh) ||
-    isLimitReached
+    !isSafePays &&
+    (canNoFeeCampaign ||
+      canRelay ||
+      (isNoFeeCampaignEnabled && isNoFeeCampaign && !blockedAddress && gasTooHigh) ||
+      isLimitReached)
 
   // Determine which method will be used
   const willRelay = !!(canRelay && executionMethod === ExecutionMethod.RELAY)
@@ -116,7 +159,7 @@ export const ExecuteForm = ({
   )
 
   // Estimate gas limit
-  const { gasLimit, gasLimitError } = useGasLimit(safeTx)
+  const { gasLimit, gasLimitError, gasLimitLoading } = useGasLimit(safeTx)
   const [advancedParams, setAdvancedParams] = useAdvancedParams(gasLimit)
 
   // Check if transaction will fail
@@ -128,6 +171,8 @@ export const ExecuteForm = ({
   // On modal submit
   const handleSubmit = async (e: SyntheticEvent) => {
     e.preventDefault()
+
+    if (submitDisabled) return
 
     setIsSubmitLoading(true)
     setSubmitError(undefined)
@@ -163,6 +208,8 @@ export const ExecuteForm = ({
     maxFeePerGas: advancedParams.maxFeePerGas,
   })
 
+  const isEstimationRejected = isSignedEthCallEnabled && !!gasLimitError && isWalletRejection(gasLimitError)
+
   const cannotPropose = !isOwner && !onlyExecute
   const submitDisabled =
     !safeTx ||
@@ -171,25 +218,47 @@ export const ExecuteForm = ({
     disableSubmit ||
     isExecutionLoop ||
     cannotPropose ||
+    gasTokenSupportBlocked ||
+    (isSafePays && !walletCanRelay) ||
     (needsRiskConfirmation && !isRiskConfirmed)
 
   return (
     <>
       <form onSubmit={handleSubmit}>
         <div className={classNames(commonCss.params, { [css.noBottomBorderRadius]: canRelay })}>
-          <AdvancedParams
-            willExecute
-            params={advancedParams}
-            recommendedGasLimit={gasLimit}
-            onFormSubmit={setAdvancedParams}
-            gasLimitError={gasLimitError}
-            willRelay={willRelay}
-            noFeeCampaign={
-              (canNoFeeCampaign || isLimitReached) && executionMethod !== ExecutionMethod.WALLET
-                ? { isEligible: true, remaining: remaining || 0, limit: limit || 0 }
-                : undefined
-            }
-          />
+          <FeeTokenSettingsHint />
+
+          {isSafePays && safeTx && gasToken ? (
+            <GasTokenFeeSummary data={safeTx.data} token={gasToken} />
+          ) : (
+            <AdvancedParams
+              willExecute
+              params={advancedParams}
+              recommendedGasLimit={gasLimit}
+              onFormSubmit={setAdvancedParams}
+              gasLimitError={gasLimitError}
+              willRelay={willRelay}
+              noFeeCampaign={
+                (canNoFeeCampaign || isLimitReached) && executionMethod !== ExecutionMethod.WALLET
+                  ? { isEligible: true, remaining: remaining || 0, limit: limit || 0 }
+                  : undefined
+              }
+            />
+          )}
+
+          {isSignedEthCallEnabled && gasLimitLoading && (
+            <Stack direction="row" spacing={1} alignItems="center" mt={1}>
+              <CircularProgress size={16} />
+              <Typography variant="body2">Sign message to estimate transaction</Typography>
+            </Stack>
+          )}
+
+          {isSafePays && (
+            <ErrorMessage level="info">
+              {safeTx && safeTx.signatures.size < safe.threshold ? 'Sign in your wallet. ' : ''}
+              The relayer will submit the transaction, and this Safe will pay the fee.
+            </ErrorMessage>
+          )}
 
           {showExecutionSelector && (
             <div className={css.noTopBorder}>
@@ -215,9 +284,22 @@ export const ExecuteForm = ({
           <ErrorMessage>
             Cannot execute a transaction from the Safe Account itself, please connect a different account.
           </ErrorMessage>
+        ) : gasTokenSupportBlocked && !gasTokenSupportLoading ? (
+          <ErrorMessage error={gasTokenSupportError}>
+            Token-fee payment is currently unavailable. Verify support before executing this transaction.
+          </ErrorMessage>
+        ) : isSafePays && !walletCanRelay ? (
+          <ErrorMessage>
+            This wallet cannot relay this transaction. Connect a supported signer or collect the required signatures.
+          </ErrorMessage>
         ) : !walletCanPay && !willRelay && !willNoFeeCampaign ? (
           <ErrorMessage level="info">
             Your connected wallet doesn&apos;t have enough funds to execute this transaction.
+          </ErrorMessage>
+        ) : isEstimationRejected ? (
+          <ErrorMessage level="info">
+            You rejected the signature request, so this transaction could not be checked for errors. Reload the page to
+            try again.
           </ErrorMessage>
         ) : (
           (executionValidationError || gasLimitError) && (
@@ -239,7 +321,21 @@ export const ExecuteForm = ({
                   <SplitMenuButton
                     selected={slotId}
                     onChange={({ id }) => onChange?.(id)}
-                    options={options}
+                    options={
+                      isSafePays
+                        ? options.map((option) =>
+                            option.id === slotId
+                              ? {
+                                  ...option,
+                                  label:
+                                    safeTx && safeTx.signatures.size < safe.threshold
+                                      ? 'Sign and send'
+                                      : 'Send transaction',
+                                }
+                              : option,
+                          )
+                        : options
+                    }
                     disabled={!isOk || submitDisabled}
                     loading={isSubmitLoading}
                     tooltip={tooltip}

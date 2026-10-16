@@ -1,5 +1,5 @@
 import type { DataDecoded, TransactionDetails } from '@safe-global/store/gateway/AUTO_GENERATED/transactions'
-import { renderHook } from '@testing-library/react'
+import { renderHook } from '@/tests/test-utils'
 
 import { _getSetupFromDataDecoded, usePredictSafeAddressFromTxDetails } from '../usePredictSafeAddressFromTxDetails'
 
@@ -273,6 +273,7 @@ describe('usePredictSafeAddressFromTxDetails', () => {
       },
       '0x4e1DCf7AD4e460CfD30791CCC4F9c8a4f820ec67',
       'Mock provider',
+      undefined,
     )
   })
 
@@ -290,6 +291,7 @@ describe('usePredictSafeAddressFromTxDetails', () => {
       },
       '0x4e1DCf7AD4e460CfD30791CCC4F9c8a4f820ec67',
       'Mock provider',
+      undefined,
     )
   })
 })

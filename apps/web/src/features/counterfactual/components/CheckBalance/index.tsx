@@ -3,6 +3,7 @@ import ActivateAccountButton from '../ActivateAccountButton'
 import Track from '@/components/common/Track'
 import { useCurrentChain } from '@/hooks/useChains'
 import useSafeInfo from '@/hooks/useSafeInfo'
+import { formatAddressForExplorer } from '@/utils/tron'
 import { COUNTERFACTUAL_EVENTS } from '@/services/analytics/events/counterfactual'
 import { getBlockExplorerLink } from '@safe-global/utils/utils/chains'
 import { Alert, Typography } from '@mui/material'
@@ -13,7 +14,9 @@ const CheckBalance = () => {
 
   if (safe.deployed) return null
 
-  const blockExplorerLink = chain ? getBlockExplorerLink(chain, safeAddress) : undefined
+  const blockExplorerLink = chain
+    ? getBlockExplorerLink(chain, formatAddressForExplorer(safeAddress, chain.chainId))
+    : undefined
 
   return (
     <Alert

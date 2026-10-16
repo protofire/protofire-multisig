@@ -60,7 +60,15 @@ export const useTxMonitor = (): void => {
       }
 
       if (isRelaying) {
-        waitForRelayedTx(pendingTx.taskId, [txId], pendingTx.chainId, pendingTx.safeAddress, pendingTx.nonce)
+        waitForRelayedTx(
+          pendingTx.taskId,
+          [txId],
+          pendingTx.chainId,
+          pendingTx.safeAddress,
+          pendingTx.nonce,
+          undefined,
+          pendingTx.isSafePays,
+        )
       }
     }
     // `provider` is updated when switching chains, re-running this effect
@@ -229,6 +237,7 @@ const useTxPendingStatuses = (): void => {
           txId,
           status: PendingStatus.RELAYING,
           taskId: detail.taskId,
+          ...(detail.isSafePays && { isSafePays: true }),
         }),
       )
     })

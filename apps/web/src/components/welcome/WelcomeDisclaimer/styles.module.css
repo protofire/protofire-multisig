@@ -1,0 +1,47 @@
+.disclaimer {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 0 var(--space-2) var(--space-2);
+}
+
+.text {
+  max-width: 520px;
+  margin: 0;
+  padding-top: var(--space-1);
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.5;
+  letter-spacing: 0;
+  color: var(--color-static-light);
+  text-wrap: pretty;
+}
+
+/* Below 1200px the welcome footer is pinned to the bottom of the page, so the
+   disclaimer is pinned right above it instead of following it in the flow. */
+@media (max-width: 1199.95px) and (min-width: 600px) {
+  .disclaimer {
+    position: absolute;
+    left: 0;
+    bottom: 60px;
+    z-index: 10;
+    background: #ffffff;
+    padding: var(--space-2) var(--space-2) 0;
+  }
+}
+
+@media (max-width: 599.95px) {
+  .disclaimer {
+    position: absolute;
+    left: 0;
+    bottom: 80px;
+    z-index: 10;
+    background: #ffffff;
+    padding: var(--space-2) var(--space-2) 0;
+  }
+
+  .text {
+    font-size: 11px;
+    line-height: 1.45;
+  }
+}

@@ -17,6 +17,7 @@ import { ErrorType, getErrorInfo } from '../utils/errors'
  * Supports both single and multiple recipients
  *
  * @param recipients - Array of recipient addresses to analyze (can be single address)
+ * @param isTronChain - Whether the chain is a Tron chain, per the platform's FEATURES.TRON flag
  * @returns Object containing complete analysis results for each address, with loading and error states
  */
 export function useRecipientAnalysis({
@@ -27,6 +28,7 @@ export function useRecipientAnalysis({
   web3ReadOnly,
   ownedSafes = [],
   debounceDelay = 500,
+  isTronChain = false,
 }: {
   safeAddress: string
   chainId: string
@@ -35,6 +37,7 @@ export function useRecipientAnalysis({
   ownedSafes: string[]
   web3ReadOnly?: JsonRpcProvider
   debounceDelay?: number
+  isTronChain?: boolean
 }): AsyncResult<RecipientAnalysisResults> | undefined {
   const recipientsMemo = useMemoDeepCompare(() => recipients, [recipients])
 
@@ -59,7 +62,11 @@ export function useRecipientAnalysis({
   const nonSafeRecipients = useMemoDeepCompare(() => filterNonSafeRecipients(fetchedResults), [fetchedResults])
 
   const addressBookCheck = useAddressBookCheck(chainId, validRecipients, isInAddressBook, ownedSafes)
-  const [activityCheck, activityCheckError, activityCheckLoading] = useAddressActivity(nonSafeRecipients, web3ReadOnly)
+  const [activityCheck, activityCheckError, activityCheckLoading] = useAddressActivity(
+    nonSafeRecipients,
+    web3ReadOnly,
+    isTronChain,
+  )
 
   // Check if any of the checks are loading or if the results are not complete
   const isLoading = useMemo(() => fetchLoading || activityCheckLoading, [fetchLoading, activityCheckLoading])

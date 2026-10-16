@@ -1,3 +1,4 @@
+import { isTronChain } from '@/utils/tron'
 import { ImplementationVersionState } from '@safe-global/store/gateway/types'
 import { POLLING_INTERVAL } from '@/config/constants'
 import { safeCreationDispatch, SafeCreationEvent } from './safeCreationEvents'
@@ -22,6 +23,7 @@ import type { BrowserProvider, Eip1193Provider, Provider, TransactionResponse } 
 import { encodeSafeCreationTx } from '@/components/new-safe/create/logic'
 import { getLatestSafeVersion } from '@safe-global/utils/utils/chains'
 import { delay } from '@safe-global/utils/utils/helpers'
+import { UncheckedJsonRpcSigner } from '@/utils/providers/UncheckedJsonRpcSigner'
 
 export const getUndeployedSafeInfo = (undeployedSafe: UndeployedSafe, address: string, chain: Chain) => {
   const safeSetup = extractCounterfactualSafeSetup(undeployedSafe, chain.chainId)
@@ -146,6 +148,25 @@ async function retryGetTransaction(provider: Provider, txHash: string, maxAttemp
   throw new Error('Transaction not found')
 }
 
+async function waitForTronReceipt(provider: Provider, txHash: string, maxAttempts = 60) {
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      const receipt = await provider.getTransactionReceipt(txHash)
+      if (receipt !== null) {
+        return receipt
+      }
+    } catch (e) {
+      // Retry on errors (rate-limiting 429, CORS failures, network hiccups).
+      // TronGrid may return 429 without CORS headers, which the browser surfaces
+      // as a generic fetch failure — retrying after a delay resolves it.
+      console.warn('waitForTronReceipt: getTransactionReceipt failed, retrying', e)
+    }
+    // Back off: 3s base, increasing to 6s after 10 attempts
+    await delay(attempt < 10 ? 3000 : 6000)
+  }
+  throw new Error('Tron transaction receipt not found after polling')
+}
+
 export const checkSafeActivation = async (
   provider: Provider,
   txHash: string,
@@ -155,13 +176,17 @@ export const checkSafeActivation = async (
   startBlock?: number,
 ) => {
   try {
-    const txResponse = await retryGetTransaction(provider, txHash)
-
-    const replaceableTx = startBlock ? txResponse.replaceableTransaction(startBlock) : txResponse
-    const receipt = await replaceableTx?.wait(1)
+    let receipt
+    if (isTronChain(chainId)) {
+      receipt = await waitForTronReceipt(provider, txHash)
+    } else {
+      const txResponse = await retryGetTransaction(provider, txHash)
+      const replaceableTx = startBlock ? txResponse.replaceableTransaction(startBlock) : txResponse
+      receipt = await replaceableTx?.wait(1)
+    }
 
     /** The receipt should always be non-null as we require 1 confirmation */
-    if (receipt === null) {
+    if (receipt === null || receipt === undefined) {
       throw new Error('Transaction should have a receipt, but got null instead.')
     }
 
@@ -279,7 +304,10 @@ export const activateReplayedSafe = async (
 ) => {
   const data = encodeSafeCreationTx(props, chain)
 
-  return (await provider.getSigner()).sendTransaction({
+  const signer = await provider.getSigner()
+  const sender = isTronChain(chain.chainId) ? new UncheckedJsonRpcSigner(provider, signer.address) : signer
+
+  return sender.sendTransaction({
     ...options,
     to: props.factoryAddress,
     data,

@@ -81,6 +81,10 @@ export interface ColorPalette {
     primary: string
     textSecondary: string
     textBrand: string
+    welcomeGradientStart: string
+    welcomeGradientEnd: string
+    welcomeFg: string
+    welcomeFgMuted: string
   }
 }
 
@@ -94,4 +98,8 @@ export interface StaticColors {
   primary: string
   textSecondary: string
   textBrand: string
+  welcomeGradientStart: string
+  welcomeGradientEnd: string
+  welcomeFg: string
+  welcomeFgMuted: string
 }

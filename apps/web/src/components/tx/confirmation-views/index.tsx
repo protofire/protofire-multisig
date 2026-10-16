@@ -39,6 +39,8 @@ import useChainId from '@/hooks/useChainId'
 import { ManageSigners } from './ManageSigners'
 import { Box } from '@mui/material'
 import DecodedData from '@/components/transactions/TxDetails/TxData/DecodedData'
+import { Erc7730Feature } from '@/features/erc7730'
+import { useLoadFeature } from '@/features/__core__'
 import BridgeTransaction from './BridgeTransaction'
 import { LifiSwapTransaction } from './LifiSwapTransaction'
 
@@ -101,6 +103,7 @@ const ConfirmationView = ({
   const { txFlow } = useContext(TxModalContext)
   const details = txDetails ?? txPreview
   const chainId = useChainId()
+  const { ClearSigningCheck } = useLoadFeature(Erc7730Feature)
 
   // Used to check if the decoded data was rendered inside the TxData component
   // If it was, we hide the decoded data in the Summary to avoid showing it twice
@@ -129,6 +132,8 @@ const ConfirmationView = ({
 
   return (
     <>
+      {withDecodedData && showTxDetails && details.txData && <ClearSigningCheck txData={details.txData} />}
+
       {withDecodedData &&
         (ConfirmationViewComponent ||
           (details && showTxDetails && (

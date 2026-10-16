@@ -5,7 +5,11 @@ import { MAX_DAY_RELAYS } from '@/hooks/useRemainingRelays'
 import css from '../BalanceInfo/styles.module.css'
 import { maybePlural } from '@safe-global/utils/utils/formatters'
 
+export const RELAYS_COUNTER_THRESHOLD = 10
+
 const RemainingRelays = ({ relays, tooltip }: { relays?: RelaysRemaining; tooltip?: string }) => {
+  if ((relays?.remaining ?? MAX_DAY_RELAYS) > RELAYS_COUNTER_THRESHOLD) return null
+
   if (!tooltip) {
     const limit = relays?.limit ?? MAX_DAY_RELAYS
     tooltip = `${limit} transaction${maybePlural(limit)} per day for free`

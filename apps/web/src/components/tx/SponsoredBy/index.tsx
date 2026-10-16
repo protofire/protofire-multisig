@@ -1,14 +1,10 @@
-import chains from '@/config/chains'
 import css from './styles.module.css'
 
-export const RELAY_SPONSORS = {
-  [chains.gno]: {
-    name: 'Gnosis',
-    logo: '/images/common/gnosis-chain-logo.png',
-  },
+// Keyed by chainId for chain-sponsored networks ("Sponsored by <Chain>"); everything else falls back to default.
+export const RELAY_SPONSORS: Record<string, { name: string; logo: string }> = {
   default: {
-    name: 'Safe',
-    logo: '/images/logo-no-text.svg',
+    name: 'Protofire',
+    logo: '/images/protofire.svg',
   },
 }
 

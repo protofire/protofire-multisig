@@ -7,6 +7,8 @@ import css from './styles.module.css'
 import accordionCss from '@/styles/accordion.module.css'
 import CodeIcon from '@mui/icons-material/Code'
 import DecodedData from '@/components/transactions/TxDetails/TxData/DecodedData'
+import { Erc7730Feature, useClearSigningOutcome } from '@/features/erc7730'
+import { useLoadFeature } from '@/features/__core__'
 import { sameAddress } from '@safe-global/utils/utils/addresses'
 import { getSafeToL2MigrationDeployment } from '@safe-global/safe-deployments'
 import { useCurrentChain } from '@/hooks/useChains'
@@ -36,6 +38,7 @@ const SingleTxDecoded = ({
   actions,
 }: SingleTxDecodedProps) => {
   const chain = useCurrentChain()
+  const { ClearSigningCheck, ClearSigningFoundChip, clearSigningAccordionClassName } = useLoadFeature(Erc7730Feature)
   const isNativeTransfer = tx.value !== '0' && (!tx.data || isEmptyHexData(tx.data))
   const method = tx.dataDecoded?.method || (isNativeTransfer ? 'native transfer' : 'contract interaction')
 
@@ -59,9 +62,16 @@ const SingleTxDecoded = ({
     addressInfoIndex: txData.addressInfoIndex,
     trustedDelegateCallTarget: sameAddress(tx.to, safeToL2MigrationAddress), // We only trusted a nested Migration
   }
+  const lookupLabel = transferTokenInfo ? `Action ${actionTitle}: transfer` : undefined
+  const showErc7730HintChip = useClearSigningOutcome(singleTxData) === 'found'
 
   return (
-    <Accordion variant={variant} expanded={expanded} onChange={onChange}>
+    <Accordion
+      variant={variant}
+      expanded={expanded}
+      onChange={onChange}
+      className={showErc7730HintChip ? clearSigningAccordionClassName : undefined}
+    >
       <AccordionSummary data-testid="action-item" expandIcon={<ExpandMoreIcon />} className={accordionCss.accordion}>
         <div className={css.summary}>
           <CodeIcon color="border" fontSize="small" />
@@ -78,6 +88,7 @@ const SingleTxDecoded = ({
               <b>{method}</b>
             </Typography>
           )}
+          {showErc7730HintChip && <ClearSigningFoundChip />}
         </div>
 
         {actions !== undefined && <Box className={css.actions}>{actions}</Box>}
@@ -85,6 +96,7 @@ const SingleTxDecoded = ({
 
       <AccordionDetails>
         <Stack spacing={1}>
+          <ClearSigningCheck txData={singleTxData} lookupLabel={lookupLabel} />
           <DecodedData txData={singleTxData} toInfo={{ value: tx.to }} isTxExecuted={isExecuted} />
         </Stack>
       </AccordionDetails>

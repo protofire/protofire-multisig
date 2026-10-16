@@ -15,7 +15,7 @@ export const createOnboard = (
 ): OnboardAPI => {
   if (onboard) return onboard
 
-  const wallets = getAllWallets(currentChain)
+  const wallets = getAllWallets(currentChain, chainConfigs)
 
   const chains = chainConfigs.map((cfg) => ({
     // We cannot use ethers' toBeHex here as we do not want to pad it to an even number of characters.

@@ -5,7 +5,7 @@ import { Gnosis_safe__factory } from '@safe-global/utils/types/contracts'
 import Safe, { type ContractNetworksConfig } from '@safe-global/protocol-kit'
 import { isValidMasterCopy } from '@safe-global/utils/services/contracts/safeContracts'
 import { isPredictedSafeProps, isReplayedSafeProps } from '@/features/counterfactual/services'
-import { isLegacyVersion } from '@safe-global/utils/services/contracts/utils'
+import { getSafeAbiVersion, isLegacyVersion } from '@safe-global/utils/services/contracts/utils'
 import { isInDeployments } from '@safe-global/utils/hooks/coreSDK/utils'
 import { getCanonicalMultiSendContractNetworks } from '@safe-global/utils/hooks/coreSDK/contractNetworks'
 import type { SafeCoreSDKProps } from '@safe-global/utils/hooks/coreSDK/types'
@@ -31,7 +31,10 @@ export const initSafeSDK = async ({
     return
   }
 
-  let safeVersion = version ?? (await Gnosis_safe__factory.connect(address, provider).VERSION())
+  let safeVersion = getSafeAbiVersion(
+    version ?? (await Gnosis_safe__factory.connect(address, provider).VERSION()),
+    chainId,
+  )!
   let isL1SafeSingleton = chainId === chains.eth
   let contractNetworks: ContractNetworksConfig | undefined
 
@@ -100,10 +103,15 @@ export const initSafeSDK = async ({
     contractNetworks,
   })
 
+  // Safe.init accepts a string URL (not FetchRequest). Use the plain RPC URL.
+  // The API key header is only needed for ethers JsonRpcProvider (createWeb3ReadOnly),
+  // not for the Protocol Kit which creates its own provider internally.
+  const rpcUrl = provider._getConnection().url
+
   if (undeployedSafe) {
     if (isPredictedSafeProps(undeployedSafe.props) || isReplayedSafeProps(undeployedSafe.props)) {
       return Safe.init({
-        provider: provider._getConnection().url,
+        provider: rpcUrl,
         isL1SafeSingleton,
         ...(contractNetworks ? { contractNetworks } : {}),
         predictedSafe: undeployedSafe.props,
@@ -114,7 +122,7 @@ export const initSafeSDK = async ({
   }
 
   return Safe.init({
-    provider: provider._getConnection().url,
+    provider: rpcUrl,
     safeAddress: address,
     isL1SafeSingleton,
     ...(contractNetworks ? { contractNetworks } : {}),

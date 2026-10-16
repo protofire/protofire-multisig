@@ -21,7 +21,7 @@ const ReviewTokenTransfer = ({
   txNonce?: number
 }>) => {
   const { setSafeTx, setSafeTxError, setNonce } = useContext(SafeTxContext)
-  const { balances } = useBalances()
+  const { balances, loaded: balancesLoaded } = useBalances()
 
   const recipients = useMemo(() => params?.recipients || [], [params?.recipients])
 
@@ -29,6 +29,10 @@ const ReviewTokenTransfer = ({
     if (txNonce !== undefined) {
       setNonce(txNonce)
     }
+
+    // Wait for balances to load - building from an empty/stale list would
+    // incorrectly fail the native-token lookup below and throw on an empty tx array
+    if (!balancesLoaded) return
 
     const calls = recipients
       .map((recipient) => {
@@ -45,8 +49,13 @@ const ReviewTokenTransfer = ({
       })
       .filter((transfer): transfer is MetaTransactionData => !!transfer)
 
-    createMultiSendCallOnlyTx(calls).then(setSafeTx).catch(setSafeTxError)
-  }, [recipients, txNonce, setNonce, balances, setSafeTx, setSafeTxError])
+    createMultiSendCallOnlyTx(calls)
+      .then((tx) => {
+        setSafeTx(tx)
+        setSafeTxError(undefined)
+      })
+      .catch(setSafeTxError)
+  }, [recipients, txNonce, setNonce, balances, balancesLoaded, setSafeTx, setSafeTxError])
 
   return (
     <ReviewTransaction onSubmit={onSubmit}>

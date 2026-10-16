@@ -3,6 +3,7 @@ import { SettingsInfoType, TransactionInfoType } from '@safe-global/store/gatewa
 import { TransactionTokenType } from '@safe-global/store/gateway/types'
 import { getTransactionTrackingType } from '../tx-tracking'
 import { TX_TYPES } from '../events/transactions'
+import { BRIDGE_WIDGET_URL } from '@/features/bridge'
 
 describe('getTransactionTrackingType', () => {
   beforeEach(() => {
@@ -178,7 +179,7 @@ describe('getTransactionTrackingType', () => {
         type: TransactionInfoType.CUSTOM,
       },
     } as unknown as TransactionDetails
-    const origin = '{"url":"https://iframe.jumper.exchange/bridge","name":"Bridge"}'
+    const origin = JSON.stringify({ url: `${BRIDGE_WIDGET_URL}?fromChain=1`, name: 'Bridge' })
     const txType = getTransactionTrackingType(details, origin)
     expect(txType).toEqual(TX_TYPES.native_bridge)
   })

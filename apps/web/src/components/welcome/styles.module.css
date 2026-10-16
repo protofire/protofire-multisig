@@ -32,8 +32,16 @@
   background-color: #fff;
 }
 
+.welcomeFooterSection {
+  width: 100%;
+}
+
 .logoContainer {
   padding: var(--space-2);
+}
+
+.welcomeBanner {
+  padding-bottom: var(--space-3);
 }
 
 .logo {
@@ -78,25 +86,39 @@
     min-height: 100vh;
   }
 
-  .rightSide {
-    width: 100%;
-  }
-
   .leftSide {
+    display: contents;
+  }
+
+  .logoContainer,
+  .welcomeBanner,
+  .loginContainer {
+    order: 1;
     width: 100%;
-    position: unset;
-    padding-bottom: var(--space-12);
+    background-color: #fff;
   }
 
-  .mockupImage {
-    max-width: 100vw;
-    margin-bottom: 59px;
+  .rightSide {
+    order: 2;
+    width: 100%;
   }
-}
 
-@media (max-width: 599.95px) {
-  .mockupImage {
-    max-width: 100vw;
-    margin-bottom: 79px;
+  .rightSide section {
+    padding-bottom: var(--space-5);
+  }
+
+  .welcomeFooterSection {
+    order: 3;
+    display: flex;
+    flex-direction: column-reverse;
+    width: 100%;
+    background-color: #fff;
+  }
+
+  .welcomeFooterSection footer,
+  .welcomeFooterSection > div {
+    position: static;
+    height: auto;
+    z-index: auto;
   }
 }

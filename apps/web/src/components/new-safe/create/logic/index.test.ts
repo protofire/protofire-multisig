@@ -1,11 +1,14 @@
 import { JsonRpcProvider } from 'ethers'
 import { EMPTY_DATA, ZERO_ADDRESS } from '@safe-global/protocol-kit/dist/src/utils/constants'
 import * as web3 from '@/hooks/wallets/web3'
+import Safe from '@safe-global/protocol-kit'
 import {
   relaySafeCreation,
   getRedirect,
+  createNewSafe,
   createNewUndeployedSafeWithoutSalt,
 } from '@/components/new-safe/create/logic/index'
+import { activateReplayedSafe } from '@/features/counterfactual/services'
 import { toBeHex } from 'ethers'
 import { chainBuilder } from '@/tests/builders/chains'
 import { type ReplayedSafeProps } from '@safe-global/utils/features/counterfactual/store/types'
@@ -401,6 +404,96 @@ describe('create/logic', () => {
       expect(result.safeAccountConfig.fallbackHandler).toEqual(firstAddress)
 
       spy.mockRestore()
+    })
+  })
+
+  describe('createNewSafe', () => {
+    const owner = faker.finance.ethereumAddress()
+    const hash = `0x${'ab'.repeat(32)}`
+    const replayedProps: ReplayedSafeProps = {
+      safeAccountConfig: {
+        owners: [owner],
+        threshold: 1,
+        data: EMPTY_DATA,
+        to: ZERO_ADDRESS,
+        fallbackHandler: ZERO_ADDRESS,
+        paymentReceiver: ZERO_ADDRESS,
+        payment: 0,
+        paymentToken: ZERO_ADDRESS,
+      },
+      safeVersion: latestSafeVersion,
+      factoryAddress: faker.finance.ethereumAddress(),
+      masterCopy: faker.finance.ethereumAddress(),
+      saltNonce: '69',
+    }
+    const predictedProps = { safeAccountConfig: { owners: [owner], threshold: 1 }, safeDeploymentConfig: {} }
+    const pendingTransaction = {
+      hash,
+      blockHash: null,
+      blockNumber: null,
+      transactionIndex: null,
+      from: owner,
+      to: replayedProps.factoryAddress,
+      gas: '0x1',
+      gasPrice: '0x1',
+      input: '0x',
+      nonce: '0x0',
+      value: '0x0',
+      type: '0x0',
+      v: '0x1b',
+      r: `0x${'11'.repeat(32)}`,
+      s: `0x${'22'.repeat(32)}`,
+    }
+
+    const create = async (chainId: string, props: Parameters<typeof createNewSafe>[1]) => {
+      const requested: string[] = []
+      const answers: Record<string, unknown> = {
+        eth_chainId: toBeHex(chainId),
+        eth_accounts: [owner],
+        eth_blockNumber: '0x1',
+        eth_sendTransaction: hash,
+        eth_getTransactionByHash: pendingTransaction,
+      }
+      const walletProvider = {
+        request: async ({ method }: { method: string }) => {
+          requested.push(method)
+          return answers[method]
+        },
+      }
+      const callback = jest.fn()
+      const chain = chainBuilder().with({ chainId }).build()
+
+      await createNewSafe(walletProvider, props, chain, { gasLimit: 1 }, callback, undefined, activateReplayedSafe)
+
+      expect(callback).toHaveBeenCalledWith(hash)
+      return requested
+    }
+
+    beforeEach(() => {
+      jest.spyOn(Safe, 'init').mockResolvedValue({
+        createSafeDeploymentTransaction: async () => ({ to: replayedProps.factoryAddress, value: '0', data: '0x1234' }),
+      } as unknown as Safe)
+    })
+
+    afterEach(() => jest.restoreAllMocks())
+
+    it.each([
+      ['replayed', replayedProps],
+      ['predicted', predictedProps],
+    ])('hands the hash over on Tron without waiting for the transaction to be readable (%s)', async (_name, props) => {
+      const requested = await create('728126428', props)
+
+      expect(requested).toContain('eth_sendTransaction')
+      expect(requested).not.toContain('eth_getTransactionByHash')
+    })
+
+    it.each([
+      ['replayed', replayedProps],
+      ['predicted', predictedProps],
+    ])('still looks the sent transaction up on other chains (%s)', async (_name, props) => {
+      const requested = await create('1', props)
+
+      expect(requested).toContain('eth_getTransactionByHash')
     })
   })
 })

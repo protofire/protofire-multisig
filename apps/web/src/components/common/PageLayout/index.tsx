@@ -11,6 +11,7 @@ import { TxModalContext } from '@/components/tx-flow'
 import BatchSidebar from '@/components/batch/BatchSidebar'
 import Breadcrumbs from '@/components/common/Breadcrumbs'
 import { AppRoutes } from '@/config/routes'
+import SunsetBanner from '@/components/common/SunsetBanner'
 
 const PageLayout = ({ pathname, children }: { pathname: string; children: ReactElement }): ReactElement => {
   const [isSidebarRoute, isAnimated] = useIsSidebarRoute(pathname)
@@ -18,7 +19,7 @@ const PageLayout = ({ pathname, children }: { pathname: string; children: ReactE
   const [isBatchOpen, setBatchOpen] = useState<boolean>(false)
   const { txFlow, setFullWidth } = useContext(TxModalContext)
   const isSafeLabsTermsPage = pathname === AppRoutes.safeLabsTerms
-  const isWelcomePage = pathname === AppRoutes.welcome.index
+  const isWelcomePage = [AppRoutes.welcome.index, AppRoutes.welcome.dataMigration].includes(pathname)
   const hideHeader = isSafeLabsTermsPage || isWelcomePage
 
   // Hide sidebar when transaction flow is open
@@ -46,6 +47,7 @@ const PageLayout = ({ pathname, children }: { pathname: string; children: ReactE
         })}
       >
         <div className={css.content}>
+          {!isWelcomePage && <SunsetBanner />}
           <SafeLoadingError>
             {!hideHeader && <Breadcrumbs />}
             {children}

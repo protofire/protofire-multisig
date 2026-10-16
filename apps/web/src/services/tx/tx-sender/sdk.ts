@@ -7,7 +7,7 @@ import {
   sameString,
 } from '@safe-global/protocol-kit/dist/src/utils'
 import type { Eip1193Provider, JsonRpcSigner } from 'ethers'
-import { isHardwareWallet, isWalletConnect } from '@/utils/wallets'
+import { isHardwareWallet, isTronWallet, isWalletConnect } from '@/utils/wallets'
 import { OperationType, type SafeTransaction } from '@safe-global/types-kit'
 import { getChainConfig } from '@/utils/chains'
 import { createWeb3, getWeb3ReadOnly } from '@/hooks/wallets/web3'
@@ -18,6 +18,7 @@ import type { ConnectedWallet } from '@/hooks/wallets/useOnboard'
 import { UncheckedJsonRpcSigner } from '@/utils/providers/UncheckedJsonRpcSigner'
 import get from 'lodash/get'
 import { maybePlural } from '@safe-global/utils/utils/formatters'
+import { isTronChain } from '@/utils/tron-chains'
 
 export const getAndValidateSafeSDK = (): Safe => {
   const safeSDK = getSafeSDK()
@@ -81,6 +82,13 @@ export const switchWalletChain = async (onboard: OnboardAPI, chainId: string): P
   // Onboard incorrectly returns WalletConnect's chainId, so it needs to be switched unconditionally
   if (currentWallet.chainId === chainId && !isWalletConnect(currentWallet)) {
     return currentWallet
+  }
+
+  // MetaMask & co. can't sign on Tron and TronLink can't leave it: let the user pick another wallet
+  if (isTronChain(chainId) !== isTronWallet(currentWallet)) {
+    await onboard.disconnectWallet({ label: currentWallet.label })
+    const wallets = await connectWallet(onboard)
+    return wallets ? getConnectedWallet(wallets) : null
   }
 
   // Hardware wallets cannot switch chains

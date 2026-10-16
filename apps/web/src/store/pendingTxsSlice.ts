@@ -60,6 +60,7 @@ export type PendingProcessingTx = PendingTxCommonProps &
 
 type PendingRelayingTx = PendingTxCommonProps & {
   taskId: string
+  isSafePays?: boolean
   status: PendingStatus.RELAYING
 }
 

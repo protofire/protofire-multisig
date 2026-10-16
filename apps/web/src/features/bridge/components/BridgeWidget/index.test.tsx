@@ -1,52 +1,24 @@
-import { _getAppData } from '@/features/bridge/components/BridgeWidget'
+import { _getBridgeUrl } from '@/features/bridge/components/BridgeWidget'
+import { BRIDGE_WIDGET_URL } from '@/features/bridge/constants'
+import { LIFI_WIDGET_URL } from '@/config/constants.extra'
 import { chainBuilder } from '@/tests/builders/chains'
 
 describe('BridgeWidget', () => {
-  describe('getAppData', () => {
-    it('should return the correct SafeAppDataWithPermissions', () => {
-      const chain = chainBuilder().build()
-      const result = _getAppData(false, chain)
-
-      expect(result).toStrictEqual({
-        accessControl: {
-          type: 'NO_RESTRICTIONS',
-        },
-        chainIds: [chain.chainId],
-        description: '',
-        developerWebsite: '',
-        featured: false,
-        features: [],
-        iconUrl: '/images/common/safe-bridge.svg',
-        id: expect.any(Number),
-        name: 'Bridge',
-        safeAppsPermissions: [],
-        socialProfiles: [],
-        tags: [],
-        url: `https://iframe.jumper.exchange/bridge?fromChain=${chain.chainId}&theme=light`,
-      })
+  describe('BRIDGE_WIDGET_URL', () => {
+    it('should point to the bridge route of the LI.FI widget', () => {
+      expect(BRIDGE_WIDGET_URL).toBe(new URL('/bridge', LIFI_WIDGET_URL).href)
     })
+  })
 
-    it('should return the correct SafeAppDataWithPermissions with dark mode', () => {
+  describe('_getBridgeUrl', () => {
+    it('should preselect the Safe chain as the source chain', () => {
       const chain = chainBuilder().build()
-      const result = _getAppData(true, chain)
 
-      expect(result).toStrictEqual({
-        accessControl: {
-          type: 'NO_RESTRICTIONS',
-        },
-        chainIds: [chain.chainId],
-        description: '',
-        developerWebsite: '',
-        featured: false,
-        features: [],
-        iconUrl: '/images/common/safe-bridge-dark.svg',
-        id: expect.any(Number),
-        name: 'Bridge',
-        safeAppsPermissions: [],
-        socialProfiles: [],
-        tags: [],
-        url: `https://iframe.jumper.exchange/bridge?fromChain=${chain.chainId}&theme=dark`,
-      })
+      const url = new URL(_getBridgeUrl(chain))
+
+      expect(`${url.origin}${url.pathname}`).toBe(BRIDGE_WIDGET_URL)
+      expect(url.searchParams.get('fromChain')).toBe(chain.chainId)
+      expect(url.searchParams.has('theme')).toBe(false)
     })
   })
 })

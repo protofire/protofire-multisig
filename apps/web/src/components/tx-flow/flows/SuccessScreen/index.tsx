@@ -10,7 +10,7 @@ import { useCurrentChain } from '@/hooks/useChains'
 import { TxEvent, txSubscribe } from '@/services/tx/txEvents'
 import useSafeInfo from '@/hooks/useSafeInfo'
 import { TxModalContext } from '../..'
-import LoadingSpinner, { SpinnerStatus } from '@/components/new-safe/create/steps/StatusStep/LoadingSpinner'
+import LoadingSpinnerCheck, { SpinnerStatus } from '@/components/new-safe/create/steps/StatusStep/LoadingSpinnerCheck'
 import { ProcessingStatus } from '@/components/tx-flow/flows/SuccessScreen/statuses/ProcessingStatus'
 import { IndexingStatus } from '@/components/tx-flow/flows/SuccessScreen/statuses/IndexingStatus'
 import { DefaultStatus } from '@/components/tx-flow/flows/SuccessScreen/statuses/DefaultStatus'
@@ -91,7 +91,7 @@ const SuccessScreen = ({ txId, txHash }: Props) => {
       maxWidth={false}
     >
       <div className={css.row}>
-        <LoadingSpinner status={spinnerStatus} />
+        <LoadingSpinnerCheck status={spinnerStatus} />
         {StatusComponent}
       </div>
 

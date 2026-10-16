@@ -6,6 +6,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import js from '@eslint/js'
 import { FlatCompat } from '@eslint/eslintrc'
+import storybook from 'eslint-plugin-storybook'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -29,7 +30,11 @@ export default [
       '**/public/mockServiceWorker.js',
     ],
   },
-  ...compat.extends('next', 'prettier', 'plugin:storybook/recommended'),
+  ...compat.extends('next', 'prettier'),
+  // eslint-plugin-storybook v10 is ESM-only, so it can't be loaded via
+  // compat.extends('plugin:storybook/recommended') (FlatCompat requires() plugins).
+  // Use its native flat config export instead.
+  ...storybook.configs['flat/recommended'],
   {
     plugins: {
       'unused-imports': unusedImports,

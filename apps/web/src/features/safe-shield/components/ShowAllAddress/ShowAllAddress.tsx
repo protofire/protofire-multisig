@@ -3,6 +3,7 @@ import { Typography, Stack, Tooltip, Box } from '@mui/material'
 import { useState } from 'react'
 import { useCurrentChain } from '@/hooks/useChains'
 import { getBlockExplorerLink } from '@safe-global/utils/utils/chains'
+import { formatAddressForExplorer } from '@/utils/tron'
 import ExplorerButton from '@/components/common/ExplorerButton'
 import useAddressBook from '@/hooks/useAddressBook'
 import useChainId from '@/hooks/useChainId'
@@ -37,7 +38,9 @@ export const ShowAllAddress = ({ addresses, showImage }: ShowAllAddressProps) =>
     <AnalysisDetailsDropdown>
       <Box display="flex" flexDirection="column" gap={1}>
         {addresses.map((item, index) => {
-          const explorerLink = currentChain ? getBlockExplorerLink(currentChain, item.address) : undefined
+          const explorerLink = currentChain
+            ? getBlockExplorerLink(currentChain, formatAddressForExplorer(item.address, currentChain.chainId))
+            : undefined
           const name = addressBook[item.address] || item.name
 
           return (

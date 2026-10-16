@@ -1,8 +1,9 @@
-import { zeroPadValue } from 'ethers'
+import { zeroPadValue, type JsonRpcSigner } from 'ethers'
 import type { SafeState } from '@safe-global/store/gateway/AUTO_GENERATED/safes'
 
 import {
   generateSafeMessageTypedData,
+  tryOffChainMsgSigning,
   isBlindSigningPayload,
   isOffchainEIP1271Supported,
 } from '@safe-global/utils/utils/safe-messages'
@@ -13,6 +14,18 @@ import { FEATURES } from '@safe-global/utils/utils/chains'
 const MOCK_ADDRESS = zeroPadValue('0x0123', 20)
 
 describe('safe-messages', () => {
+  it.each(['1', '728126428'])('validates Tron message signatures against the Safe chain %s', async (chainId) => {
+    const signature = '0x' + '11'.repeat(64) + '3a'
+    const signer = { signTypedData: jest.fn().mockResolvedValue(signature) } as unknown as JsonRpcSigner
+    const safe = { version: '1.5.0', chainId, address: { value: MOCK_ADDRESS } } as SafeState
+    const result = tryOffChainMsgSigning(signer, safe, 'Hello world!')
+    if (chainId === '1') {
+      await expect(result).rejects.toThrow('Invalid signature')
+    } else {
+      await expect(result).resolves.toBe(signature)
+    }
+  })
+
   describe('createSafeMessage', () => {
     it('should generate the correct types for a EIP-191 message for >= 1.3.0 Safes', () => {
       const safe = {

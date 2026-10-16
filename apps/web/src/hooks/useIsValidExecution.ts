@@ -12,6 +12,7 @@ import useSafeInfo from '@/hooks/useSafeInfo'
 import { useSigner } from '@/hooks/wallets/useWallet'
 import { type NestedWallet } from '@/utils/nested-safe-wallet'
 import { assertProvider } from '@/utils/helpers'
+import { isTronChain } from '@/utils/tron'
 
 const isContractError = (error: EthersError) => {
   if (!error.reason) return false
@@ -66,6 +67,12 @@ const useIsValidExecution = (
   const [isValidExecution, executionValidationError, isValidExecutionLoading] = useAsync(async () => {
     if (!safeTx || !wallet || gasLimit === undefined || !readOnlyProvider) {
       return
+    }
+
+    // Tron /jsonrpc does not support reliable eth_call for execution validation.
+    // Skip validation — the Tron transport simulates the call before signing.
+    if (isTronChain(safe.chainId)) {
+      return true
     }
 
     try {
