@@ -52,7 +52,7 @@ describe('SafeShieldDisplay', () => {
         <SafeShieldDisplay recipient={emptyRecipient} contract={emptyContract} threat={emptyThreat} />,
       )
 
-      expect(container.querySelector('.MuiSvgIcon-root')).toBeInTheDocument()
+      expect(container.querySelector('.MuiCard-root')).toBeInTheDocument()
     })
 
     it('should render with empty props', () => {
@@ -61,7 +61,6 @@ describe('SafeShieldDisplay', () => {
       )
 
       expect(container.querySelector('.MuiCard-root')).toBeInTheDocument()
-      expect(container.querySelector('.MuiSvgIcon-root')).toBeInTheDocument()
     })
 
     it('should have correct layout structure', () => {
@@ -214,15 +213,15 @@ describe('SafeShieldDisplay', () => {
   })
 
   describe('Footer', () => {
-    it('should always render the Safe Shield logo', () => {
+    it('should not render the Safe Shield logo link', () => {
       const { container } = render(
         <SafeShieldDisplay recipient={emptyRecipient} contract={emptyContract} threat={emptyThreat} />,
       )
 
-      expect(container.querySelector('.MuiSvgIcon-root')).toBeInTheDocument()
+      expect(container.querySelector('a[href*="safe-shield"]')).not.toBeInTheDocument()
     })
 
-    it('should render logo even with errors', () => {
+    it('should not render the logo link even with errors', () => {
       const error = new Error('Analysis failed')
       const errorRecipient: AsyncResult<RecipientAnalysisResults> = [undefined, error, false]
 
@@ -230,20 +229,8 @@ describe('SafeShieldDisplay', () => {
         <SafeShieldDisplay recipient={errorRecipient} contract={emptyContract} threat={emptyThreat} />,
       )
 
-      expect(container.querySelector('.MuiSvgIcon-root')).toBeInTheDocument()
-    })
-
-    it('should render logo during loading', () => {
-      const loadingRecipient = RecipientAnalysisBuilder.knownRecipient(mockRecipientAddress).build()
-      if (loadingRecipient) {
-        loadingRecipient[2] = true
-      }
-
-      const { container } = render(
-        <SafeShieldDisplay recipient={loadingRecipient} contract={emptyContract} threat={emptyThreat} />,
-      )
-
-      expect(container.querySelector('.MuiSvgIcon-root')).toBeInTheDocument()
+      expect(container.querySelector('.MuiCard-root')).toBeInTheDocument()
+      expect(container.querySelector('a[href*="safe-shield"]')).not.toBeInTheDocument()
     })
   })
 

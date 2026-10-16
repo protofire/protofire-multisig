@@ -16,7 +16,7 @@ import { createMockWeb3Provider, type MockCallImplementation } from '@safe-globa
 
 export const getAppName = (): string => {
   const isOfficialHost = process.env.NEXT_PUBLIC_IS_OFFICIAL_HOST === 'true'
-  return isOfficialHost ? 'Safe{Wallet}' : 'Wallet fork'
+  return process.env.NEXT_PUBLIC_BRAND_NAME || (isOfficialHost ? 'Safe{Wallet}' : 'Wallet fork')
 }
 
 export const createAppNameRegex = (template: string): RegExp => {

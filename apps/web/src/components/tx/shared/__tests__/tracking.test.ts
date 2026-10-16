@@ -7,6 +7,7 @@ const mockTrackEvent = jest.fn()
 jest.mock('@/services/analytics', () => ({
   trackEvent: (...args: unknown[]) => mockTrackEvent(...args),
   MODALS_EVENTS: { RECEIPT_TIME_SPENT: { action: 'Time spent', category: 'modals' } },
+  MixpanelEventParams: jest.requireActual('@/services/analytics/mixpanel-events').MixpanelEventParams,
 }))
 
 jest.mock('@/utils/transaction-guards', () => ({

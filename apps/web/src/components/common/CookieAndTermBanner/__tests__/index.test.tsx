@@ -20,6 +20,13 @@ jest.mock('next/router', () => ({
   }),
 }))
 
+// Beamer is only offered on the official host
+const mockUseIsOfficialHost = jest.fn(() => true)
+
+jest.mock('@/hooks/useIsOfficialHost', () => ({
+  useIsOfficialHost: () => mockUseIsOfficialHost(),
+}))
+
 // Helper to render with Redux store
 const renderWithStore = (ui: React.ReactElement, preloadedState?: any) => {
   const store = makeStore(preloadedState, { skipBroadcast: true })
@@ -37,6 +44,7 @@ const renderWithStore = (ui: React.ReactElement, preloadedState?: any) => {
 describe('CookieAndTermBanner', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    mockUseIsOfficialHost.mockReturnValue(true)
   })
 
   describe('Basic rendering', () => {
@@ -220,6 +228,59 @@ describe('CookieAndTermBanner', () => {
       await waitFor(() => {
         const state = store.getState()
         expect(state.cookies_terms.termsVersion).toBe(metadata.version)
+      })
+    })
+  })
+
+  describe('Non-official host', () => {
+    beforeEach(() => {
+      mockUseIsOfficialHost.mockReturnValue(false)
+    })
+
+    it('should not render the Beamer option', () => {
+      renderWithStore(<CookieAndTermBanner />)
+
+      expect(screen.getByText('Necessary')).toBeInTheDocument()
+      expect(screen.getByText('Analytics')).toBeInTheDocument()
+      expect(screen.queryByText('Beamer')).not.toBeInTheDocument()
+      expect(screen.queryByText('New features and product announcements')).not.toBeInTheDocument()
+    })
+
+    it('should not display the Beamer warning message', () => {
+      renderWithStore(<CookieAndTermBanner warningKey={CookieAndTermType.UPDATES} />)
+
+      expect(screen.queryByText(/You attempted to open the "What's new" section/)).not.toBeInTheDocument()
+    })
+
+    it('should keep Beamer disabled on "Accept all" click', async () => {
+      const { store } = renderWithStore(<CookieAndTermBanner />)
+
+      fireEvent.click(screen.getByText('Accept all'))
+
+      await waitFor(() => {
+        const state = store.getState()
+        expect(state.cookies_terms[CookieAndTermType.UPDATES]).toBe(false)
+        expect(state.cookies_terms[CookieAndTermType.ANALYTICS]).toBe(true)
+      })
+    })
+
+    it('should keep Beamer disabled on "Save settings" click even if previously enabled', async () => {
+      const preloadedState = {
+        cookies_terms: {
+          [CookieAndTermType.TERMS]: true,
+          [CookieAndTermType.NECESSARY]: true,
+          [CookieAndTermType.UPDATES]: true,
+          [CookieAndTermType.ANALYTICS]: false,
+          termsVersion: metadata.version,
+        },
+      }
+      const { store } = renderWithStore(<CookieAndTermBanner />, preloadedState)
+
+      fireEvent.click(screen.getByText('Save settings'))
+
+      await waitFor(() => {
+        const state = store.getState()
+        expect(state.cookies_terms[CookieAndTermType.UPDATES]).toBe(false)
       })
     })
   })

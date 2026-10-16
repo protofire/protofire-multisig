@@ -2,6 +2,7 @@ import { render, waitFor } from '@/tests/test-utils'
 import { ZERO_ADDRESS } from '@safe-global/protocol-kit/dist/src/utils/constants'
 import type { SafeTransaction } from '@safe-global/types-kit'
 import ReviewTokenTransfer from '@/components/tx-flow/flows/TokenTransfer/ReviewTokenTransfer'
+import { TokenTransferType } from '@/components/tx-flow/flows/TokenTransfer/types'
 import { SafeTxContext } from '@/components/tx-flow/SafeTxProvider'
 import * as useBalances from '@/hooks/useBalances'
 import * as txSender from '@/services/tx/tx-sender'
@@ -24,6 +25,7 @@ describe('ReviewTokenTransfer', () => {
         amount: '1',
       },
     ],
+    type: TokenTransferType.multiSig,
   }
 
   const renderComponent = () =>

@@ -5,6 +5,7 @@ import * as useWalletHook from '@/hooks/wallets/useWallet'
 import * as useChains from '@/hooks/useChains'
 import type { ConnectedWallet } from '@/hooks/wallets/useOnboard'
 import type { Chain } from '@safe-global/store/gateway/AUTO_GENERATED/chains'
+import { DEFAULT_CHAIN_ID } from '@/config/constants'
 
 // mock useRouter
 jest.mock('next/navigation', () => ({
@@ -56,7 +57,7 @@ describe('useChainId hook', () => {
 
   it('should return the default chainId if no query params', () => {
     const { result } = renderHook(() => useChainId())
-    expect(result.current).toBe('11155111')
+    expect(result.current).toBe(String(DEFAULT_CHAIN_ID))
   })
 
   it('should return the chainId based on the chain query', () => {
