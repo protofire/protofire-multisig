@@ -2,7 +2,10 @@ import { faker } from '@faker-js/faker'
 import type { TypedData as GatewayTypedData } from '@safe-global/store/gateway/AUTO_GENERATED/messages'
 import type { TransactionData } from '@safe-global/store/gateway/AUTO_GENERATED/transactions'
 import { Operation } from '@safe-global/store/gateway/types'
+import type { ClearSigningLookupEntry } from './ClearSigningLookupContext'
+import { isRevokedAttestation } from './erc8176/attestation'
 import {
+  getClearSigningEntryLabel,
   getClearSigningLookupKey,
   getClearSigningTypedDataLookupKey,
   toClearSigningTransaction,
@@ -69,6 +72,48 @@ describe('getClearSigningTypedDataLookupKey', () => {
     })
 
     expect(key).toBe('1:0xsafe:1:0xverifier:Permit:{"value":"1"}')
+  })
+})
+
+describe('getClearSigningEntryLabel', () => {
+  const doneEntry = (patch: Partial<ClearSigningLookupEntry>): ClearSigningLookupEntry => ({
+    label: 'Contract call',
+    eligible: true,
+    status: 'done',
+    outcome: 'found',
+    ...patch,
+  })
+
+  it.each([
+    ['attested', 'Descriptor found'],
+    ['unattested', 'Descriptor found'],
+    ['revoked', 'Descriptor found - revoked'],
+  ] as const)('labels a found descriptor with a %s attestation', (status, label) => {
+    const attestation =
+      status === 'attested'
+        ? { status, attester: { address: faker.finance.ethereumAddress(), attestationPath: 'sigs/x.json' } }
+        : { status }
+
+    expect(getClearSigningEntryLabel(doneEntry({ attestation }))).toBe(label)
+  })
+
+  it('ignores the attestation when no descriptor was found', () => {
+    expect(getClearSigningEntryLabel(doneEntry({ outcome: 'not_found', attestation: { status: 'revoked' } }))).toBe(
+      'No descriptor',
+    )
+  })
+
+  it('labels loading and idle entries', () => {
+    expect(getClearSigningEntryLabel(doneEntry({ status: 'loading' }))).toBe('Looking up…')
+    expect(getClearSigningEntryLabel(doneEntry({ status: 'idle', outcome: undefined }))).toBeUndefined()
+  })
+})
+
+describe('isRevokedAttestation', () => {
+  it('flags only revoked attestations', () => {
+    expect(isRevokedAttestation(undefined)).toBe(false)
+    expect(isRevokedAttestation({ status: 'unattested' })).toBe(false)
+    expect(isRevokedAttestation({ status: 'revoked' })).toBe(true)
   })
 })
 

@@ -1,7 +1,7 @@
-import { faker } from '@faker-js/faker'
 import { http, HttpResponse } from 'msw'
 import { server } from '@/tests/server'
 import { getRegistryResolver } from './registryResolver'
+import { createBaseUrl, CYFRIN_ATTESTER, mockRegistryIndexes } from './testHelpers'
 
 const calldataIndex = { 'eip155:1:0x0000000000000000000000000000000000000001': 'registry/acme/calldata-acme.json' }
 const typedDataIndex = {
@@ -10,17 +10,8 @@ const typedDataIndex = {
   },
 }
 
-const createBaseUrl = () => `https://${faker.internet.domainName()}/erc7730/${faker.git.commitSha({ length: 7 })}`
-
-const mockIndexes = (baseUrl: string, onRequest?: () => void) => {
-  server.use(
-    http.get(`${baseUrl}/index.calldata.json`, () => {
-      onRequest?.()
-      return HttpResponse.json(calldataIndex)
-    }),
-    http.get(`${baseUrl}/index.eip712.json`, () => HttpResponse.json(typedDataIndex)),
-  )
-}
+const mockIndexes = (baseUrl: string, onRequest?: () => void) =>
+  mockRegistryIndexes(baseUrl, { calldataIndex, typedDataIndex, onRequest })
 
 describe('getRegistryResolver', () => {
   it('combines both index files and fetches descriptors relative to the base URL', async () => {
@@ -78,5 +69,45 @@ describe('getRegistryResolver', () => {
 
     const resolver = await getRegistryResolver(baseUrl)
     expect(resolver.index.calldataIndex).toEqual(calldataIndex)
+  })
+
+  describe('fetchAttestation', () => {
+    const attester = CYFRIN_ATTESTER
+    const sigsPath = `registry/acme/sigs/calldata-acme.eip155-1-${attester}.json`
+
+    it('fetches the sigs/ file next to the descriptor', async () => {
+      const baseUrl = createBaseUrl()
+      const attestation = { sig: { uid: '0x01' }, signer: attester }
+      mockIndexes(baseUrl)
+      server.use(http.get(`${baseUrl}/${sigsPath}`, () => HttpResponse.json(attestation)))
+
+      const resolver = await getRegistryResolver(baseUrl)
+
+      await expect(resolver.fetchAttestation?.('registry/acme/calldata-acme.json', attester)).resolves.toEqual(
+        attestation,
+      )
+    })
+
+    it('returns null when the attester published no attestation', async () => {
+      const baseUrl = createBaseUrl()
+      mockIndexes(baseUrl)
+      server.use(http.get(`${baseUrl}/${sigsPath}`, () => new HttpResponse(null, { status: 404 })))
+
+      const resolver = await getRegistryResolver(baseUrl)
+
+      await expect(resolver.fetchAttestation?.('registry/acme/calldata-acme.json', attester)).resolves.toBeNull()
+    })
+
+    it('throws on any other HTTP failure', async () => {
+      const baseUrl = createBaseUrl()
+      mockIndexes(baseUrl)
+      server.use(http.get(`${baseUrl}/${sigsPath}`, () => new HttpResponse(null, { status: 503 })))
+
+      const resolver = await getRegistryResolver(baseUrl)
+
+      await expect(resolver.fetchAttestation?.('registry/acme/calldata-acme.json', attester)).rejects.toThrow(
+        'HTTP 503',
+      )
+    })
   })
 })

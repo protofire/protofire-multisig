@@ -12,6 +12,7 @@ import {
 } from 'react'
 import { ERC7730_EVENTS, trackEvent } from '@/services/analytics'
 import { Errors, logError } from '@/services/exceptions'
+import type { ClearSigningAttestationResult } from './erc8176/attestation'
 import { useClearSigningLookupEnabled } from './eligibility'
 import { useClearSigningExternalDataProvider } from './externalDataProvider'
 
@@ -19,9 +20,8 @@ export type ClearSigningLookupStatus = 'idle' | 'loading' | 'done'
 
 export type ClearSigningLookupOutcome = 'found' | 'not_found' | 'error'
 
-export interface ClearSigningLookupResultData {
+export interface ClearSigningLookupResultData extends ClearSigningAttestationResult {
   model?: DisplayModel
-  descriptorPath?: string
 }
 
 export type ClearSigningLookupRunner = (
@@ -60,6 +60,12 @@ const patchEntry =
     const entry = entries[key]
     return entry ? { ...entries, [key]: { ...entry, ...patch } } : entries
   }
+
+const EMPTY_LOOKUP_RESULT: Record<keyof ClearSigningLookupResultData, undefined> = {
+  model: undefined,
+  descriptorPath: undefined,
+  attestation: undefined,
+}
 
 const toOutcome = ({ model }: ClearSigningLookupResultData): ClearSigningLookupOutcome =>
   model ? 'found' : 'not_found'
@@ -144,8 +150,7 @@ export const ClearSigningLookupProvider = ({ children }: { children: ReactNode }
           status: 'loading',
           outcome: undefined,
           error: undefined,
-          model: undefined,
-          descriptorPath: undefined,
+          ...EMPTY_LOOKUP_RESULT,
         }),
       )
       run(externalDataProvider)

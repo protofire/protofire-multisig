@@ -12,7 +12,7 @@ import {
   toClearSigningTransaction,
   toClearSigningTypedData,
 } from './lookupInputs'
-import { formatCalldataInput, formatTypedDataInput, useClearSigningLookup } from './useClearSigningLookup'
+import { calldataInputAdapter, typedDataInputAdapter, useClearSigningLookup } from './useClearSigningLookup'
 
 type ClearSigningCheckProps = {
   txData: TransactionData
@@ -29,7 +29,7 @@ const ClearSigningCheckContent = ({ txData, lookupLabel }: ClearSigningCheckProp
     label: lookupLabel ?? getClearSigningLookupLabel(txData),
     isEligible,
     input: isEligible ? toClearSigningTransaction(chainId, safeAddress, txData) : undefined,
-    formatInput: formatCalldataInput,
+    adapter: calldataInputAdapter,
   })
 
   return <ClearSigningLookupStatusView lookup={lookup} subject="call" />
@@ -63,7 +63,7 @@ const ClearSigningTypedDataReviewContent = ({
     label: message.primaryType || 'Typed message',
     isEligible,
     input: typedData,
-    formatInput: formatTypedDataInput,
+    adapter: typedDataInputAdapter,
   })
 
   return <ClearSigningLookupStatusView lookup={lookup} subject="message" />

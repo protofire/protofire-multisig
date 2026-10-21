@@ -5470,12 +5470,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ethereum-sourcify/clear-signing@npm:0.2.2":
-  version: 0.2.2
-  resolution: "@ethereum-sourcify/clear-signing@npm:0.2.2"
+"@ethereum-sourcify/clear-signing@npm:0.3.0":
+  version: 0.3.0
+  resolution: "@ethereum-sourcify/clear-signing@npm:0.3.0"
   dependencies:
+    "@noble/curves": "npm:^1.9.7"
     "@noble/hashes": "npm:^1.7.1"
-  checksum: 10/830d555f810e8965636989487ca0f7175c21c86e1549586efd18eb263851ae2ae8d8d7c3abd62e1c1060033f0081431c4b86a540c4adfee1005c0d18b1511c5b
+  checksum: 10/93a770259def718babfd1668b8b8a1b4179dda84f7b11a16f6a8a5f38a46e2ca14e4ac355263859426c10b1e3a4e2c16ae6185af4b6f78b0f160663885ed558a
   languageName: node
   linkType: hard
 
@@ -10720,7 +10721,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@noble/curves@npm:1.9.7, @noble/curves@npm:^1.6.0, @noble/curves@npm:~1.9.0":
+"@noble/curves@npm:1.9.7, @noble/curves@npm:^1.6.0, @noble/curves@npm:^1.9.7, @noble/curves@npm:~1.9.0":
   version: 1.9.7
   resolution: "@noble/curves@npm:1.9.7"
   dependencies:
@@ -13552,7 +13553,7 @@ __metadata:
     "@emotion/styled": "npm:^11.13.5"
     "@eslint/eslintrc": "npm:^3.3.1"
     "@eslint/js": "npm:^9.18.0"
-    "@ethereum-sourcify/clear-signing": "npm:0.2.2"
+    "@ethereum-sourcify/clear-signing": "npm:0.3.0"
     "@faker-js/faker": "npm:^9.0.3"
     "@gnosis.pm/zodiac": "npm:^4.0.3"
     "@ledgerhq/context-module": "npm:^1.8.0"

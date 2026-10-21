@@ -19,7 +19,7 @@ const StatusText = ({ children }: { children: string }): ReactElement => (
 )
 
 export const ClearSigningLookupStatusView = ({
-  lookup: { isActive, loading, error, model, descriptorPath },
+  lookup: { isActive, loading, error, model, ...result },
   subject,
 }: {
   lookup: ClearSigningLookupResult
@@ -43,7 +43,7 @@ export const ClearSigningLookupStatusView = ({
     return <StatusText>{copy.notFound}</StatusText>
   }
 
-  return <ClearSigningPanel model={model} descriptorPath={descriptorPath} />
+  return <ClearSigningPanel {...result} model={model} />
 }
 
 export const ClearSigningBoundary = ({

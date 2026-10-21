@@ -30,6 +30,13 @@ export const ERC7730_REGISTRY_URL = (
 export const ERC7730_REGISTRY_SOURCE_BLOB_BASE =
   'https://github.com/protofire/clear-signing-erc7730-registry/blob/protofire'
 
+export const ERC8176_TRUSTED_ATTESTERS = (
+  process.env.NEXT_PUBLIC_ERC8176_TRUSTED_ATTESTERS || '0x3846c3A30E62075Fa916216b35EF04B8F53931f6'
+)
+  .split(',')
+  .map((address) => address.trim())
+  .filter(Boolean)
+
 // Sunset banners per chain ID
 const CROSSFI_SUNSET_BANNER = {
   title: 'CrossFi Safe Support Sunsetting',

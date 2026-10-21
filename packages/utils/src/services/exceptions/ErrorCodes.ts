@@ -72,6 +72,8 @@ enum ErrorCodes {
   _818 = '818: Error validating transaction data',
   _819 = '819: Error adding a transaction to the batch',
   _820 = '820: Error signing or submitting delegation',
+  _821 = '821: Failed checking ERC-8176 attestation',
+  _822 = '822: Failed loading ERC-8176 auditor profile',
 
   _900 = '900: Error loading Safe App',
   _901 = '901: Error processing Safe Apps SDK request',

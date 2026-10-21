@@ -1,7 +1,10 @@
 import {
   format,
   formatTypedData,
-  type DescriptorResolver,
+  resolveCalldataDescriptor,
+  resolveTypedDataDescriptor,
+  type ChainClient,
+  type CustomResolverOptions,
   type DisplayModel,
   type ExternalDataProvider,
   type FormatOptions,
@@ -9,40 +12,52 @@ import {
   type TypedData,
 } from '@ethereum-sourcify/clear-signing'
 import { useEffect } from 'react'
-import { ERC7730_REGISTRY_URL } from '@/config/constants.extra'
+import { ERC7730_REGISTRY_URL, ERC8176_TRUSTED_ATTESTERS } from '@/config/constants.extra'
+import { Errors, logError } from '@/services/exceptions'
 import { useClearSigningLookupContext, type ClearSigningLookupResultData } from './ClearSigningLookupContext'
 import { assertClearSigningModelLoaded, shouldShowClearSigningModel } from './descriptorModel'
+import {
+  resolveAttestation,
+  type ClearSigningAttestationResult,
+  type ResolveDescriptorResult,
+} from './erc8176/attestation'
+import { withAttesterProfile } from './erc8176/attesterProfile'
 import { getRegistryResolver } from './registryResolver'
 
-export type ClearSigningFormatInput<T> = (input: T, options: FormatOptions) => Promise<DisplayModel>
+export interface ClearSigningInputAdapter<T> {
+  format: (input: T, options: FormatOptions) => Promise<DisplayModel>
+  resolve: (input: T, options: CustomResolverOptions, chainClient?: ChainClient) => Promise<ResolveDescriptorResult>
+}
 
-export const formatCalldataInput: ClearSigningFormatInput<Transaction> = format
+export const calldataInputAdapter: ClearSigningInputAdapter<Transaction> = {
+  format,
+  resolve: (tx, options, chainClient) => resolveCalldataDescriptor(tx.chainId, tx.to, options, chainClient),
+}
 
-export const formatTypedDataInput: ClearSigningFormatInput<TypedData> = formatTypedData
-
-const trackFetchedDescriptors = (resolver: DescriptorResolver, fetchedPaths: string[]): DescriptorResolver => ({
-  ...resolver,
-  fetchDescriptor: (path) => {
-    fetchedPaths.push(path)
-    return resolver.fetchDescriptor(path)
-  },
-})
+export const typedDataInputAdapter: ClearSigningInputAdapter<TypedData> = {
+  format: formatTypedData,
+  resolve: resolveTypedDataDescriptor,
+}
 
 export const formatWithRegistry = async <T>(
   input: T,
   externalDataProvider: ExternalDataProvider,
-  formatInput: ClearSigningFormatInput<T>,
+  adapter: ClearSigningInputAdapter<T>,
 ): Promise<ClearSigningLookupResultData> => {
   const resolver = await getRegistryResolver(ERC7730_REGISTRY_URL)
-  const fetchedPaths: string[] = []
-  const model = assertClearSigningModelLoaded(
-    await formatInput(input, {
-      externalDataProvider,
-      descriptorResolverOptions: { type: 'custom', resolver: trackFetchedDescriptors(resolver, fetchedPaths) },
-    }),
-  )
+  const [attestation, formatted] = await Promise.all([
+    resolveAttestation({
+      resolver,
+      chainClient: externalDataProvider.chainClient,
+      trustedAttesters: ERC8176_TRUSTED_ATTESTERS,
+      resolve: (options, chainClient) => adapter.resolve(input, options, chainClient),
+      onFailure: (thrown) => logError(Errors._821, thrown),
+    }).then((result) => withAttesterProfile(ERC7730_REGISTRY_URL, result)),
+    adapter.format(input, { externalDataProvider, descriptorResolverOptions: { type: 'custom', resolver } }),
+  ])
+  const model = assertClearSigningModelLoaded(formatted)
 
-  return { model: shouldShowClearSigningModel(model) ? model : undefined, descriptorPath: fetchedPaths[0] }
+  return { ...attestation, model: shouldShowClearSigningModel(model) ? model : undefined }
 }
 
 interface ClearSigningLookupParams<T> {
@@ -50,15 +65,14 @@ interface ClearSigningLookupParams<T> {
   label: string
   isEligible: boolean
   input: T | undefined
-  formatInput: ClearSigningFormatInput<T>
+  adapter: ClearSigningInputAdapter<T>
 }
 
-export interface ClearSigningLookupResult {
+export interface ClearSigningLookupResult extends ClearSigningAttestationResult {
   isActive: boolean
   loading: boolean
   error: Error | undefined
   model: DisplayModel | undefined
-  descriptorPath: string | undefined
 }
 
 export const useClearSigningLookup = <T>({
@@ -66,7 +80,7 @@ export const useClearSigningLookup = <T>({
   label,
   isEligible,
   input,
-  formatInput,
+  adapter,
 }: ClearSigningLookupParams<T>): ClearSigningLookupResult => {
   const lookupContext = useClearSigningLookupContext()
   const registerEntry = lookupContext?.registerEntry
@@ -77,10 +91,10 @@ export const useClearSigningLookup = <T>({
       return
     }
     const run = input
-      ? (externalDataProvider: ExternalDataProvider) => formatWithRegistry(input, externalDataProvider, formatInput)
+      ? (externalDataProvider: ExternalDataProvider) => formatWithRegistry(input, externalDataProvider, adapter)
       : undefined
     registerEntry(lookupKey, { label, eligible: isEligible && run !== undefined, run })
-  }, [lookupKey, label, isEligible, input, formatInput, registerEntry])
+  }, [lookupKey, label, isEligible, input, adapter, registerEntry])
 
   useEffect(() => {
     if (!lookupKey || !subscribeEntry) {
@@ -98,5 +112,6 @@ export const useClearSigningLookup = <T>({
     error: entry?.error,
     model: entry?.model,
     descriptorPath: entry?.descriptorPath,
+    attestation: entry?.attestation,
   }
 }

@@ -3,12 +3,15 @@ import type { TypedData as GatewayTypedData } from '@safe-global/store/gateway/A
 import type { TransactionData } from '@safe-global/store/gateway/AUTO_GENERATED/transactions'
 import { normalizeTypedData } from '@safe-global/utils/utils/web3'
 import type { ClearSigningLookupEntry, ClearSigningLookupOutcome } from './ClearSigningLookupContext'
+import { isRevokedAttestation, REVOKED_WARNING, type ClearSigningAttestation } from './erc8176/attestation'
 
 export const getClearSigningLookupKey = (chainId: string, txData: TransactionData): string =>
   `${chainId}:${txData.to.value}:${txData.operation}:${txData.value ?? '0'}:${txData.hexData ?? ''}`
 
 export const getClearSigningTypedDataLookupKey = (chainId: string, typedData: ClearSigningTypedData): string =>
-  `${chainId}:${typedData.account}:${typedData.domain.chainId}:${typedData.domain.verifyingContract ?? ''}:${typedData.primaryType}:${JSON.stringify(typedData.message)}`
+  `${chainId}:${typedData.account}:${typedData.domain.chainId}:${typedData.domain.verifyingContract ?? ''}:${
+    typedData.primaryType
+  }:${JSON.stringify(typedData.message)}`
 
 const OUTCOME_LABELS: Record<ClearSigningLookupOutcome, string> = {
   found: 'Descriptor found',
@@ -16,11 +19,16 @@ const OUTCOME_LABELS: Record<ClearSigningLookupOutcome, string> = {
   error: 'Lookup unavailable',
 }
 
+const getOutcomeLabel = (outcome: ClearSigningLookupOutcome, attestation: ClearSigningAttestation | undefined) =>
+  outcome === 'found' && isRevokedAttestation(attestation)
+    ? `${OUTCOME_LABELS[outcome]} - ${REVOKED_WARNING.label}`
+    : OUTCOME_LABELS[outcome]
+
 export const getClearSigningEntryLabel = (entry: ClearSigningLookupEntry): string | undefined => {
   if (entry.status === 'loading') {
     return 'Looking up…'
   }
-  return entry.status === 'done' && entry.outcome ? OUTCOME_LABELS[entry.outcome] : undefined
+  return entry.status === 'done' && entry.outcome ? getOutcomeLabel(entry.outcome, entry.attestation) : undefined
 }
 
 export const getClearSigningLookupLabel = (

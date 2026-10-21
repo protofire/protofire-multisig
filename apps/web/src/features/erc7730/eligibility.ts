@@ -6,7 +6,8 @@ import { useHasFeature } from '@/hooks/useChains'
 import useSafeAddress from '@/hooks/useSafeAddress'
 import { isMultiSendCalldata } from '@/utils/transaction-calldata'
 
-export const useClearSigningLookupEnabled = (): boolean => useHasFeature(FEATURES.ERC7730_CLEAR_SIGNING) ?? false
+export const useClearSigningLookupEnabled = (): boolean =>
+  useHasFeature(FEATURES.ERC7730_ERC8176_CLEAR_SIGNING) ?? false
 
 export const useIsClearSigningEligible = (txData: TransactionData | null | undefined): boolean => {
   const isEnabled = useClearSigningLookupEnabled()

@@ -15,27 +15,32 @@ import ExternalLink from '@/components/common/ExternalLink'
 import EthHashInfo from '@/components/common/EthHashInfo'
 import { ERC7730_EVENTS, trackEvent } from '@/services/analytics'
 import accordionCss from '@/styles/accordion.module.css'
+import type { ClearSigningLookupResultData } from './ClearSigningLookupContext'
+import { isRevokedAttestation, REVOKED_WARNING, type ClearSigningAttestation } from './erc8176/attestation'
+import { AttestationStatus, AttestationWarning } from './erc8176/AttestationStatus'
 import { getDescriptorOwnerUrl, getDescriptorSourceUrl, getVisibleWarning, getVisibleWarnings } from './descriptorModel'
 import { isClearSigningNativeTokenAddress } from './externalDataProvider'
+import { ClearSigningPill, FieldGrid } from './primitives'
 import css from './styles.module.css'
 
 export const clearSigningAccordionClassName = css.accordion
 
-const ClearSigningPill = ({ children, testId }: { children: ReactNode; testId?: string }): ReactElement => (
-  <Typography component="span" variant="body2" data-testid={testId} className={css.pill}>
-    {children}
-  </Typography>
-)
+const CHIP_TOOLTIP = 'ERC-7730 descriptor available for this call'
 
-export const ClearSigningFoundChip = (): ReactElement => (
-  <Tooltip title="ERC-7730 descriptor available for this call" arrow>
-    <span data-testid="erc7730-check-hint" className={css.chipWrapper}>
-      <ClearSigningPill>
-        ERC-7730<span className={css.chipSuffix}> found</span>
-      </ClearSigningPill>
-    </span>
-  </Tooltip>
-)
+export const ClearSigningFoundChip = ({ attestation }: { attestation?: ClearSigningAttestation }): ReactElement => {
+  const warning = isRevokedAttestation(attestation) ? REVOKED_WARNING : undefined
+
+  return (
+    <Tooltip title={warning ? `${CHIP_TOOLTIP}, but ${warning.tooltip}` : CHIP_TOOLTIP} arrow>
+      <span data-testid="erc7730-check-hint" className={css.chipWrapper}>
+        <ClearSigningPill className={warning && css.pillWarning}>
+          ERC-7730
+          <span className={css.chipSuffix}> found{warning && ` - ${warning.label}`}</span>
+        </ClearSigningPill>
+      </span>
+    </Tooltip>
+  )
+}
 
 const ClearSigningOwnerTag = ({ owner, url }: { owner: string; url?: string }): ReactElement => {
   const className = classnames(css.accent, css.ownerTag)
@@ -153,15 +158,6 @@ const WarningList = ({ warnings }: { warnings: Warning[] | undefined }): ReactEl
   )
 }
 
-const FieldGrid = ({ label, children }: { label: string; children: ReactNode }): ReactElement => (
-  <div className={css.fieldGrid}>
-    <Typography color="primary.light" variant="body2" component="span">
-      {label}
-    </Typography>
-    {children}
-  </div>
-)
-
 const IntentField = ({ intent }: { intent: string }): ReactElement => (
   <FieldGrid label="Intent">
     <Typography variant="body2" fontWeight={700} component="div" className={css.fieldValue}>
@@ -276,10 +272,8 @@ function ClearSigningFields({ fields }: { fields: (DisplayField | DisplayFieldGr
 export const ClearSigningPanel = ({
   model,
   descriptorPath,
-}: {
-  model: DisplayModel
-  descriptorPath?: string
-}): ReactElement => {
+  attestation,
+}: ClearSigningLookupResultData & { model: DisplayModel }): ReactElement => {
   const { intent, summaryTags, showIntentInBody } = getClearSigningSummary(model)
   const owner = model.metadata?.owner
   const ownerUrl = getDescriptorOwnerUrl(model)
@@ -304,6 +298,8 @@ export const ClearSigningPanel = ({
       }
     >
       <Stack spacing={2}>
+        <AttestationWarning attestation={attestation} />
+
         {showIntentRow && (
           <Stack
             direction="row"
@@ -322,6 +318,8 @@ export const ClearSigningPanel = ({
         )}
 
         {model.fields && model.fields.length > 0 && <ClearSigningFields fields={model.fields} />}
+
+        <AttestationStatus attestation={attestation} />
 
         <WarningList warnings={model.warnings} />
 

@@ -4,9 +4,11 @@ import type { Chain } from '@safe-global/store/gateway/AUTO_GENERATED/chains'
 import { ZERO_ADDRESS } from '@safe-global/protocol-kit/dist/src/utils/constants'
 import {
   CLEAR_SIGNING_ETH_PLACEHOLDER,
+  createMainnetChainClient,
   isClearSigningNativeTokenAddress,
   resolveClearSigningChainInfo,
   resolveClearSigningToken,
+  REVOCATION_CALL_TIMEOUT_MS,
 } from './externalDataProvider'
 
 const createMockChain = (chainId: string, overrides?: Partial<Chain>): Chain =>
@@ -135,6 +137,67 @@ describe('externalDataProvider', () => {
 
       expect(result).toBeNull()
       expect(fetchErc20OnChain).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('createMainnetChainClient', () => {
+    const request = { to: faker.finance.ethereumAddress(), data: '0x1234' }
+    const result = `0x${'0'.repeat(64)}`
+    const configWith = (...chainIds: string[]) => ({
+      ids: chainIds,
+      entities: Object.fromEntries(chainIds.map((id) => [id, createMockChain(id)])),
+    })
+
+    it('performs eth_call on the mainnet chain from the chains config', async () => {
+      const config = configWith('1')
+      const call = jest.fn().mockResolvedValue(result)
+      const createProvider = jest.fn().mockReturnValue({ call })
+      const chainClient = createMainnetChainClient(() => config, createProvider)
+
+      await expect(chainClient.call(1, request)).resolves.toBe(result)
+
+      expect(call).toHaveBeenCalledWith(request)
+      expect(createProvider).toHaveBeenCalledWith(config.entities['1'])
+    })
+
+    it('reuses the provider while the mainnet chain config is unchanged', async () => {
+      const config = configWith('1')
+      const createProvider = jest.fn().mockReturnValue({ call: jest.fn().mockResolvedValue(result) })
+      const chainClient = createMainnetChainClient(() => config, createProvider)
+
+      await chainClient.call(1, request)
+      await chainClient.call(1, request)
+
+      expect(createProvider).toHaveBeenCalledTimes(1)
+    })
+
+    it.each([
+      ['no RPC provider is available for mainnet', configWith('1')],
+      ['mainnet is not in the chains config', configWith('100')],
+    ])('throws when %s', async (_, config) => {
+      const chainClient = createMainnetChainClient(() => config, jest.fn().mockReturnValue(undefined))
+
+      await expect(chainClient.call(1, request)).rejects.toThrow('No RPC provider for Ethereum mainnet')
+    })
+
+    it('throws for any chain other than mainnet', async () => {
+      const createProvider = jest.fn()
+      const chainClient = createMainnetChainClient(() => configWith('1', '11155111'), createProvider)
+
+      await expect(chainClient.call(11155111, request)).rejects.toThrow('mainnet')
+      expect(createProvider).not.toHaveBeenCalled()
+    })
+
+    it('rejects when the RPC does not answer within the timeout', async () => {
+      jest.useFakeTimers()
+      const call = jest.fn().mockReturnValue(new Promise<string>(() => {}))
+      const chainClient = createMainnetChainClient(() => configWith('1'), jest.fn().mockReturnValue({ call }))
+
+      const pending = expect(chainClient.call(1, request)).rejects.toThrow('ERC-8176 revocation check timed out')
+      await jest.advanceTimersByTimeAsync(REVOCATION_CALL_TIMEOUT_MS)
+
+      await pending
+      jest.useRealTimers()
     })
   })
 })

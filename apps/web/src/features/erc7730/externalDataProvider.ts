@@ -1,5 +1,6 @@
 import type {
   AddressNameResult,
+  ChainClient,
   ChainInfoResult,
   ExternalDataProvider,
   TokenResult,
@@ -10,10 +11,13 @@ import { useGetChainsConfigQuery } from '@safe-global/store/gateway'
 import type { Balance } from '@safe-global/store/gateway/AUTO_GENERATED/balances'
 import type { Chain } from '@safe-global/store/gateway/AUTO_GENERATED/chains'
 import { checksumAddress, sameAddress } from '@safe-global/utils/utils/addresses'
+import type { JsonRpcProvider } from 'ethers'
 import { useEffect, useMemo, useRef } from 'react'
+import chains from '@/config/chains'
 import useAddressBook from '@/hooks/useAddressBook'
 import useChainId from '@/hooks/useChainId'
 import { useVisibleBalances } from '@/hooks/useVisibleBalances'
+import { createWeb3ReadOnly } from '@/hooks/wallets/web3'
 import { useWeb3ReadOnly } from '@/hooks/wallets/web3ReadOnly'
 import { lookupAddress } from '@/services/ens'
 import { getERC20TokenInfoOnChain } from '@/utils/tokens'
@@ -91,6 +95,7 @@ interface SafeExternalDataProviderDeps {
   resolveEns: (address: string) => Promise<string | undefined>
   getChainInfo: (chainId: number) => Promise<ChainInfoResult | null>
   getTokenInfo: (chainId: number, tokenAddress: string) => Promise<TokenResult | null>
+  chainClient: ChainClient
 }
 
 const toAddressName = (name: string): AddressNameResult => ({ name, typeMatch: true })
@@ -106,10 +111,54 @@ const createSafeExternalDataProvider = (deps: SafeExternalDataProviderDeps): Ext
   },
   resolveChainInfo: (chainId: number) => deps.getChainInfo(chainId),
   resolveToken: (chainId: number, tokenAddress: string) => deps.getTokenInfo(chainId, tokenAddress),
+  chainClient: deps.chainClient,
 })
 
 const getChainFromConfig = (config: EntityState<Chain, string> | undefined, chainId: number): Chain | undefined =>
   config?.entities[String(chainId)]
+
+export const REVOCATION_CALL_TIMEOUT_MS = 10_000
+
+const withTimeout = <T>(promise: Promise<T>, ms: number, message: string): Promise<T> => {
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(message)), ms)
+  })
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer))
+}
+
+export const createMainnetChainClient = (
+  getChainsConfig: () => EntityState<Chain, string> | undefined,
+  createProvider: (chain: Chain) => Pick<JsonRpcProvider, 'call'> | undefined = createWeb3ReadOnly,
+): ChainClient => {
+  const mainnet = Number(chains.eth)
+  let cached: { chain: Chain; provider: Pick<JsonRpcProvider, 'call'> | undefined } | undefined
+
+  const getProvider = (chain: Chain) => {
+    if (cached?.chain !== chain) {
+      cached = { chain, provider: createProvider(chain) }
+    }
+    return cached.provider
+  }
+
+  return {
+    call: async (chainId, { to, data }) => {
+      if (chainId !== mainnet) {
+        throw new Error(`ERC-8176 revocation state is only read on Ethereum mainnet, not chain ${chainId}`)
+      }
+      const chain = getChainFromConfig(getChainsConfig(), mainnet)
+      const provider = chain && getProvider(chain)
+      if (!provider) {
+        throw new Error('No RPC provider for Ethereum mainnet; ERC-8176 revocation state cannot be read')
+      }
+      return withTimeout(
+        provider.call({ to, data }),
+        REVOCATION_CALL_TIMEOUT_MS,
+        `ERC-8176 revocation check timed out after ${REVOCATION_CALL_TIMEOUT_MS}ms`,
+      )
+    },
+  }
+}
 
 export const useClearSigningExternalDataProvider = (): ExternalDataProvider => {
   const chainId = useChainId()
@@ -160,6 +209,7 @@ export const useClearSigningExternalDataProvider = (): ExternalDataProvider => {
               },
             })
           }),
+        chainClient: createMainnetChainClient(() => externalDataRef.current.chainsConfig),
       }),
     [],
   )

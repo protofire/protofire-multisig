@@ -63,7 +63,8 @@ const SingleTxDecoded = ({
     trustedDelegateCallTarget: sameAddress(tx.to, safeToL2MigrationAddress), // We only trusted a nested Migration
   }
   const lookupLabel = transferTokenInfo ? `Action ${actionTitle}: transfer` : undefined
-  const showErc7730HintChip = useClearSigningOutcome(singleTxData) === 'found'
+  const { outcome: erc7730Outcome, attestation: erc7730Attestation } = useClearSigningOutcome(singleTxData)
+  const showErc7730HintChip = erc7730Outcome === 'found'
 
   return (
     <Accordion
@@ -88,7 +89,7 @@ const SingleTxDecoded = ({
               <b>{method}</b>
             </Typography>
           )}
-          {showErc7730HintChip && <ClearSigningFoundChip />}
+          {showErc7730HintChip && <ClearSigningFoundChip attestation={erc7730Attestation} />}
         </div>
 
         {actions !== undefined && <Box className={css.actions}>{actions}</Box>}

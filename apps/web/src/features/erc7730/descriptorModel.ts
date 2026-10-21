@@ -39,5 +39,8 @@ export const getDescriptorOwnerUrl = (model: DisplayModel): string | undefined =
   }
 }
 
+export const getRegistrySourceUrl = (path: string): string =>
+  `${ERC7730_REGISTRY_SOURCE_BLOB_BASE}/${path.replace(/^\//, '')}`
+
 export const getDescriptorSourceUrl = (descriptorPath?: string): string | undefined =>
-  descriptorPath ? `${ERC7730_REGISTRY_SOURCE_BLOB_BASE}/${descriptorPath.replace(/^\//, '')}` : undefined
+  descriptorPath ? getRegistrySourceUrl(descriptorPath) : undefined

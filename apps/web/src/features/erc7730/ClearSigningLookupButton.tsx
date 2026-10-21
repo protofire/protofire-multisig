@@ -4,7 +4,8 @@ import CloseIcon from '@/public/images/common/close.svg'
 import WarningIcon from '@/public/images/notifications/warning.svg'
 import { ButtonBase, CircularProgress, Stack, SvgIcon, Typography } from '@mui/material'
 import type { ReactElement, ReactNode } from 'react'
-import type { ClearSigningLookupEntry } from './ClearSigningLookupContext'
+import type { ClearSigningLookupEntry, ClearSigningLookupOutcome } from './ClearSigningLookupContext'
+import { isRevokedAttestation } from './erc8176/attestation'
 import { getClearSigningEntryLabel, getClearSigningFoundCountLabel } from './lookupInputs'
 import { useClearSigningLookupSummary } from './ClearSigningLookupContext'
 import css from './styles.module.css'
@@ -45,19 +46,20 @@ const CompactLookupButton = ({
   </ButtonBase>
 )
 
-const OUTCOME_ICONS = {
-  found: { color: 'border' as const, component: CheckIcon },
-  error: { color: 'warning' as const, component: WarningIcon },
-  not_found: { color: 'error' as const, component: CloseIcon },
+type LookupStatusIcon = { color: 'border' | 'warning' | 'error'; component: typeof CheckIcon }
+
+const WARNING_ICON: LookupStatusIcon = { color: 'warning', component: WarningIcon }
+
+const OUTCOME_ICONS: Record<ClearSigningLookupOutcome, LookupStatusIcon> = {
+  found: { color: 'border', component: CheckIcon },
+  error: WARNING_ICON,
+  not_found: { color: 'error', component: CloseIcon },
 }
 
-const LookupStatus = ({
-  outcome = 'not_found',
-  label,
-}: {
-  outcome?: ClearSigningLookupEntry['outcome']
-  label: string
-}): ReactElement => (
+const getEntryIcon = ({ outcome = 'not_found', attestation }: ClearSigningLookupEntry): LookupStatusIcon =>
+  outcome === 'found' && isRevokedAttestation(attestation) ? WARNING_ICON : OUTCOME_ICONS[outcome]
+
+const LookupStatus = ({ icon, label }: { icon: LookupStatusIcon; label: string }): ReactElement => (
   <Stack
     direction="row"
     alignItems="center"
@@ -65,7 +67,7 @@ const LookupStatus = ({
     className={css.inlineAction}
     data-testid="erc7730-queued-lookup-status"
   >
-    <SvgIcon {...OUTCOME_ICONS[outcome]} inheritViewBox sx={{ height: '16px' }} />
+    <SvgIcon {...icon} inheritViewBox sx={{ height: '16px' }} />
     <Typography variant="subtitle2" fontWeight={700}>
       {label}
     </Typography>
@@ -95,7 +97,7 @@ export const ClearSigningLookupButton = (): ReactElement | null => {
   if (!isMultiAction && primaryEntry.entry.status === 'done') {
     return (
       <LookupStatus
-        outcome={primaryEntry.entry.outcome}
+        icon={getEntryIcon(primaryEntry.entry)}
         label={getClearSigningEntryLabel(primaryEntry.entry) ?? 'Looked up'}
       />
     )
@@ -104,7 +106,7 @@ export const ClearSigningLookupButton = (): ReactElement | null => {
   if (isMultiAction && allDone) {
     return (
       <LookupStatus
-        outcome={foundCount > 0 ? 'found' : 'not_found'}
+        icon={OUTCOME_ICONS[foundCount > 0 ? 'found' : 'not_found']}
         label={getClearSigningFoundCountLabel(foundCount)}
       />
     )

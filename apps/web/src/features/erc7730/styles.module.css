@@ -63,6 +63,15 @@
   flex-shrink: 0;
 }
 
+.pill.pillWarning {
+  color: var(--color-warning-dark);
+  background-color: var(--color-warning-background);
+}
+
+[data-theme='dark'] .pill.pillWarning {
+  color: var(--color-warning-main);
+}
+
 .accent:global(.MuiTypography-root) {
   color: var(--color-secondary-dark);
   font-weight: 700;

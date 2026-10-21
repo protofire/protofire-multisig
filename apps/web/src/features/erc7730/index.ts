@@ -2,7 +2,7 @@ import { createFeatureHandle } from '@/features/__core__'
 import { FEATURES } from '@safe-global/utils/utils/chains'
 import type { Erc7730Contract } from './contract'
 
-export const Erc7730Feature = createFeatureHandle<Erc7730Contract>('erc7730', FEATURES.ERC7730_CLEAR_SIGNING)
+export const Erc7730Feature = createFeatureHandle<Erc7730Contract>('erc7730', FEATURES.ERC7730_ERC8176_CLEAR_SIGNING)
 
 export type { Erc7730Contract } from './contract'
 

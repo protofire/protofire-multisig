@@ -3,6 +3,7 @@ import { faker } from '@faker-js/faker'
 import { keccak256, toUtf8Bytes } from 'ethers'
 import { http, HttpResponse } from 'msw'
 import * as useChains from '@/hooks/useChains'
+import { logError } from '@/services/exceptions'
 import { act, render, waitFor } from '@/tests/test-utils'
 import { server } from '@/tests/server'
 import {
@@ -10,16 +11,20 @@ import {
   useClearSigningLookupContext,
   type ClearSigningLookupContextValue,
 } from './ClearSigningLookupContext'
-import { mockRegistryConfig, REGISTRY_URL } from './testHelpers'
+import { createRegistryUrl, mockRegistryConfig, mockRegistryIndexes, REGISTRY_URL } from './testHelpers'
 import type * as TestHelpers from './testHelpers'
 import {
-  formatCalldataInput,
-  formatTypedDataInput,
+  calldataInputAdapter,
+  typedDataInputAdapter,
   useClearSigningLookup,
-  type ClearSigningFormatInput,
+  type ClearSigningInputAdapter,
   type ClearSigningLookupResult,
 } from './useClearSigningLookup'
 
+jest.mock('@/services/exceptions', () => ({
+  ...jest.requireActual<Record<string, unknown>>('@/services/exceptions'),
+  logError: jest.fn(),
+}))
 jest.mock('@/config/constants.extra', () =>
   jest.requireActual<typeof TestHelpers>('./testHelpers').mockRegistryConstants(),
 )
@@ -30,15 +35,9 @@ jest.mock('./externalDataProvider', () => ({
 
 let registryUrl = REGISTRY_URL
 
-const mockIndexes = (calldataIndex: object = {}, typedDataIndex: object = {}) =>
-  server.use(
-    http.get(`${registryUrl}/index.calldata.json`, () => HttpResponse.json(calldataIndex)),
-    http.get(`${registryUrl}/index.eip712.json`, () => HttpResponse.json(typedDataIndex)),
-  )
-
 beforeEach(() => {
   jest.spyOn(useChains, 'useHasFeature').mockReturnValue(true)
-  registryUrl = `${REGISTRY_URL}/${faker.string.alphanumeric(8)}`
+  registryUrl = createRegistryUrl()
   mockRegistryConfig.ERC7730_REGISTRY_URL = registryUrl
 })
 
@@ -57,12 +56,12 @@ type LookupProps<T> = {
   lookupKey: string
   input: T | undefined
   isEligible?: boolean
-  formatInput: ClearSigningFormatInput<T>
+  adapter: ClearSigningInputAdapter<T>
   onResult?: (result: ClearSigningLookupResult) => void
 }
 
-const Lookup = <T,>({ lookupKey, input, isEligible = true, formatInput, onResult }: LookupProps<T>): null => {
-  const result = useClearSigningLookup({ lookupKey, label: 'Swap', isEligible, input, formatInput })
+const Lookup = <T,>({ lookupKey, input, isEligible = true, adapter, onResult }: LookupProps<T>): null => {
+  const result = useClearSigningLookup({ lookupKey, label: 'Swap', isEligible, input, adapter })
   onResult?.(result)
   return null
 }
@@ -91,7 +90,7 @@ describe('useClearSigningLookup', () => {
       const { rerenderWith, context } = renderLookup({
         lookupKey: 'key-1',
         input: createTx(),
-        formatInput: formatCalldataInput,
+        adapter: calldataInputAdapter,
       })
 
       expect(context()?.entries['key-1']).toMatchObject({ label: 'Swap', eligible: true, status: 'idle' })
@@ -102,13 +101,13 @@ describe('useClearSigningLookup', () => {
     })
 
     it('keeps a shared entry and its lookup state until the last registrar unmounts', async () => {
-      mockIndexes()
+      mockRegistryIndexes(registryUrl)
       let context: ClearSigningLookupContextValue | null = null
       const tree = (count: number) => (
         <ClearSigningLookupProvider>
           <Reader onValue={(value) => (context = value)} />
           {Array.from({ length: count }, (_, index) => (
-            <Lookup key={index} lookupKey="shared" input={createTx()} formatInput={formatCalldataInput} />
+            <Lookup key={index} lookupKey="shared" input={createTx()} adapter={calldataInputAdapter} />
           ))}
         </ClearSigningLookupProvider>
       )
@@ -129,10 +128,10 @@ describe('useClearSigningLookup', () => {
       const { rerenderWith, context } = renderLookup({
         lookupKey: 'key-1',
         input: createTx(),
-        formatInput: formatCalldataInput,
+        adapter: calldataInputAdapter,
       })
 
-      rerenderWith({ lookupKey: 'key-2', input: createTx(), formatInput: formatCalldataInput })
+      rerenderWith({ lookupKey: 'key-2', input: createTx(), adapter: calldataInputAdapter })
 
       expect(context()?.entries['key-1']).toBeUndefined()
       expect(context()?.entries['key-2']).toBeDefined()
@@ -145,7 +144,7 @@ describe('useClearSigningLookup', () => {
         lookupKey: 'key-1',
         input: undefined,
         isEligible: false,
-        formatInput: formatCalldataInput,
+        adapter: calldataInputAdapter,
       })
 
       expect(context()?.entries['key-1']).toMatchObject({ eligible: false, status: 'idle' })
@@ -157,16 +156,16 @@ describe('useClearSigningLookup', () => {
 
     it('does not re-create the entry when the input object identity changes', async () => {
       const tx = createTx()
-      mockIndexes()
+      mockRegistryIndexes(registryUrl)
       const { rerenderWith, context, request } = renderLookup({
         lookupKey: 'key-1',
         input: tx,
-        formatInput: formatCalldataInput,
+        adapter: calldataInputAdapter,
       })
       request('key-1')
       await waitFor(() => expect(context()?.entries['key-1'].status).toBe('done'))
 
-      rerenderWith({ lookupKey: 'key-1', input: { ...tx }, formatInput: formatCalldataInput })
+      rerenderWith({ lookupKey: 'key-1', input: { ...tx }, adapter: calldataInputAdapter })
 
       expect(context()?.entries['key-1']).toMatchObject({ status: 'done', outcome: 'not_found' })
     })
@@ -174,12 +173,12 @@ describe('useClearSigningLookup', () => {
 
   describe('formatting', () => {
     it('is inactive until the lookup is requested, then reports loading and the outcome', async () => {
-      mockIndexes()
+      mockRegistryIndexes(registryUrl)
       const statuses: string[] = []
       const { context, result, request } = renderLookup({
         lookupKey: 'tx',
         input: createTx(),
-        formatInput: formatCalldataInput,
+        adapter: calldataInputAdapter,
       })
       expect(result()).toMatchObject({ isActive: false, loading: false })
 
@@ -195,10 +194,10 @@ describe('useClearSigningLookup', () => {
       expect(result()).toMatchObject({ isActive: true, loading: false, model: undefined, error: undefined })
     })
 
-    it('formats a call with its descriptor and reports the descriptor source path', async () => {
+    it('formats a call with its descriptor and reports it as unattested without a chain client', async () => {
       const tx = createTx()
       const path = 'registry/acme/calldata-acme.json'
-      mockIndexes({ [`eip155:1:${tx.to.toLowerCase()}`]: path })
+      mockRegistryIndexes(registryUrl, { calldataIndex: { [`eip155:1:${tx.to.toLowerCase()}`]: path } })
       server.use(
         http.get(`${registryUrl}/${path}`, () =>
           HttpResponse.json({
@@ -215,12 +214,12 @@ describe('useClearSigningLookup', () => {
           }),
         ),
       )
-      const { result, request } = renderLookup({ lookupKey: 'tx', input: tx, formatInput: formatCalldataInput })
+      const { result, request } = renderLookup({ lookupKey: 'tx', input: tx, adapter: calldataInputAdapter })
 
       request('tx')
 
       await waitFor(() => expect(result()?.model).toBeDefined())
-      expect(result()?.descriptorPath).toBe(path)
+      expect(result()).toMatchObject({ descriptorPath: path, attestation: { status: 'unattested' } })
       expect(result()?.model).toMatchObject({
         intent: 'Send',
         fields: [expect.objectContaining({ label: 'Amount', value: '0' })],
@@ -239,15 +238,16 @@ describe('useClearSigningLookup', () => {
       const path = 'registry/uniswap/eip712-permit2.json'
       const encodeType = eip712.computeEncodeType(typedData.primaryType, typedData.types)
       const encodeTypeHash = keccak256(toUtf8Bytes(encodeType ?? ''))
-      mockIndexes(
-        {},
-        { [`eip155:1:${verifyingContract}`]: { PermitTransferFrom: [{ path, encodeTypeHashes: [encodeTypeHash] }] } },
-      )
+      mockRegistryIndexes(registryUrl, {
+        typedDataIndex: {
+          [`eip155:1:${verifyingContract}`]: { PermitTransferFrom: [{ path, encodeTypeHashes: [encodeTypeHash] }] },
+        },
+      })
       server.use(http.get(`${registryUrl}/${path}`, () => new HttpResponse(null, { status: 404 })))
       const { result, request } = renderLookup({
         lookupKey: 'typed',
         input: typedData,
-        formatInput: formatTypedDataInput,
+        adapter: typedDataInputAdapter,
       })
 
       request('typed')
@@ -255,6 +255,7 @@ describe('useClearSigningLookup', () => {
       await waitFor(() => expect(result()?.error).toBeDefined())
       expect(result()?.model).toBeUndefined()
       expect(result()?.error?.message).toContain('HTTP 404')
+      expect(logError).not.toHaveBeenCalledWith(expect.stringContaining('821'), expect.anything())
     })
   })
 })
