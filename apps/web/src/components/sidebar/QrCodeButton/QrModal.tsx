@@ -2,7 +2,7 @@ import { type ReactElement } from 'react'
 import { Box, Switch, DialogContent, FormControlLabel, Typography } from '@mui/material'
 import ModalDialog from '@/components/common/ModalDialog'
 import useSafeAddress from '@/hooks/useSafeAddress'
-import useTronAddress from '@/hooks/useTronAddress'
+import useDisplayAddress from '@/hooks/useDisplayAddress'
 import { useCurrentChain } from '@/hooks/useChains'
 import QRCode from '@/components/common/QRCode'
 import EthHashInfo from '@/components/common/EthHashInfo'
@@ -11,12 +11,12 @@ import { selectSettings, setQrShortName } from '@/store/settingsSlice'
 
 const QrModal = ({ onClose }: { onClose: () => void }): ReactElement => {
   const safeAddress = useSafeAddress()
-  const { displayAddress, isTron } = useTronAddress(safeAddress)
+  const { displayAddress, copyAddress, isTron } = useDisplayAddress(safeAddress)
   const chain = useCurrentChain()
   const settings = useAppSelector(selectSettings)
   const dispatch = useAppDispatch()
   const qrPrefix = settings.shortName.qr ? `${chain?.shortName}:` : ''
-  const qrCode = isTron ? displayAddress : `${qrPrefix}${safeAddress}`
+  const qrCode = isTron ? displayAddress : `${qrPrefix}${copyAddress}`
   const chainName = chain?.chainName || ''
   const nativeToken = chain?.nativeCurrency.symbol || ''
 

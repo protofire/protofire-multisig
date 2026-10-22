@@ -29,7 +29,8 @@ import inputCss from '@/styles/inputs.module.css'
 import Identicon from '../Identicon'
 import { FEATURES, hasFeature } from '@safe-global/utils/utils/chains'
 import { isTronChain, isTronBase58Address, fromTronBase58Sync } from '@/utils/tron'
-import useTronAddress from '@/hooks/useTronAddress'
+import useDisplayAddress from '@/hooks/useDisplayAddress'
+import { isRootstockSupportEnabled, normalizeRskChecksum } from '@safe-global/utils/utils/rsk-utils'
 
 export type AddressInputProps = TextFieldProps & {
   name: string
@@ -71,7 +72,8 @@ const AddressInput = ({
   const effectiveChain = chain || currentChain
   const currentShortName = effectiveChain?.shortName || ''
   const isTron = isTronChain(effectiveChain?.chainId || '')
-  const { displayAddress } = useTronAddress(watchedValue || '', effectiveChain?.chainId)
+  const isRskChecksumAccepted = !!effectiveChain && isRootstockSupportEnabled(effectiveChain)
+  const { displayAddress } = useDisplayAddress(watchedValue || '', effectiveChain?.chainId)
   const hederaNetwork = getHederaNetwork(effectiveChain)
 
   const addressBook = useAddressBook()
@@ -110,7 +112,7 @@ const AddressInput = ({
       }
 
       // Clean the input value
-      const cleanValue = cleanInputValue(value)
+      const cleanValue = isRskChecksumAccepted ? normalizeRskChecksum(cleanInputValue(value)) : cleanInputValue(value)
       rawValueRef.current = cleanValue
       // This also checksums the address
       if (validatePrefixed(cleanValue) === undefined) {
@@ -121,7 +123,7 @@ const AddressInput = ({
         return cleanValue
       }
     },
-    [validatePrefixed, isTron],
+    [validatePrefixed, isTron, isRskChecksumAccepted],
   )
 
   // Update the input value
@@ -266,7 +268,7 @@ const AddressInput = ({
         })}
         // Workaround for a bug in react-hook-form when `register().value` is cached after `setValueAs`
         // Only seems to occur on the `/load` route
-        // For Tron: display per the user's tronAddressFormat setting while keeping 0x in form state
+        // For Tron and Rootstock: display per the user's address format settings while keeping the raw address in form state
         value={displayAddress}
       />
     </>

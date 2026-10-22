@@ -49,6 +49,14 @@ describe('Addresses', () => {
       expect(value).toBe(false)
     })
 
+    // ERC-1191 vectors for RSK mainnet (30) and testnet (31): RSK acceptance stays out of the shared validator
+    it.each(['0x5aaEB6053f3e94c9b9a09f33669435E7ef1bEAeD', '0x5aAeb6053F3e94c9b9A09F33669435E7EF1BEaEd'])(
+      'should return false for the EIP-1191 address %s',
+      (address) => {
+        expect(isChecksummedAddress(address)).toBe(false)
+      },
+    )
+
     it('should return false for non-/invalid addresses', () => {
       const value = isChecksummedAddress('sdfgsdfg')
       expect(value).toBe(false)

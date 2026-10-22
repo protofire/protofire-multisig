@@ -16,6 +16,7 @@ import { Interface } from 'ethers'
 import { getCreateCallDeployment } from '@safe-global/safe-deployments'
 import * as chainHooks from '@/hooks/useChains'
 import { chainBuilder } from '@/tests/builders/chains'
+import { FEATURES } from '@safe-global/utils/utils/chains'
 import { useAllSafes, useGetHref } from '@/hooks/safes'
 import type { TransactionDetails } from '@safe-global/store/gateway/AUTO_GENERATED/transactions'
 
@@ -388,6 +389,64 @@ describe('useSafeWalletProvider', () => {
       expect(resp).toBeInstanceOf(Promise)
     })
 
+    describe('transaction target normalization', () => {
+      // EIP-1191 checksum of this address is rejected by ethers' strict EIP-55 check
+      const rskAddress = '0x52908400098527886E0F7030069857D2E4169ee7'
+      const eip55Address = '0x52908400098527886E0F7030069857D2E4169EE7'
+
+      let useChainSpy: jest.SpyInstance | undefined
+
+      afterEach(() => {
+        useChainSpy?.mockRestore()
+      })
+
+      const renderTxFlowApi = (chainId: string, features: Array<string> = []) => {
+        useChainSpy = jest
+          .spyOn(chainHooks, 'useChain')
+          .mockReturnValue(chainBuilder().with({ chainId, features }).build())
+        const setTxFlow = jest.fn()
+        const { result } = renderHook(() => useTxFlowApi(chainId, '0x1234567890000000000000000000000000000000'), {
+          wrapper: ({ children }) => (
+            <Provider store={makeStore(undefined, { skipBroadcast: true })}>
+              <TxModalContext.Provider value={{ txFlow: undefined, setTxFlow, setFullWidth: jest.fn() }}>
+                {children}
+              </TxModalContext.Provider>
+            </Provider>
+          ),
+        })
+        return { setTxFlow, api: result.current }
+      }
+
+      it('should accept EIP-1191 target addresses on RSK chains with the Rootstock support flag', () => {
+        jest.spyOn(router, 'useRouter').mockReturnValue({} as unknown as router.NextRouter)
+        const { setTxFlow, api } = renderTxFlowApi('30', [FEATURES.ROOTSTOCK_SUPPORT])
+
+        api?.send({ txs: [{ to: rskAddress, value: '0', data: '0x' }], params: { safeTxGas: 0 } }, appInfo)
+
+        expect(setTxFlow.mock.calls[0][0].props.data.txs).toEqual([{ to: eip55Address, value: '0', data: '0x' }])
+      })
+
+      it('should reject EIP-1191 target addresses on RSK chains without the Rootstock support flag', async () => {
+        jest.spyOn(router, 'useRouter').mockReturnValue({} as unknown as router.NextRouter)
+        const { setTxFlow, api } = renderTxFlowApi('30')
+
+        await expect(
+          api?.send({ txs: [{ to: rskAddress, value: '0', data: '0x' }], params: { safeTxGas: 0 } }, appInfo),
+        ).rejects.toThrow()
+        expect(setTxFlow).not.toHaveBeenCalled()
+      })
+
+      it('should reject EIP-1191 target addresses on non-RSK chains', async () => {
+        jest.spyOn(router, 'useRouter').mockReturnValue({} as unknown as router.NextRouter)
+        const { setTxFlow, api } = renderTxFlowApi('1')
+
+        await expect(
+          api?.send({ txs: [{ to: rskAddress, value: '0', data: '0x' }], params: { safeTxGas: 0 } }, appInfo),
+        ).rejects.toThrow()
+        expect(setTxFlow).not.toHaveBeenCalled()
+      })
+    })
+
     it('should get tx by safe tx hash', async () => {
       const mockTxDetails: TransactionDetails = {
         txInfo: {
@@ -745,7 +804,7 @@ describe('useSafeWalletProvider', () => {
         () =>
           ({
             send: mockSend,
-          }) as any,
+          } as any),
       )
 
       const { result } = renderHook(() => useTxFlowApi('1', '0x1234567890000000000000000000000000000000'))

@@ -1,5 +1,6 @@
 import { act, render, waitFor } from '@/tests/test-utils'
 import { checksumAddress } from '@safe-global/utils/utils/addresses'
+import { toEip1191ChecksumAddress } from '@safe-global/utils/utils/rsk-utils'
 import { faker } from '@faker-js/faker'
 import CopyAddressButton from '..'
 
@@ -41,6 +42,26 @@ describe('CopyAddressButton', () => {
     await waitFor(async () => {
       const copiedText = await navigator.clipboard.readText()
       expect(copiedText).toEqual(address)
+    })
+  })
+
+  it('should show the EIP-55 address in the confirmation modal for an EIP-1191 address', async () => {
+    const address = checksumAddress(faker.finance.ethereumAddress())
+    const rskAddress = toEip1191ChecksumAddress(address, 30)
+    const result = render(<CopyAddressButton address={rskAddress} trusted={false} />)
+
+    act(() => {
+      result.getByRole('button').click()
+    })
+
+    expect(result.getByText(address)).toBeVisible()
+
+    act(() => {
+      result.getByText('Proceed and copy').click()
+    })
+
+    await waitFor(async () => {
+      expect(await navigator.clipboard.readText()).toEqual(rskAddress)
     })
   })
 

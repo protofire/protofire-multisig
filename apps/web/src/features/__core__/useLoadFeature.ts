@@ -222,11 +222,14 @@ export function useLoadFeature<T extends FeatureImplementation>(
 
   // Derive meta from current state
   const feature = getFeature(loaded)
-  const meta: FeatureMeta = {
-    $isDisabled: isEnabled === false,
-    $isReady: !!feature,
-    $error: getError(loaded),
-  }
+  const meta: FeatureMeta = useMemo(
+    () => ({
+      $isDisabled: isEnabled === false,
+      $isReady: !!feature,
+      $error: getError(loaded),
+    }),
+    [isEnabled, feature, loaded],
+  )
 
   // Stable proxy — created once per hook instance, reads meta from ref
   const metaRef = useRef<FeatureMeta>(meta)

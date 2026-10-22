@@ -10,9 +10,15 @@ import type {
 import type { Chain, WalletInit, WalletInterface } from '@web3-onboard/common'
 import type { Account, Asset, BasePath, DerivationPath, ScanAccountsOptions } from '@web3-onboard/hw-common'
 import type { Subscription } from 'rxjs'
+import { getRskAddress } from '@safe-global/utils/utils/rsk-utils'
 
 const LEDGER_LIVE_PATH: DerivationPath = "44'/60'"
 const LEDGER_LEGACY_PATH: DerivationPath = "44'/60'/0'"
+const ROOTSTOCK_MAINNET_PATH: DerivationPath = "44'/137'/0'/0"
+const ROOTSTOCK_TESTNET_PATH: DerivationPath = "44'/37310'/0'/0"
+
+const ROOTSTOCK_MAINNET_PREFIX = "44'/137'"
+const ROOTSTOCK_TESTNET_PREFIX = "44'/37310'"
 
 const DEFAULT_BASE_PATHS: Array<BasePath> = [
   {
@@ -25,13 +31,75 @@ const DEFAULT_BASE_PATHS: Array<BasePath> = [
   },
 ]
 
+const ROOTSTOCK_BASE_PATHS: Array<BasePath> = [
+  {
+    label: 'Rootstock',
+    value: ROOTSTOCK_MAINNET_PATH,
+  },
+  {
+    label: 'Rootstock testnet',
+    value: ROOTSTOCK_TESTNET_PATH,
+  },
+]
+
+const isRskDerivationPath = (derivationPath: string): boolean =>
+  derivationPath.startsWith(ROOTSTOCK_MAINNET_PREFIX) || derivationPath.startsWith(ROOTSTOCK_TESTNET_PREFIX)
+
+// `isRsk` is true only when Rootstock support is enabled and the current chain is Rootstock
+const isRskAccountPath = (isRsk: boolean, derivationPath: string): boolean =>
+  isRsk && isRskDerivationPath(derivationPath)
+
+const getBasePaths = (isRsk: boolean): Array<BasePath> =>
+  isRsk ? [...DEFAULT_BASE_PATHS, ...ROOTSTOCK_BASE_PATHS] : DEFAULT_BASE_PATHS
+
+const isBasePath = (isRsk: boolean, derivationPath: string): boolean =>
+  getBasePaths(isRsk).some((basePath) => basePath.value === derivationPath)
+
+// Rootstock paths are served by the Rootstock app, so the Ethereum app must not be auto-opened
+const skipOpenAppOption = (skipOpenApp: boolean) => (skipOpenApp ? { skipOpenApp: true } : {})
+
+const skipOpenAppArgs = (skipOpenApp: boolean): [{ skipOpenApp: true }] | [] =>
+  skipOpenApp ? [{ skipOpenApp: true }] : []
+
+type LedgerTxParams = {
+  gasPrice?: string | number | bigint | null
+  maxFeePerGas?: string | number | bigint | null
+  maxPriorityFeePerGas?: string | number | bigint | null
+}
+
+type LegacyTxOverrides = {
+  type: 0
+  gasPrice: bigint
+  maxFeePerGas: null
+  maxPriorityFeePerGas: null
+}
+
+/**
+ * Rootstock only accepts legacy transactions, while ethers infers a typed transaction otherwise.
+ * Type 0 is pinned whenever the EIP-1559 fee-cap pair is not complete.
+ */
+function getRskLegacyTxOverrides(isRsk: boolean, txParams: LedgerTxParams): Partial<LegacyTxOverrides> {
+  const hasEip1559Fees = Boolean(txParams.maxFeePerGas && txParams.maxPriorityFeePerGas)
+  if (!isRsk || hasEip1559Fees) {
+    return {}
+  }
+
+  const gasPrice = txParams.gasPrice ? BigInt(txParams.gasPrice) : 0n
+  if (gasPrice === 0n) {
+    throw new Error('Rootstock legacy transactions require a gas price')
+  }
+
+  return { type: 0, gasPrice, maxFeePerGas: null, maxPriorityFeePerGas: null }
+}
+
 const DEFAULT_ASSETS: Array<Asset> = [
   {
     label: 'ETH',
   },
 ]
 
-export function ledgerModule(): WalletInit {
+// `rootstockChainIds` are the decimal ids of chains with the ROOTSTOCK_SUPPORT flag
+export function ledgerModule(rootstockChainIds: string[] = []): WalletInit {
   return () => {
     return {
       label: 'Ledger',
@@ -58,6 +126,10 @@ export function ledgerModule(): WalletInit {
 
         let currentChain = DEFAULT_CHAIN
         let currentAccount: Account | null = null
+        // Web3-Onboard chain ids are hex strings, e.g. '0x1e' for Rootstock mainnet
+        const isRskNetwork = (): boolean => rootstockChainIds.includes(String(Number(currentChain.id)))
+        // The account modal fixes its path list on open, before the user picks a network in it
+        const hasRskChains = rootstockChainIds.length > 0
 
         // Sets the current chain and emits the chainChanged event
         function setCurrentChain(chainId: Chain['id']): void {
@@ -157,6 +229,7 @@ export function ledgerModule(): WalletInit {
                 nonce: parseInt(nonce, 16),
                 to: txParams.to,
                 value: txParams.value ? BigInt(txParams.value) : null,
+                ...getRskLegacyTxOverrides(isRskNetwork(), txParams),
               })
 
               // Calculate hash and show comparison dialog before signing
@@ -168,9 +241,11 @@ export function ledgerModule(): WalletInit {
 
               try {
                 // Sign transaction on Ledger device
+                const derivationPath = getAssertedDerivationPath()
                 transaction.signature = await ledgerSdk.signTransaction(
-                  getAssertedDerivationPath(),
+                  derivationPath,
                   hexaStringToBuffer(transaction.unsignedSerialized)!,
+                  isRskAccountPath(isRskNetwork(), derivationPath),
                 )
 
                 // Hide dialog after successful signing
@@ -199,7 +274,12 @@ export function ledgerModule(): WalletInit {
               // messages as is to avoid unreadable byte notation (e.g. \xef\xbe\xad\xde). Instead,
               // the Ledger device shows plain hex (e.g. 0xdeadbeef).
               const message = args.params[1]
-              const signature = await ledgerSdk.signMessage(getAssertedDerivationPath(), message)
+              const derivationPath = getAssertedDerivationPath()
+              const signature = await ledgerSdk.signMessage(
+                derivationPath,
+                message,
+                isRskAccountPath(isRskNetwork(), derivationPath),
+              )
               return Signature.from(signature).serialized
             },
             personal_sign: async (args) => {
@@ -212,7 +292,12 @@ export function ledgerModule(): WalletInit {
             },
             eth_signTypedData: async (args) => {
               const typedData = JSON.parse(args.params[1])
-              const signature = await ledgerSdk.signTypedData(getAssertedDerivationPath(), typedData)
+              const derivationPath = getAssertedDerivationPath()
+              const signature = await ledgerSdk.signTypedData(
+                derivationPath,
+                typedData,
+                isRskAccountPath(isRskNetwork(), derivationPath),
+              )
               return Signature.from(signature).serialized
             },
             // @ts-expect-error createEIP1193Provider does not allow overriding eth_signTypedData_v3
@@ -252,7 +337,7 @@ export function ledgerModule(): WalletInit {
          */
         async function getAccounts(): Promise<Array<Account>> {
           const accounts = await accountSelect({
-            basePaths: DEFAULT_BASE_PATHS,
+            basePaths: getBasePaths(hasRskChains),
             assets: DEFAULT_ASSETS,
             chains,
             scanAccounts: deriveAccounts,
@@ -278,7 +363,7 @@ export function ledgerModule(): WalletInit {
           const provider = new JsonRpcProvider(currentChain.rpcUrl)
 
           // Only return exact account from custom derivation
-          if (args.derivationPath !== LEDGER_LIVE_PATH && args.derivationPath !== LEDGER_LEGACY_PATH) {
+          if (!isBasePath(hasRskChains, args.derivationPath)) {
             const account = await deriveAccount({ ...args, provider })
             return [account]
           }
@@ -318,7 +403,10 @@ export function ledgerModule(): WalletInit {
           provider: InstanceType<typeof JsonRpcProvider>
           asset: Asset
         }): Promise<Account> {
-          const { address } = await ledgerSdk.getAddress(args.derivationPath)
+          const isRskPath = isRskAccountPath(isRskNetwork(), args.derivationPath)
+          const { address: deviceAddress } = await ledgerSdk.getAddress(args.derivationPath, isRskPath)
+          // Rootstock devices return EIP-1191 checksums, which ethers rejects unless normalized
+          const address = isRskPath ? (getRskAddress(deviceAddress) as `0x${string}`) : deviceAddress
           const balance = await args.provider.getBalance(address)
 
           return {
@@ -376,17 +464,37 @@ async function getLedgerSdk() {
     disconnect: async (): Promise<void> => {
       return dmk.disconnect({ sessionId })
     },
-    getAddress: async (derivationPath: string): Promise<GetAddressDAOutput> => {
-      return waitForAction(signer.getAddress(derivationPath, { checkOnDevice: false }))
+    getAddress: async (derivationPath: string, skipOpenApp: boolean): Promise<GetAddressDAOutput> => {
+      return waitForAction(
+        signer.getAddress(derivationPath, { checkOnDevice: false, ...skipOpenAppOption(skipOpenApp) }),
+      )
     },
-    signMessage: async (derivationPath: string, message: string | Uint8Array): Promise<SignPersonalMessageDAOutput> => {
-      return withRefresherPaused(() => waitForAction(signer.signMessage(derivationPath, message)))
+    signMessage: async (
+      derivationPath: string,
+      message: string | Uint8Array,
+      skipOpenApp: boolean,
+    ): Promise<SignPersonalMessageDAOutput> => {
+      return withRefresherPaused(() =>
+        waitForAction(signer.signMessage(derivationPath, message, ...skipOpenAppArgs(skipOpenApp))),
+      )
     },
-    signTransaction: async (derivationPath: string, transaction: Uint8Array): Promise<SignTransactionDAOutput> => {
-      return withRefresherPaused(() => waitForAction(signer.signTransaction(derivationPath, transaction)))
+    signTransaction: async (
+      derivationPath: string,
+      transaction: Uint8Array,
+      skipOpenApp: boolean,
+    ): Promise<SignTransactionDAOutput> => {
+      return withRefresherPaused(() =>
+        waitForAction(signer.signTransaction(derivationPath, transaction, ...skipOpenAppArgs(skipOpenApp))),
+      )
     },
-    signTypedData: async (derivationPath: string, typedData: TypedData): Promise<SignTypedDataDAOutput> => {
-      return withRefresherPaused(() => waitForAction(signer.signTypedData(derivationPath, typedData)))
+    signTypedData: async (
+      derivationPath: string,
+      typedData: TypedData,
+      skipOpenApp: boolean,
+    ): Promise<SignTypedDataDAOutput> => {
+      return withRefresherPaused(() =>
+        waitForAction(signer.signTypedData(derivationPath, typedData, ...skipOpenAppArgs(skipOpenApp))),
+      )
     },
   }
 }

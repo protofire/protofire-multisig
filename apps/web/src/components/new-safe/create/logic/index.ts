@@ -40,6 +40,8 @@ import { hasMultiChainCreationFeatures } from '@/features/multichain'
 import { getLatestSafeVersion } from '@safe-global/utils/utils/chains'
 import { isTronChain } from '@/utils/tron'
 import { getUncheckedSigner } from '@/services/tx/tx-sender/sdk'
+import { getRskAddress, isRootstockSupportEnabled } from '@safe-global/utils/utils/rsk-utils'
+
 // Type for the lazy-loaded activateReplayedSafe function
 export type ActivateReplayedSafeFn = (
   chain: Chain,
@@ -311,12 +313,17 @@ export const createNewUndeployedSafeWithoutSalt = (
 
   const masterCopy = includeMigration ? safeL1Address : chain.l2 ? safeL2Address : safeL1Address
 
+  // RSK wallets return EIP-1191 checksums, which ethers' strict EIP-55 check rejects
+  const owners = isRootstockSupportEnabled(chain)
+    ? safeAccountConfig.owners.map(getRskAddress)
+    : safeAccountConfig.owners
+
   const replayedSafe: Omit<ReplayedSafeProps, 'saltNonce'> = {
     factoryAddress: safeFactoryAddress,
     masterCopy,
     safeAccountConfig: {
       threshold: safeAccountConfig.threshold,
-      owners: safeAccountConfig.owners,
+      owners,
       fallbackHandler: fallbackHandlerAddress,
       to: includeMigration && safeToL2SetupAddress ? safeToL2SetupAddress : ZERO_ADDRESS,
       data: includeMigration ? safeToL2SetupInterface.encodeFunctionData('setupToL2', [safeL2Address]) : EMPTY_DATA,

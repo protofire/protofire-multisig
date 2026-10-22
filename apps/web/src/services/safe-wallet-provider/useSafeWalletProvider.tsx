@@ -15,10 +15,11 @@ import type { SafeSettings } from '@safe-global/safe-apps-sdk'
 import type { TypedData } from '@safe-global/store/gateway/AUTO_GENERATED/messages'
 import { useWeb3ReadOnly } from '@/hooks/wallets/web3ReadOnly'
 import { getTransactionDetails } from '@/utils/transactions'
-import { Interface, getAddress } from 'ethers'
+import { Interface } from 'ethers'
 import { sameAddress } from '@safe-global/utils/utils/addresses'
+import { getTxTargetAddress } from '@safe-global/utils/utils/rsk-utils'
 import { AppRoutes } from '@/config/routes'
-import useChains, { useCurrentChain } from '@/hooks/useChains'
+import useChains, { useChain, useCurrentChain } from '@/hooks/useChains'
 import { NotificationMessages, showNotification } from './notifications'
 import { SignMessageOnChainFlow } from '@/components/tx-flow/flows'
 import { useAppSelector } from '@/store'
@@ -32,6 +33,7 @@ import { WalletConnectFeature } from '@/features/walletconnect'
 export const useTxFlowApi = (chainId: string, safeAddress: string): WalletSDK | undefined => {
   const { safe } = useSafeInfo()
   const currentChain = useCurrentChain()
+  const chain = useChain(chainId)
   const { setTxFlow } = useContext(TxModalContext)
   const web3ReadOnly = useWeb3ReadOnly()
   const router = useRouter()
@@ -124,7 +126,7 @@ export const useTxFlowApi = (chainId: string, safeAddress: string): WalletSDK | 
 
         const transactions = params.txs.map(({ to, value, data }) => {
           return {
-            to: getAddress(to),
+            to: getTxTargetAddress(to, chain),
             value: BigInt(value).toString(),
             data,
           }
@@ -286,6 +288,7 @@ export const useTxFlowApi = (chainId: string, safeAddress: string): WalletSDK | 
       },
     }
   }, [
+    chain,
     chainId,
     safeAddress,
     safe,

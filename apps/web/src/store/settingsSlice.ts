@@ -55,6 +55,7 @@ export type SettingsState = {
   }
   transactionExecution: boolean
   tronAddressFormat?: 'base58' | 'hex'
+  rootstockAddressChecksum?: boolean
 }
 
 export const initialState: SettingsState = {
@@ -92,6 +93,7 @@ export const initialState: SettingsState = {
   },
   transactionExecution: true,
   tronAddressFormat: 'base58' as const,
+  rootstockAddressChecksum: true,
 }
 
 export const settingsSlice = createSlice({
@@ -166,6 +168,9 @@ export const settingsSlice = createSlice({
     setTronAddressFormat: (state, { payload }: PayloadAction<'base58' | 'hex'>) => {
       state.tronAddressFormat = payload
     },
+    setRootstockAddressChecksum: (state, { payload }: PayloadAction<boolean>) => {
+      state.rootstockAddressChecksum = payload
+    },
     setSettings: (_, { payload }: PayloadAction<SettingsState>) => {
       // We must return as we are overwriting the entire state
       // Preserve default nested settings if importing without
@@ -191,6 +196,7 @@ export const {
   setTransactionExecution,
   setBlindSigning,
   setTronAddressFormat,
+  setRootstockAddressChecksum,
 } = settingsSlice.actions
 
 export const selectSettings = (state: RootState): SettingsState => state[settingsSlice.name]
@@ -261,3 +267,6 @@ export const selectIsCuratedNestedSafe = createSelector(
 
 export const selectTronAddressFormat = (state: RootState): 'base58' | 'hex' =>
   state[settingsSlice.name].tronAddressFormat ?? 'base58'
+
+export const selectRootstockAddressChecksum = (state: RootState): boolean =>
+  state[settingsSlice.name].rootstockAddressChecksum ?? true

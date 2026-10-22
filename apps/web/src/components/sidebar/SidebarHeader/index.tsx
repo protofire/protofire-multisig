@@ -24,7 +24,7 @@ import { NESTED_SAFE_EVENTS, NESTED_SAFE_LABELS } from '@/services/analytics/eve
 import { SvgIcon } from '@mui/material'
 import EnvHintButton from '@/components/settings/EnvironmentVariables/EnvHintButton'
 import useSafeAddress from '@/hooks/useSafeAddress'
-import useTronAddress from '@/hooks/useTronAddress'
+import useDisplayAddress from '@/hooks/useDisplayAddress'
 import { formatAddressForExplorer } from '@/utils/tron'
 import ExplorerButton from '@/components/common/ExplorerButton'
 import CopyTooltip from '@/components/common/CopyTooltip'
@@ -37,13 +37,13 @@ const SafeHeader = (): ReactElement => {
   const chain = useCurrentChain()
   const settings = useAppSelector(selectSettings)
   const { CounterfactualStatusButton } = useLoadFeature(CounterfactualFeature)
-  const { copyAddress: tronCopyAddress, isTron } = useTronAddress(safeAddress)
+  const { copyAddress, isTron } = useDisplayAddress(safeAddress)
 
   const addressCopyText = isTron
-    ? tronCopyAddress
+    ? copyAddress
     : settings.shortName.copy && chain
-      ? `${chain.shortName}:${safeAddress}`
-      : safeAddress
+      ? `${chain.shortName}:${copyAddress}`
+      : copyAddress
 
   const blockExplorerLink = chain
     ? getBlockExplorerLink(chain, formatAddressForExplorer(safeAddress, chain.chainId))

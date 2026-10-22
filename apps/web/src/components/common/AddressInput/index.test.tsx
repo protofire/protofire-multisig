@@ -5,7 +5,7 @@ import { act, fireEvent, waitFor } from '@testing-library/react'
 import { render } from '@/tests/test-utils'
 import { useForm, FormProvider } from 'react-hook-form'
 import AddressInput, { type AddressInputProps } from '.'
-import { useCurrentChain } from '@/hooks/useChains'
+import { useChain, useCurrentChain } from '@/hooks/useChains'
 import useNameResolver from '@/components/common/AddressInput/useNameResolver'
 import useHederaAccountIdResolver from '@/components/common/AddressInput/useHederaAccountIdResolver'
 import { chainBuilder } from '@/tests/builders/chains'
@@ -14,6 +14,9 @@ import { FEATURES as CHAIN_FEATURES } from '@safe-global/utils/utils/chains'
 import userEvent from '@testing-library/user-event'
 import { ContactSource } from '@/hooks/useAllAddressBooks'
 import * as tronUtils from '@/utils/tron'
+import { FEATURES as UTILS_FEATURES } from '@safe-global/utils/utils/chains'
+
+const ROOTSTOCK_SUPPORT = UTILS_FEATURES.ROOTSTOCK_SUPPORT
 
 const mockChain = chainBuilder()
   .with({ features: [FEATURES.DOMAIN_LOOKUP] })
@@ -427,6 +430,98 @@ describe('AddressInput tests', () => {
     })
 
     await waitFor(() => expect(input.value).toBe(TEST_ADDRESS_A))
+  })
+
+  describe('Rootstock', () => {
+    const RSK_MAINNET_ADDRESS = '0x5aaEB6053f3e94c9b9a09f33669435E7ef1bEAeD'
+    const RSK_TESTNET_ADDRESS = '0x5aAeb6053F3e94c9b9A09F33669435E7EF1BEaEd'
+    const EIP55_ADDRESS = '0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed'
+
+    const mockRskChain = (features: string[]) =>
+      (useCurrentChain as jest.Mock).mockImplementation(() =>
+        chainBuilder().with({ chainId: '31', shortName: 'trbtc', features }).build(),
+      )
+
+    it.each([RSK_MAINNET_ADDRESS, RSK_TESTNET_ADDRESS])(
+      'should accept the EIP-1191 address %s and convert it to EIP-55',
+      async (address) => {
+        mockRskChain([ROOTSTOCK_SUPPORT])
+        const { input, utils } = setup('')
+
+        act(() => {
+          fireEvent.change(input, { target: { value: address } })
+          jest.advanceTimersByTime(1000)
+        })
+
+        await waitFor(() => expect(input.value).toBe(EIP55_ADDRESS))
+        expect(utils.queryByLabelText('Invalid address checksum', { exact: false })).toBeNull()
+      },
+    )
+
+    describe('display format', () => {
+      beforeEach(() => {
+        const rskChain = chainBuilder()
+          .with({ chainId: '31', shortName: 'trbtc', features: [ROOTSTOCK_SUPPORT] })
+          .build()
+        ;(useCurrentChain as jest.Mock).mockImplementation(() => rskChain)
+        ;(useChain as jest.Mock).mockImplementation(() => rskChain)
+      })
+
+      afterEach(() => {
+        ;(useChain as jest.Mock).mockImplementation(() => mockChain)
+      })
+
+      it('should display the EIP-1191 address by default', async () => {
+        const { input } = setup(EIP55_ADDRESS)
+
+        await waitFor(() => expect(input.value).toBe(RSK_TESTNET_ADDRESS))
+      })
+
+      it('should display the EIP-55 address when the checksum setting is off', async () => {
+        const utils = render(<TestForm address={EIP55_ADDRESS} />, {
+          initialReduxState: { settings: { rootstockAddressChecksum: false } } as any,
+        })
+        const input = utils.getByLabelText('Recipient address', { exact: false }) as HTMLInputElement
+
+        await waitFor(() => expect(input.value).toBe(EIP55_ADDRESS))
+      })
+
+      it('should keep the EIP-55 address in the form state', async () => {
+        const onSubmit = jest.fn()
+        const Form = () => {
+          const methods = useForm({ defaultValues: { recipient: EIP55_ADDRESS }, mode: 'all' })
+          return (
+            <FormProvider {...methods}>
+              <form onSubmit={methods.handleSubmit(onSubmit)}>
+                <AddressInput name="recipient" label="Recipient address" />
+                <button type="submit">Submit</button>
+              </form>
+            </FormProvider>
+          )
+        }
+        const utils = render(<Form />)
+
+        await act(async () => {
+          fireEvent.click(utils.getByText('Submit'))
+          jest.advanceTimersByTime(1000)
+        })
+
+        await waitFor(() => expect(onSubmit).toHaveBeenCalled())
+        expect(onSubmit.mock.calls[0][0]).toEqual({ recipient: EIP55_ADDRESS })
+      })
+    })
+
+    it('should reject the EIP-1191 address when Rootstock support is disabled', async () => {
+      mockRskChain([])
+      const { input, utils } = setup('')
+
+      act(() => {
+        fireEvent.change(input, { target: { value: RSK_TESTNET_ADDRESS } })
+        jest.advanceTimersByTime(1000)
+      })
+
+      await waitFor(() => expect(utils.getByLabelText('Invalid address checksum', { exact: false })).toBeDefined())
+    })
   })
 
   it('should display a read-only input if the address is in the address book', async () => {

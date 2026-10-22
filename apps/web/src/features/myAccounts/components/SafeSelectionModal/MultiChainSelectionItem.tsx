@@ -119,6 +119,7 @@ const MultiChainSelectionItem = ({ multiSafe, onToggle }: MultiChainSelectionIte
                 showCopyButton
                 hasExplorer
                 showPrefix={false}
+                evmAddressOnly
                 highlight4bytes={!!multiSafe.similarityGroup}
               >
                 {!isMobile && statusChips}

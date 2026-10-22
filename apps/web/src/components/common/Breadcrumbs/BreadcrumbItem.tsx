@@ -6,13 +6,15 @@ import css from './styles.module.css'
 import Identicon from '@/components/common/Identicon'
 import { useAddressBookItem } from '@/hooks/useAllAddressBooks'
 import useChainId from '@/hooks/useChainId'
+import useRootstockAddress from '@/hooks/useRootstockAddress'
 
 export const BreadcrumbItem = ({ title, address, href }: { title: string; address: string; href?: UrlObject }) => {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
   const chainId = useChainId()
   const addressBookItem = useAddressBookItem(address, chainId)
-  const name = addressBookItem ? addressBookItem.name : isMobile ? shortenAddress(address) : address
+  const rskAddress = useRootstockAddress(address)
+  const name = addressBookItem ? addressBookItem.name : isMobile ? shortenAddress(rskAddress) : rskAddress
 
   return (
     <Tooltip title={title}>

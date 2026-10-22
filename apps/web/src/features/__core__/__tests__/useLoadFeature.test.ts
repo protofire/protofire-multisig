@@ -159,6 +159,26 @@ describe('useLoadFeature', () => {
     })
   })
 
+  // ── Referential stability ─────────────────────────────────────
+
+  describe('referential stability', () => {
+    it('should return the same feature object across rerenders when ready and inputs are unchanged', async () => {
+      const handle: FeatureHandle<MockImpl> = {
+        name: 'test-feature',
+        useIsEnabled: () => true,
+        load: () => Promise.resolve({ default: mockImpl }),
+      }
+      const { result, rerender } = renderHook(() => useLoadFeature(handle))
+
+      await waitFor(() => expect(result.current.$isReady).toBe(true))
+
+      const readyRef = result.current
+      rerender()
+
+      expect(result.current).toBe(readyRef)
+    })
+  })
+
   // ── Shared feature registry ────────────────────────────────────
 
   describe('shared registry', () => {

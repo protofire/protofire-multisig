@@ -137,4 +137,15 @@ describe('getAvailableSigners', () => {
       checksumAddress(nonChecksummedMockWallet.address),
     ])
   })
+
+  it('should checksum every nested owner as EIP-55 regardless of list length', () => {
+    const nestedOwners = Array.from({ length: 32 }, () => faker.finance.ethereumAddress())
+    const mockSafe = safeInfoBuilder()
+      .with({ owners: [{ value: parentSafe }] })
+      .build()
+
+    const result = getAvailableSigners(mockWallet, nestedOwners, mockSafe, mockTx)
+
+    expect(result).toEqual(nestedOwners.map((owner) => checksumAddress(owner)))
+  })
 })

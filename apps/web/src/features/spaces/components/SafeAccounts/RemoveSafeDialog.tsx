@@ -12,6 +12,7 @@ import { useSpaceSafesDeleteV1Mutation } from '@safe-global/store/gateway/AUTO_G
 import { useState } from 'react'
 import { showNotification } from '@/store/notificationsSlice'
 import { useAppDispatch } from '@/store'
+import useRootstockAddress from '@/hooks/useRootstockAddress'
 
 function getToBeDeletedSafeAccounts(safeItem: SafeItem | MultiChainSafeItem) {
   if (isMultiChainSafeItem(safeItem)) {
@@ -29,6 +30,9 @@ const RemoveSafeDialog = ({
   handleClose: () => void
 }) => {
   const { address } = safeItem
+  const rskAddress = useRootstockAddress(address, isMultiChainSafeItem(safeItem) ? undefined : safeItem.chainId)
+  // Multichain accounts always show the plain EVM address
+  const displayAddress = isMultiChainSafeItem(safeItem) ? address : rskAddress
   const spaceId = useCurrentSpaceId()
   const dispatch = useAppDispatch()
   const [removeSafeAccounts] = useSpaceSafesDeleteV1Mutation()
@@ -64,7 +68,7 @@ const RemoveSafeDialog = ({
     <ModalDialog open onClose={handleClose} dialogTitle="Remove Safe Account" hideChainIndicator>
       <DialogContent sx={{ p: '24px !important' }}>
         <Typography>
-          Are you sure you want to remove <b>{address}</b> from this space?
+          Are you sure you want to remove <b>{displayAddress}</b> from this space?
         </Typography>
         {error && (
           <Alert severity="error" sx={{ mt: 2 }}>

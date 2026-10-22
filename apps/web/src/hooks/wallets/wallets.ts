@@ -10,6 +10,7 @@ import tronlinkModule, { TRONLINK_MODULE_LABEL } from '@/services/onboard/tronli
 import { FEATURES, hasFeature } from '@safe-global/utils/utils/chains'
 import { getTronChains, isTronChain } from '@/utils/tron-chains'
 import hashpackModule from '@/services/onboard/hashpack-module'
+import { isRootstockSupportEnabled } from '@safe-global/utils/utils/rsk-utils'
 
 import { CGW_NAMES, WALLET_KEYS } from './consts'
 
@@ -53,13 +54,14 @@ const injected = () => {
   return injectedWalletModule({ filter })
 }
 
-const WALLET_MODULES: Partial<{ [_key in WALLET_KEYS]: (chain: Chain, tronChains: Chain[]) => WalletInit }> = {
+const WALLET_MODULES: Partial<{ [_key in WALLET_KEYS]: (chain: Chain, configs: Chain[]) => WalletInit }> = {
   [WALLET_KEYS.INJECTED]: () => injected() as WalletInit,
   [WALLET_KEYS.WALLETCONNECT_V2]: (chain) => walletConnectV2(chain) as WalletInit,
   [WALLET_KEYS.COINBASE]: () => coinbaseModule({ darkMode: prefersDarkMode() }) as WalletInit,
-  [WALLET_KEYS.LEDGER]: () => ledgerModule(),
+  [WALLET_KEYS.LEDGER]: (_, configs) =>
+    ledgerModule(configs.filter(isRootstockSupportEnabled).map((config) => config.chainId)),
   [WALLET_KEYS.PK]: (chain) => pkModule(chain.chainId, chain.rpcUri) as WalletInit,
-  [WALLET_KEYS.TRONLINK]: (chain, tronChains) => tronlinkModule(chain.chainId, tronChains) as WalletInit,
+  [WALLET_KEYS.TRONLINK]: (chain, configs) => tronlinkModule(chain.chainId, getTronChains(configs)) as WalletInit,
   [WALLET_KEYS.HASHPACK]: (chain) => hashpackModule(chain) as WalletInit,
 }
 
@@ -81,13 +83,11 @@ export const isWalletSupported = (disabledWallets: string[], walletLabel: string
 }
 
 export const getSupportedWallets = (chain: Chain, configs: Chain[]): WalletInits => {
-  const tronChains = getTronChains(configs)
-
   if (hasFeature(chain, FEATURES.TRON)) {
     if (!isWalletSupported(chain.disabledWallets, WALLET_KEYS.TRONLINK)) {
       return []
     }
-    const tronModule = WALLET_MODULES[WALLET_KEYS.TRONLINK]?.(chain, tronChains)
+    const tronModule = WALLET_MODULES[WALLET_KEYS.TRONLINK]?.(chain, configs)
     return tronModule ? [tronModule] : []
   }
 
@@ -99,7 +99,7 @@ export const getSupportedWallets = (chain: Chain, configs: Chain[]): WalletInits
   // the real module above. MetaMask still gets picked up via its legacy
   // `window.ethereum.isMetaMask` flag, which injected-wallets checks regardless of EIP-6963.
   if (hasFeature(chain, FEATURES.HEDERA)) {
-    const hashpack = WALLET_MODULES[WALLET_KEYS.HASHPACK]?.(chain, tronChains)
+    const hashpack = WALLET_MODULES[WALLET_KEYS.HASHPACK]?.(chain, configs)
     const hederaInjected = injectedWalletModule({ disable6963Support: true }) as WalletInit
     return hashpack ? [hashpack, hederaInjected] : [hederaInjected]
   }
@@ -112,5 +112,5 @@ export const getSupportedWallets = (chain: Chain, configs: Chain[]): WalletInits
     return [injected()]
   }
 
-  return enabledWallets.map(([, module]) => module(chain, tronChains))
+  return enabledWallets.map(([, module]) => module(chain, configs))
 }

@@ -21,7 +21,10 @@ jest.mock('@web3-onboard/injected-wallets', () => ({
 jest.mock('@web3-onboard/coinbase', () => ({ __esModule: true, default: () => ({ label: 'COINBASE' }) }))
 jest.mock('@web3-onboard/walletconnect', () => ({ __esModule: true, default: () => ({ label: 'WALLETCONNECT_V2' }) }))
 jest.mock('@/services/private-key-module', () => ({ __esModule: true, default: () => ({ label: 'PK' }) }))
-jest.mock('@/services/onboard/ledger-module', () => ({ ledgerModule: () => ({ label: 'LEDGER' }) }))
+const mockLedgerModule = jest.fn<{ label: string }, [string[]]>(() => ({ label: 'LEDGER' }))
+jest.mock('@/services/onboard/ledger-module', () => ({
+  ledgerModule: (rootstockChainIds: string[]) => mockLedgerModule(rootstockChainIds),
+}))
 jest.mock('@/services/onboard/tronlink-module', () => ({
   __esModule: true,
   TRONLINK_MODULE_LABEL: 'TronLink',
@@ -98,6 +101,15 @@ describe('getSupportedWallets', () => {
 
     expect(wallets).toHaveLength(1)
     expect(tronModuleFn(undefined)).toBeNull()
+  })
+
+  it('passes the ids of chains with Rootstock support to the Ledger module', () => {
+    const rskChain = { chainId: '31', disabledWallets: [], features: [FEATURES.ROOTSTOCK_SUPPORT] } as unknown as Chain
+    const rskChainWithoutSupport = { chainId: '30', disabledWallets: [], features: [] } as unknown as Chain
+
+    getSupportedWallets(evmChain, [...configs, rskChain, rskChainWithoutSupport])
+
+    expect(mockLedgerModule).toHaveBeenCalledWith(['31'])
   })
 
   it('passes the TronLink duplicate filter to the injected wallet module', () => {

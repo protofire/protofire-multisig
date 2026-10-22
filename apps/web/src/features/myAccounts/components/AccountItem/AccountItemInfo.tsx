@@ -17,6 +17,7 @@ export interface AccountItemInfoProps {
   hasExplorer?: boolean // Show explorer link next to address
   highlight4bytes?: boolean // Highlight first 4 and last 4 chars (for similar addresses)
   monospace?: boolean // Use monospace font for address (easier to compare)
+  evmAddressOnly?: boolean // Keep the plain EVM address, e.g. for multichain groups
   'data-testid'?: string
 }
 
@@ -37,6 +38,7 @@ function AccountItemInfo({
   hasExplorer = false,
   monospace = false,
   highlight4bytes = false,
+  evmAddressOnly = false,
   'data-testid': testId,
 }: AccountItemInfoProps) {
   return (
@@ -72,6 +74,7 @@ function AccountItemInfo({
             showCopyButton={showCopyButton}
             hasExplorer={hasExplorer}
             highlight4bytes={highlight4bytes}
+            evmAddressOnly={evmAddressOnly}
           />
         )}
       </Typography>

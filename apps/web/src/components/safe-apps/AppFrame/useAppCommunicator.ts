@@ -1,7 +1,7 @@
 import type { TransactionDetails } from '@safe-global/store/gateway/AUTO_GENERATED/transactions'
 import type { MutableRefObject } from 'react'
 import { useEffect, useMemo, useState } from 'react'
-import { getAddress } from 'ethers'
+import { getTxTargetAddress } from '@safe-global/utils/utils/rsk-utils'
 import type { SafeApp as SafeAppData } from '@safe-global/store/gateway/AUTO_GENERATED/safe-apps'
 import type { Chain as WebCoreChain } from '@safe-global/store/gateway/AUTO_GENERATED/chains'
 import type {
@@ -184,7 +184,7 @@ const useAppCommunicator = (
 
       const transactions = txs.map(({ to, value, data }) => {
         return {
-          to: getAddress(to),
+          to: getTxTargetAddress(to, chain),
           value: value ? BigInt(value).toString() : '0',
           data: data || '0x',
         }

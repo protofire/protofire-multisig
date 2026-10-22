@@ -4,6 +4,7 @@ import { useAppDispatch } from '@/store'
 import { addOrUpdateSafe, unpinSafe } from '@/store/addedSafesSlice'
 import { showNotification } from '@/store/notificationsSlice'
 import { shortenAddress } from '@safe-global/utils/utils/formatters'
+import { useRootstockAddressFormatter } from '@/hooks/useRootstockAddress'
 import { defaultSafeInfo } from '@safe-global/store/slices/SafeInfo/utils'
 import { OVERVIEW_EVENTS, PIN_SAFE_LABELS, trackEvent } from '@/services/analytics'
 import type { AddressInfo } from '@safe-global/store/gateway/AUTO_GENERATED/safes'
@@ -26,6 +27,7 @@ export function useSingleChainPinActions({
   owners,
 }: UseSingleChainPinActionsProps) {
   const dispatch = useAppDispatch()
+  const formatAddress = useRootstockAddressFormatter(chainId)
 
   const handlePinClick = useCallback(
     (e: MouseEvent) => {
@@ -37,7 +39,7 @@ export function useSingleChainPinActions({
         dispatch(
           showNotification({
             title: 'Safe removed',
-            message: name ?? shortenAddress(address),
+            message: name ?? shortenAddress(formatAddress(address)),
             groupKey: `unpin-safe-success-${address}`,
             variant: 'success',
           }),
@@ -58,7 +60,7 @@ export function useSingleChainPinActions({
         dispatch(
           showNotification({
             title: 'Safe trusted',
-            message: name ?? shortenAddress(address),
+            message: name ?? shortenAddress(formatAddress(address)),
             groupKey: `pin-safe-success-${address}`,
             variant: 'success',
           }),
@@ -66,7 +68,7 @@ export function useSingleChainPinActions({
         trackEvent({ ...OVERVIEW_EVENTS.PIN_SAFE, label: PIN_SAFE_LABELS.pin })
       }
     },
-    [dispatch, address, chainId, name, isPinned, threshold, owners],
+    [dispatch, formatAddress, address, chainId, name, isPinned, threshold, owners],
   )
 
   return { handlePinClick }

@@ -265,6 +265,37 @@ describe('create/logic', () => {
       })
     })
 
+    it('should normalize EIP-1191 owners on RSK chains with the Rootstock support flag', () => {
+      const rskOwner = '0x52908400098527886E0F7030069857D2E4169ee7'
+      const chainSetup = chainBuilder()
+        .with({ chainId: '30', recommendedMasterCopyVersion: '1.4.1', features: [FEATURES.ROOTSTOCK_SUPPORT] })
+        .build()
+
+      const result = createNewUndeployedSafeWithoutSalt('1.4.1', { owners: [rskOwner], threshold: 1 }, chainSetup)
+
+      expect(result.safeAccountConfig.owners).toEqual(['0x52908400098527886E0F7030069857D2E4169EE7'])
+    })
+
+    it('should keep owners unchanged on RSK chains without the Rootstock support flag', () => {
+      const rskOwner = '0x52908400098527886E0F7030069857D2E4169ee7'
+      const chainSetup = chainBuilder()
+        .with({ chainId: '30', recommendedMasterCopyVersion: '1.4.1', features: [] })
+        .build()
+
+      const result = createNewUndeployedSafeWithoutSalt('1.4.1', { owners: [rskOwner], threshold: 1 }, chainSetup)
+
+      expect(result.safeAccountConfig.owners).toEqual([rskOwner])
+    })
+
+    it('should keep owners unchanged on non-RSK chains', () => {
+      const lowercaseOwner = '0x52908400098527886e0f7030069857d2e4169ee7'
+      const chainSetup = chainBuilder().with({ chainId: '1', recommendedMasterCopyVersion: '1.4.1' }).build()
+
+      const result = createNewUndeployedSafeWithoutSalt('1.4.1', { owners: [lowercaseOwner], threshold: 1 }, chainSetup)
+
+      expect(result.safeAccountConfig.owners).toEqual([lowercaseOwner])
+    })
+
     it('should use l1 masterCopy and migration on l2s with multichain feature', () => {
       const safeSetup = {
         owners: [faker.finance.ethereumAddress()],

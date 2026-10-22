@@ -9,6 +9,8 @@ import {
   selectCuratedNestedSafes,
   selectHasCompletedCuration,
   selectCuratedAddresses,
+  selectRootstockAddressChecksum,
+  setRootstockAddressChecksum,
 } from '../settingsSlice'
 import type { SettingsState } from '../settingsSlice'
 import type { RootState } from '..'
@@ -24,6 +26,25 @@ const createCurationState = (
   }) as unknown as RootState
 
 describe('settingsSlice', () => {
+  describe('rootstockAddressChecksum', () => {
+    it('is enabled by default', () => {
+      expect(initialState.rootstockAddressChecksum).toBe(true)
+    })
+
+    it('stores the toggled value', () => {
+      const state = settingsSlice.reducer(undefined, setRootstockAddressChecksum(false))
+
+      expect(state.rootstockAddressChecksum).toBe(false)
+      expect(selectRootstockAddressChecksum({ settings: state } as unknown as RootState)).toBe(false)
+    })
+
+    it('falls back to enabled when the persisted settings lack the field', () => {
+      const { rootstockAddressChecksum: _, ...legacySettings } = initialState
+
+      expect(selectRootstockAddressChecksum({ settings: legacySettings } as unknown as RootState)).toBe(true)
+    })
+  })
+
   it('handle hiddenTokens', () => {
     const token1 = toBeHex('0x1', 20)
     const token2 = toBeHex('0x2', 20)

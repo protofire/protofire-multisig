@@ -6,6 +6,7 @@ import type {
 import { sortByIssueSeverity } from '@safe-global/utils/features/safe-shield/utils/analysisUtils'
 import { Box, Typography, Tooltip } from '@mui/material'
 import { useCurrentChain } from '@/hooks/useChains'
+import { useRootstockAddressFormatter, useRootstockCopyAddressFormatter } from '@/hooks/useRootstockAddress'
 import { getBlockExplorerLink } from '@safe-global/utils/utils/chains'
 import { formatAddressForExplorer } from '@/utils/tron'
 import ExplorerButton from '@/components/common/ExplorerButton'
@@ -40,6 +41,8 @@ const addressTypographyStyles = {
 
 export const AnalysisIssuesDisplay = ({ result, issueBackgroundColor }: AnalysisIssuesDisplayProps) => {
   const currentChain = useCurrentChain()
+  const formatAddress = useRootstockAddressFormatter()
+  const formatCopyAddress = useRootstockCopyAddressFormatter()
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null)
 
   if (!('issues' in result)) {
@@ -57,7 +60,7 @@ export const AnalysisIssuesDisplay = ({ result, issueBackgroundColor }: Analysis
 
   const handleCopyToClipboard = async (address: string, index: number) => {
     try {
-      await navigator.clipboard.writeText(address)
+      await navigator.clipboard.writeText(formatCopyAddress(address))
       setCopiedIndex(index)
       setTimeout(() => setCopiedIndex(null), 1000)
     } catch (error) {
@@ -92,7 +95,7 @@ export const AnalysisIssuesDisplay = ({ result, issueBackgroundColor }: Analysis
                       arrow
                     >
                       <Typography component="span" variant="body2" sx={addressTypographyStyles}>
-                        {issue.address}
+                        {formatAddress(issue.address)}
                       </Typography>
                     </Tooltip>
                     <Box component="span" color="text.secondary">

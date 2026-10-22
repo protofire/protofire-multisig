@@ -12,7 +12,7 @@ import { Box, Stack } from '@mui/material'
 import { useChain } from '@/hooks/useChains'
 import { useAppSelector } from '@/store'
 import { selectSettings } from '@/store/settingsSlice'
-import useTronAddress from '@/hooks/useTronAddress'
+import useDisplayAddress from '@/hooks/useDisplayAddress'
 
 const SafeInfo = (): ReactElement => {
   const safeAddress = useSafeAddress()
@@ -23,7 +23,7 @@ const SafeInfo = (): ReactElement => {
   const settings = useAppSelector(selectSettings)
 
   const name = addressBookItem?.name || ens
-  const { displayAddress, copyAddress, isTron } = useTronAddress(safeAddress)
+  const { displayAddress, copyAddress, isTron } = useDisplayAddress(safeAddress)
   const prefix = chain?.shortName
   const copyPrefix = isTron ? false : settings.shortName.copy
 
@@ -52,9 +52,9 @@ const SafeInfo = (): ReactElement => {
               </Typography>
             )}
             <Typography variant="body2">
-              <CopyAddressButton address={isTron ? copyAddress : safeAddress} prefix={prefix} copyPrefix={copyPrefix}>
+              <CopyAddressButton address={copyAddress} prefix={prefix} copyPrefix={copyPrefix}>
                 {!isTron && prefix && <b>{prefix}:</b>}
-                {shortenAddress(isTron ? displayAddress : safeAddress)}
+                {shortenAddress(displayAddress)}
               </CopyAddressButton>
             </Typography>
           </>

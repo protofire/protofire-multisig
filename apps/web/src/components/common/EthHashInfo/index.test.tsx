@@ -7,6 +7,7 @@ import * as useAllAddressBooks from '@/hooks/useAllAddressBooks'
 import * as useChainId from '@/hooks/useChainId'
 import * as store from '@/store'
 import * as useChains from '@/hooks/useChains'
+import { FEATURES } from '@safe-global/utils/utils/chains'
 import * as useDarkMode from '@/hooks/useDarkMode'
 import EthHashInfo from '.'
 import { ContactSource } from '@/hooks/useAllAddressBooks'
@@ -81,7 +82,9 @@ describe('EthHashInfo', () => {
     it('renders the current chain prefix by default', () => {
       jest.spyOn(useChainId, 'default').mockReturnValue('4')
 
-      jest.spyOn(useChains, 'useChain').mockReturnValue({ chainId: '4', shortName: 'rin' } as Chain)
+      jest
+        .spyOn(useChains, 'useChain')
+        .mockReturnValue({ chainId: '4', shortName: 'rin', features: [] } as unknown as Chain)
 
       jest.spyOn(store, 'useAppSelector').mockReturnValue({
         shortName: {
@@ -95,7 +98,9 @@ describe('EthHashInfo', () => {
     })
 
     it('renders the chain prefix associated with the given chainId', () => {
-      jest.spyOn(useChains, 'useChain').mockReturnValue({ chainId: '100', shortName: 'gno' } as Chain)
+      jest
+        .spyOn(useChains, 'useChain')
+        .mockReturnValue({ chainId: '100', shortName: 'gno', features: [] } as unknown as Chain)
 
       jest.spyOn(store, 'useAppSelector').mockReturnValue({
         shortName: {
@@ -123,7 +128,9 @@ describe('EthHashInfo', () => {
     it("doesn't prefix non-addresses", () => {
       jest.spyOn(useChainId, 'default').mockReturnValue('4')
 
-      jest.spyOn(useChains, 'useChain').mockReturnValue({ chainId: '4', shortName: 'rin' } as Chain)
+      jest
+        .spyOn(useChains, 'useChain')
+        .mockReturnValue({ chainId: '4', shortName: 'rin', features: [] } as unknown as Chain)
 
       jest.spyOn(store, 'useAppSelector').mockReturnValue({
         shortName: {
@@ -245,7 +252,9 @@ describe('EthHashInfo', () => {
     it("doesn't copy the prefix with non-addresses", async () => {
       jest.spyOn(useChainId, 'default').mockReturnValue('4')
 
-      jest.spyOn(useChains, 'useChain').mockReturnValue({ chainId: '4', shortName: 'rin' } as Chain)
+      jest
+        .spyOn(useChains, 'useChain')
+        .mockReturnValue({ chainId: '4', shortName: 'rin', features: [] } as unknown as Chain)
 
       jest.spyOn(store, 'useAppSelector').mockReturnValue({
         shortName: {
@@ -271,7 +280,9 @@ describe('EthHashInfo', () => {
     it('copies the default prefixed address', async () => {
       jest.spyOn(useChainId, 'default').mockReturnValue('4')
 
-      jest.spyOn(useChains, 'useChain').mockReturnValue({ chainId: '4', shortName: 'rin' } as Chain)
+      jest
+        .spyOn(useChains, 'useChain')
+        .mockReturnValue({ chainId: '4', shortName: 'rin', features: [] } as unknown as Chain)
 
       jest.spyOn(store, 'useAppSelector').mockReturnValue({
         shortName: {
@@ -293,7 +304,9 @@ describe('EthHashInfo', () => {
     it('copies the prefix even if it is hidden', async () => {
       jest.spyOn(useChainId, 'default').mockReturnValue('4')
 
-      jest.spyOn(useChains, 'useChain').mockReturnValue({ chainId: '4', shortName: 'rin' } as Chain)
+      jest
+        .spyOn(useChains, 'useChain')
+        .mockReturnValue({ chainId: '4', shortName: 'rin', features: [] } as unknown as Chain)
 
       jest.spyOn(store, 'useAppSelector').mockReturnValue({
         shortName: {
@@ -317,7 +330,9 @@ describe('EthHashInfo', () => {
     })
 
     it('copies the selected chainId prefix', async () => {
-      jest.spyOn(useChains, 'useChain').mockReturnValue({ chainId: '100', shortName: 'gno' } as Chain)
+      jest
+        .spyOn(useChains, 'useChain')
+        .mockReturnValue({ chainId: '100', shortName: 'gno', features: [] } as unknown as Chain)
 
       jest.spyOn(store, 'useAppSelector').mockReturnValue({
         shortName: {
@@ -366,8 +381,9 @@ describe('EthHashInfo', () => {
     it('renders the block explorer link', () => {
       jest.spyOn(useChains, 'useChain').mockReturnValue({
         chainId: '4',
+        features: [],
         blockExplorerUriTemplate: { address: 'https://rinkeby.etherscan.io/address/{{address}}' },
-      } as Chain)
+      } as unknown as Chain)
 
       jest.spyOn(store, 'useAppSelector').mockReturnValue({ shortName: {} })
 
@@ -377,6 +393,82 @@ describe('EthHashInfo', () => {
         'href',
         'https://rinkeby.etherscan.io/address/0x0000000000000000000000000000000000005AFE',
       )
+    })
+  })
+
+  describe('Rootstock', () => {
+    const EVM_ADDRESS = '0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed'
+    const RSK_ADDRESS = '0x5aaEB6053f3e94c9b9a09f33669435E7ef1bEAeD'
+    const TX_HASH = '0xcfa9e0a83c6302603f1974b5aa4d48d406dfddabc176bb2f3763a8f3fece280f'
+
+    const mockRootstock = (rootstockAddressChecksum: boolean) => {
+      jest.spyOn(useChainId, 'default').mockReturnValue('30')
+      jest
+        .spyOn(useChains, 'useChain')
+        .mockReturnValue({ chainId: '30', shortName: 'rsk', features: [FEATURES.ROOTSTOCK_SUPPORT] } as Chain)
+      jest
+        .spyOn(store, 'useAppSelector')
+        .mockImplementation((selector) =>
+          selector({ settings: { shortName: { copy: false }, rootstockAddressChecksum } } as never),
+        )
+    }
+
+    it('renders the EIP-1191 address when the setting is on', () => {
+      mockRootstock(true)
+
+      const { queryByText } = render(<EthHashInfo address={EVM_ADDRESS} shortAddress={false} />)
+
+      expect(queryByText(RSK_ADDRESS)).toBeInTheDocument()
+      expect(queryByText(EVM_ADDRESS)).not.toBeInTheDocument()
+    })
+
+    it('renders the plain EVM address when the setting is off', () => {
+      mockRootstock(false)
+
+      const { queryByText } = render(<EthHashInfo address={EVM_ADDRESS} shortAddress={false} />)
+
+      expect(queryByText(EVM_ADDRESS)).toBeInTheDocument()
+      expect(queryByText(RSK_ADDRESS)).not.toBeInTheDocument()
+    })
+
+    it('keeps the plain EVM address when evmAddressOnly is set', () => {
+      mockRootstock(true)
+
+      const { queryByText } = render(<EthHashInfo address={EVM_ADDRESS} shortAddress={false} evmAddressOnly />)
+
+      expect(queryByText(EVM_ADDRESS)).toBeInTheDocument()
+    })
+
+    it('does not touch hashes', () => {
+      mockRootstock(true)
+
+      const { queryByText } = render(<EthHashInfo address={TX_HASH} shortAddress={false} />)
+
+      expect(queryByText(TX_HASH)).toBeInTheDocument()
+    })
+
+    it.each([true, false])('copies the lower-case address when the checksum setting is %s', (checksum) => {
+      mockRootstock(checksum)
+
+      const { container } = render(<EthHashInfo address={EVM_ADDRESS} showCopyButton />)
+
+      act(() => {
+        fireEvent.click(container.querySelector('button')!)
+      })
+
+      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(EVM_ADDRESS.toLowerCase())
+    })
+
+    it('copies the plain EVM address when evmAddressOnly is set', () => {
+      mockRootstock(true)
+
+      const { container } = render(<EthHashInfo address={EVM_ADDRESS} showCopyButton evmAddressOnly />)
+
+      act(() => {
+        fireEvent.click(container.querySelector('button')!)
+      })
+
+      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(EVM_ADDRESS)
     })
   })
 })

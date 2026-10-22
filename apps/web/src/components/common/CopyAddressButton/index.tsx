@@ -1,4 +1,5 @@
 import { checksumAddress } from '@safe-global/utils/utils/addresses'
+import { normalizeRskChecksum } from '@safe-global/utils/utils/rsk-utils'
 import { Box, Typography } from '@mui/material'
 import type { ReactNode, ReactElement } from 'react'
 import CopyButton from '../CopyButton'
@@ -19,7 +20,8 @@ const CopyAddressButton = ({
 }): ReactElement => {
   const addressText = copyPrefix && prefix ? `${prefix}:${address}` : address
 
-  const checksummedAddress = checksumAddress(address)
+  // The copied address can be in the EIP-1191 form on Rootstock, the dialog needs the EIP-55 one
+  const checksummedAddress = checksumAddress(address ? normalizeRskChecksum(address) : address)
 
   const dialogContent = trusted ? undefined : (
     <Box display="flex" flexDirection="column" gap={2}>

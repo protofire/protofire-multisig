@@ -48,6 +48,10 @@ export const SETTINGS_EVENTS = {
       action: 'Dark mode',
       category: SETTINGS_CATEGORY,
     },
+    ROOTSTOCK_CHECKSUM: {
+      action: 'Rootstock checksum addresses',
+      category: SETTINGS_CATEGORY,
+    },
   },
   MODULES: {
     REMOVE_MODULE: {

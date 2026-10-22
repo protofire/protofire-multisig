@@ -3,6 +3,7 @@ import useSafeAddress from '@/hooks/useSafeAddress'
 import { useAppSelector } from '@/store'
 import { selectSettings } from '@/store/settingsSlice'
 import { useCurrentChain } from '@/hooks/useChains'
+import useDisplayAddress from '@/hooks/useDisplayAddress'
 import { Box, Button, Stack, SvgIcon, Typography } from '@mui/material'
 import FiatIcon from '@/public/images/common/fiat2.svg'
 import CopyTooltip from '@/components/common/CopyTooltip'
@@ -14,7 +15,9 @@ const AddFundsToGetStarted = () => {
   const settings = useAppSelector(selectSettings)
   const chain = useCurrentChain()
 
-  const addressCopyText = settings.shortName.copy && chain ? `${chain.shortName}:${safeAddress}` : safeAddress
+  const { copyAddress } = useDisplayAddress(safeAddress)
+
+  const addressCopyText = settings.shortName.copy && chain ? `${chain.shortName}:${copyAddress}` : copyAddress
 
   if (!safe.deployed) return null
 

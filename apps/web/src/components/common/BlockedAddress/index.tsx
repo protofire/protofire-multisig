@@ -4,6 +4,7 @@ import { shortenAddress } from '@safe-global/utils/utils/formatters'
 import { useRouter } from 'next/router'
 import Disclaimer from '@/components/common/Disclaimer'
 import { AppRoutes } from '@/config/routes'
+import useRootstockAddress from '@/hooks/useRootstockAddress'
 
 const BlockedAddress = ({
   address,
@@ -16,7 +17,8 @@ const BlockedAddress = ({
 }): ReactElement => {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
-  const displayAddress = address && isMobile ? shortenAddress(address) : address
+  const rskAddress = useRootstockAddress(address)
+  const displayAddress = address && isMobile ? shortenAddress(rskAddress) : rskAddress
   const router = useRouter()
 
   const handleAccept = () => {

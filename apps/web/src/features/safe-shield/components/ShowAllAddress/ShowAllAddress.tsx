@@ -2,6 +2,7 @@ import { AddressImage } from '../AddressImage'
 import { Typography, Stack, Tooltip, Box } from '@mui/material'
 import { useState } from 'react'
 import { useCurrentChain } from '@/hooks/useChains'
+import { useRootstockAddressFormatter, useRootstockCopyAddressFormatter } from '@/hooks/useRootstockAddress'
 import { getBlockExplorerLink } from '@safe-global/utils/utils/chains'
 import { formatAddressForExplorer } from '@/utils/tron'
 import ExplorerButton from '@/components/common/ExplorerButton'
@@ -21,12 +22,14 @@ interface ShowAllAddressProps {
 export const ShowAllAddress = ({ addresses, showImage }: ShowAllAddressProps) => {
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null)
   const currentChain = useCurrentChain()
+  const formatAddress = useRootstockAddressFormatter()
+  const formatCopyAddress = useRootstockCopyAddressFormatter()
   const chainId = useChainId()
   const addressBook = useAddressBook(chainId)
 
   const handleCopyToClipboard = async (address: string, index: number) => {
     try {
-      await navigator.clipboard.writeText(address)
+      await navigator.clipboard.writeText(formatCopyAddress(address))
       setCopiedIndex(index)
       setTimeout(() => setCopiedIndex(null), 1000)
     } catch (error) {
@@ -83,7 +86,7 @@ export const ShowAllAddress = ({ addresses, showImage }: ShowAllAddressProps) =>
                         },
                       }}
                     >
-                      {item.address}
+                      {formatAddress(item.address)}
                     </Typography>
                   </Tooltip>
                   <Box component="span" color="text.secondary">

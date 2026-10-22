@@ -13,7 +13,7 @@ import { shortenAddress } from '@safe-global/utils/utils/formatters'
 import ImageFallback from '../../ImageFallback'
 import css from './styles.module.css'
 import { ContactSource } from '@/hooks/useAllAddressBooks'
-import useTronAddress from '@/hooks/useTronAddress'
+import useDisplayAddress from '@/hooks/useDisplayAddress'
 
 export type EthHashInfoProps = {
   address: string
@@ -36,6 +36,8 @@ export type EthHashInfoProps = {
   addressBookNameSource?: ContactSource
   highlight4bytes?: boolean
   badgeTooltip?: ReactNode
+  // Keep the plain EVM address, e.g. for items shared between several chains
+  evmAddressOnly?: boolean
 }
 
 const stopPropagation = (e: SyntheticEvent) => e.stopPropagation()
@@ -61,6 +63,7 @@ const SrcEthHashInfo = ({
   addressBookNameSource,
   highlight4bytes = false,
   badgeTooltip,
+  evmAddressOnly = false,
 }: EthHashInfoProps): ReactElement => {
   const shouldPrefix = isAddress(address)
   const theme = useTheme()
@@ -68,8 +71,12 @@ const SrcEthHashInfo = ({
   const identicon = <Identicon address={address} size={avatarSize} />
   const shouldCopyPrefix = shouldPrefix && copyPrefix
 
-  // Convert 0x address to Tron base58 for display on Tron chains
-  const { displayAddress, copyAddress: tronCopyAddress, isTron } = useTronAddress(address, chainId)
+  // Chain-specific format: Tron base58 or the Rootstock EIP-1191 checksum
+  const {
+    displayAddress: shownAddress,
+    copyAddress: copyAddr,
+    isTron,
+  } = useDisplayAddress(address, chainId, { keepEvm: evmAddressOnly })
 
   const accountStylesWithBadge = badgeTooltip
     ? {
@@ -79,9 +86,6 @@ const SrcEthHashInfo = ({
         padding: name ? '2px 8px 2px 6px' : undefined,
       }
     : undefined
-
-  const shownAddress = isTron ? displayAddress : address
-  const copyAddr = isTron ? tronCopyAddress : address
 
   const highlightedAddress = highlight4bytes ? (
     <>
