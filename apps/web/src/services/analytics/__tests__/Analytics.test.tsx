@@ -1,6 +1,6 @@
 import { render, waitFor } from '@testing-library/react'
 import Analytics from '../Analytics'
-import { getGaCookieExpiresSeconds } from '../gaCookieExpires'
+import { GA_COOKIE_EXPIRES_SECONDS } from '@/config/constants'
 
 type DataLayerWindow = Window & { dataLayer?: IArguments[] }
 
@@ -23,7 +23,7 @@ describe('Analytics', () => {
     const setIndex = commands.findIndex(([command]) => command === 'set')
     const configIndex = commands.findIndex(([command]) => command === 'config')
 
-    expect(commands[setIndex]).toEqual(['set', { cookie_expires: getGaCookieExpiresSeconds() }])
+    expect(commands[setIndex]).toEqual(['set', { cookie_expires: GA_COOKIE_EXPIRES_SECONDS }])
     expect(setIndex).toBeGreaterThanOrEqual(0)
     expect(setIndex).toBeLessThan(configIndex)
   })

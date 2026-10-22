@@ -122,7 +122,8 @@ export const PROD_GA_TRACKING_ID = process.env.NEXT_PUBLIC_PROD_GA_TRACKING_ID |
 export const TEST_GA_TRACKING_ID = process.env.NEXT_PUBLIC_TEST_GA_TRACKING_ID || ''
 export const SAFE_APPS_GA_TRACKING_ID = process.env.NEXT_PUBLIC_SAFE_APPS_GA_TRACKING_ID || ''
 export const GA_TRACKING_ID = IS_PRODUCTION ? PROD_GA_TRACKING_ID : TEST_GA_TRACKING_ID
-export const GA_COOKIE_EXPIRES_SECONDS = process.env.NEXT_PUBLIC_GA_COOKIE_EXPIRES_SECONDS || ''
+// 14 months of 30 days, matching the analytics data retention period
+export const GA_COOKIE_EXPIRES_SECONDS = Number(process.env.NEXT_PUBLIC_GA_COOKIE_EXPIRES_SECONDS) || 36288000
 
 // Mixpanel
 const PROD_MIXPANEL_TOKEN = process.env.NEXT_PUBLIC_PROD_MIXPANEL_TOKEN || ''
