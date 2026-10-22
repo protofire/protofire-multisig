@@ -21,7 +21,7 @@ import classnames from 'classnames'
 import css from './styles.module.css'
 import accordionCss from '@/styles/accordion.module.css'
 import madProps from '@/utils/mad-props'
-import { getTotalFee } from '@safe-global/utils/hooks/useDefaultGasPrice'
+import { getTotalFeeFormatted } from '@safe-global/utils/hooks/useDefaultGasPrice'
 
 const GasDetail = ({ name, value, isLoading }: { name: string; value: string; isLoading: boolean }): ReactElement => {
   const valueSkeleton = <Skeleton variant="text" sx={{ minWidth: '5em' }} />
@@ -69,9 +69,7 @@ export const _GasParams = ({
   const isError = gasLimitError && !gasLimit
 
   // Total gas cost
-  const totalFee = !isLoading
-    ? formatVisualAmount(getTotalFee(maxFeePerGas, gasLimit), chain?.nativeCurrency.decimals)
-    : '> 0.001'
+  const totalFee = !isLoading ? getTotalFeeFormatted(maxFeePerGas, gasLimit, chain) : '> 0.001'
 
   // Individual gas params
   const gasLimitString = gasLimit?.toString() || ''

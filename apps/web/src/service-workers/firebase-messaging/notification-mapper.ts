@@ -3,6 +3,7 @@
 import { formatUnits } from 'ethers'
 import { type Balance } from '@safe-global/store/gateway/AUTO_GENERATED/balances'
 import type { Chain } from '@safe-global/store/gateway/AUTO_GENERATED/chains'
+import { getRpcNativeCurrencyDecimals } from '@/utils/rpcNativeDecimals'
 
 import { WebhookType } from './webhook-types'
 import type { WebhookEvent } from './webhook-types'
@@ -85,11 +86,12 @@ export const Notifications: PushNotificationsMap = {
     }
   },
   [WebhookType.INCOMING_ETHER]: ({ address, txHash, value, chainId }, chain) => {
+    const decimals = getRpcNativeCurrencyDecimals(chain)
     return {
       title: `${getCurrencyName(chain)} received`,
       body: `Safe ${shortenAddress(address)} on ${getChainName(chainId, chain)} received ${formatUnits(
         value,
-        chain?.nativeCurrency?.decimals,
+        decimals,
       ).toString()} ${getCurrencySymbol(chain)} in transaction ${shortenAddress(txHash)}.`,
     }
   },

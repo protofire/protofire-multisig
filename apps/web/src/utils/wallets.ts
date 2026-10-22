@@ -25,6 +25,8 @@ export const isWalletRejection = (err: EthersError | Error): boolean => {
   return isEthersRejection(err as EthersError) || isWCRejection(err)
 }
 
+export const isHashPackWallet = (walletLabel: string): boolean => walletLabel.toUpperCase() === WALLET_KEYS.HASHPACK
+
 export const isEthSignWallet = (wallet: ConnectedWallet): boolean => {
   return [WALLET_KEYS.TREZOR, WALLET_KEYS.KEYSTONE].includes(wallet.label.toUpperCase() as WALLET_KEYS)
 }
@@ -131,7 +133,9 @@ export const getSmartContractWalletStatus = async (
 
 /* Check if the wallet is unlocked. */
 export const isWalletUnlocked = async (walletName: string): Promise<boolean | undefined> => {
-  if ([PRIVATE_KEY_MODULE_LABEL, WALLETCONNECT].includes(walletName)) return true
+  // HashPack is a WalletConnect-based module — "unlocked" isn't meaningful for it a persisted
+  // session either exists or it doesn't.
+  if ([PRIVATE_KEY_MODULE_LABEL, WALLETCONNECT].includes(walletName) || isHashPackWallet(walletName)) return true
 
   // TronLink: check if the extension is available and has a connected address
   if (walletName === 'TronLink') {

@@ -27,6 +27,18 @@ describe('Token transfer encoder', () => {
         '0xa9059cbb000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000186a0',
       )
     })
+
+    it('should encode the transfer of 0.1 HBAR at its own 8 decimals (tinybar) — Hedera EVM value semantics are tinybar-native, unlike its weibar-scaled JSON-RPC balance reads', () => {
+      const recipient = '0x0000000000000000000000000000000000000000'
+      const amount = '0.1'
+      const decimals = 8
+      const tokenAddress = '0x0000000000000000000000000000000000000000'
+      const txParams = createTokenTransferParams(recipient, amount, decimals, tokenAddress)
+
+      expect(txParams.to).toBe(recipient)
+      expect(txParams.value).toBe('10000000')
+      expect(txParams.data).toBe('0x')
+    })
   })
 
   describe('createNftTransferParams', () => {

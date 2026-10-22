@@ -7,7 +7,7 @@ import { type Balance } from '@safe-global/store/gateway/AUTO_GENERATED/balances
 import { FiatChange } from './FiatChange'
 import { FiatBalance } from './FiatBalance'
 import { PromoButtons } from './PromoButtons'
-import { getBlockExplorerLink } from '@safe-global/utils/utils/chains'
+import { getTokenExplorerLink } from '@/utils/hedera'
 import { useCurrentChain } from '@/hooks/useChains'
 import { formatAddressForExplorer } from '@/utils/tron'
 import css from './styles.module.css'
@@ -37,7 +37,7 @@ export const AssetRowContent = ({
   const currentChain = useCurrentChain()
   const explorerLink =
     !isNative && currentChain
-      ? getBlockExplorerLink(currentChain, formatAddressForExplorer(item.tokenInfo.address, currentChain.chainId))
+      ? getTokenExplorerLink(currentChain, formatAddressForExplorer(item.tokenInfo.address, currentChain.chainId))
       : null
 
   return (

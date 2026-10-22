@@ -3,10 +3,12 @@ import { WalletIdenticon } from '@/components/common/WalletOverview'
 import { Box, Button, Typography } from '@mui/material'
 import css from './styles.module.css'
 import EthHashInfo from '@/components/common/EthHashInfo'
+import CopyButton from '@/components/common/CopyButton'
 import ChainSwitcher from '@/components/common/ChainSwitcher'
 import useOnboard, { type ConnectedWallet } from '@/hooks/wallets/useOnboard'
 import useConnectWallet from '@/components/common/ConnectWallet/useConnectWallet'
 import useAddressBook from '@/hooks/useAddressBook'
+import useHederaAccountId from '@/hooks/useHederaAccountId'
 import { useAppDispatch } from '@/store'
 import { useChain } from '@/hooks/useChains'
 import madProps from '@/utils/mad-props'
@@ -33,6 +35,7 @@ export const WalletInfo = ({ wallet, balance, currentChainId, onboard, addressBo
   const prefix = chainInfo?.shortName
   const hideNativeToken = chainInfo ? hasFeature(chainInfo, FEATURES.HIDE_NATIVE_TOKEN) : false
   const connectWallet = useConnectWallet()
+  const { accountId: hederaAccountId, isHedera } = useHederaAccountId(wallet.address, wallet.chainId)
 
   const handleSwitchWallet = () => {
     if (onboard) {
@@ -60,17 +63,43 @@ export const WalletInfo = ({ wallet, balance, currentChainId, onboard, addressBo
       <Box display="flex" gap="12px">
         <WalletIdenticon wallet={wallet} size={36} />
 
-        <Typography variant="body2" className={css.address} component="div">
-          <EthHashInfo
-            address={wallet.address}
-            name={addressBook[wallet.address] || wallet.ens || wallet.label}
-            showAvatar={false}
-            showPrefix={false}
-            hasExplorer
-            showCopyButton
-            prefix={prefix}
-          />
-        </Typography>
+        {isHedera && hederaAccountId ? (
+          // Hedera identifies an account primarily by its native 0.0.X id, not its 0x alias —
+          // account id as the primary line, address as a secondary line below it.
+          <Box display="flex" flexDirection="column" gap="2px">
+            {/* No explorer link here: HashScan resolves the address row's "/address/0x…" link
+                below to the same account page as "/account/0.0.X" would, so a second link here
+                would just be a redundant duplicate of the one right underneath it. */}
+            <Box display="flex" alignItems="center" gap="4px">
+              <Typography variant="body2" fontWeight="bold">
+                {hederaAccountId}
+              </Typography>
+              <CopyButton text={hederaAccountId} />
+            </Box>
+
+            <EthHashInfo
+              address={wallet.address}
+              showName={false}
+              showAvatar={false}
+              showPrefix={false}
+              hasExplorer
+              showCopyButton
+              prefix={prefix}
+            />
+          </Box>
+        ) : (
+          <Typography variant="body2" className={css.address} component="div">
+            <EthHashInfo
+              address={wallet.address}
+              name={addressBook[wallet.address] || wallet.ens || wallet.label}
+              showAvatar={false}
+              showPrefix={false}
+              hasExplorer
+              showCopyButton
+              prefix={prefix}
+            />
+          </Typography>
+        )}
       </Box>
 
       <Box className={css.rowContainer}>

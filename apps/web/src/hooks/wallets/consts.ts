@@ -7,6 +7,7 @@ export const enum WALLET_KEYS {
   KEYSTONE = 'KEYSTONE',
   PK = 'PRIVATE KEY',
   TRONLINK = 'TRONLINK',
+  HASHPACK = 'HASHPACK',
 }
 
 // TODO: Check if undefined is needed as a return type, possibly couple this with WALLET_MODULES
@@ -19,4 +20,5 @@ export const CGW_NAMES: { [_key in WALLET_KEYS]: string | undefined } = {
   [WALLET_KEYS.KEYSTONE]: 'keystone',
   [WALLET_KEYS.PK]: 'pk',
   [WALLET_KEYS.TRONLINK]: 'tronlink',
+  [WALLET_KEYS.HASHPACK]: 'hashpack',
 }

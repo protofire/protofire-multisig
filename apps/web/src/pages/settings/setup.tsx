@@ -13,6 +13,7 @@ import { useLoadFeature } from '@/features/__core__'
 import { BRAND_NAME } from '@/config/constants'
 import { NestedSafesList } from '@/components/settings/NestedSafesList'
 import { FeeTokenPreference } from '@/components/settings/FeeTokenPreference'
+import { TokenAssociation } from '@/components/settings/TokenAssociation'
 
 const Setup: NextPage = () => {
   const { safe, safeLoaded } = useSafeInfo()
@@ -83,6 +84,8 @@ const Setup: NextPage = () => {
         </Paper>
 
         <SpendingLimitsSettings />
+
+        <TokenAssociation />
 
         <NestedSafesList />
 

@@ -28,6 +28,11 @@ jest.mock('@/services/onboard/tronlink-module', () => ({
   default: (chainId: string, tronChains: Chain[]) => mockTronlinkModule(chainId, tronChains),
 }))
 
+jest.mock('@/services/onboard/hashpack-module', () => ({
+  __esModule: true,
+  default: (chain: Chain) => ({ label: 'HASHPACK', chainId: chain.chainId }),
+}))
+
 import { getAllWallets, getSupportedWallets } from '../wallets'
 
 const tronChain = { chainId: '728126428', disabledWallets: [], features: [FEATURES.TRON] } as unknown as Chain
@@ -42,6 +47,8 @@ const evmChainNoTronlink = {
   disabledWallets: ['tronlink'],
   features: [],
 } as unknown as Chain
+
+const hederaChain = { chainId: '295', disabledWallets: [], features: [FEATURES.HEDERA] } as unknown as Chain
 
 const configs = [tronChain, evmChain]
 
@@ -144,5 +151,32 @@ describe('getAllWallets', () => {
 
   it('offers only the current family when no chain of the other family is configured', () => {
     expect(getAllWallets(tronChain, [tronChain])).toHaveLength(1)
+  })
+})
+
+describe('Hedera wallets', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    window.matchMedia = jest.fn().mockReturnValue({ matches: false })
+  })
+
+  it('offers only HashPack and an EIP-6963-less injected wallet on a Hedera chain', () => {
+    const wallets = getSupportedWallets(hederaChain, [hederaChain])
+
+    expect(wallets).toEqual([{ label: 'HASHPACK', chainId: '295' }, expect.objectContaining({ label: 'INJECTED' })])
+    expect(mockInjectedWalletModule).toHaveBeenCalledWith({ disable6963Support: true })
+  })
+
+  it('never offers HashPack on a non-Hedera chain', () => {
+    const wallets = getSupportedWallets(evmChain, [evmChain, hederaChain])
+
+    expect(wallets).not.toContainEqual(expect.objectContaining({ label: 'HASHPACK' }))
+  })
+
+  it('offers the regular EVM wallets, not the Hedera ones, alongside TronLink on a Tron chain', () => {
+    const wallets = getAllWallets(tronChain, [tronChain, hederaChain, evmChain])
+
+    expect(wallets).not.toContainEqual(expect.objectContaining({ label: 'HASHPACK' }))
+    expect(wallets).toContainEqual({ label: 'LEDGER' })
   })
 })

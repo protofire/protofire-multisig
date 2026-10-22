@@ -1,4 +1,7 @@
 import CheckWallet from '@/components/common/CheckWallet'
+import useSupportsOffChainSignatures, {
+  OFF_CHAIN_SIGNATURES_UNSUPPORTED,
+} from '@/hooks/wallets/useSupportsOffChainSignatures'
 import Track from '@/components/common/Track'
 import UpsertProposer from '@/features/proposers/components/UpsertProposer'
 import useWallet from '@/hooks/wallets/useWallet'
@@ -15,6 +18,8 @@ const EditProposerDialog = ({ proposer }: { proposer: Delegate }) => {
   const wallet = useWallet()
   const nestedSafeOwners = useNestedSafeOwners()
 
+  const supportsOffChainSignatures = useSupportsOffChainSignatures()
+
   const canEdit =
     sameAddress(wallet?.address, proposer.delegator) ||
     (nestedSafeOwners?.some((addr) => sameAddress(addr, proposer.delegator)) ?? false)
@@ -26,11 +31,13 @@ const EditProposerDialog = ({ proposer }: { proposer: Delegate }) => {
           <Track {...SETTINGS_EVENTS.PROPOSERS.EDIT_PROPOSER}>
             <Tooltip
               title={
-                isOk && canEdit
+                !supportsOffChainSignatures
+                  ? OFF_CHAIN_SIGNATURES_UNSUPPORTED
+                  : isOk && canEdit
                   ? 'Edit proposer'
                   : isOk && !canEdit
-                    ? 'Only the owner of this proposer can edit them'
-                    : undefined
+                  ? 'Only the owner of this proposer can edit them'
+                  : undefined
               }
             >
               <span>
@@ -38,7 +45,7 @@ const EditProposerDialog = ({ proposer }: { proposer: Delegate }) => {
                   data-testid="edit-proposer-btn"
                   onClick={() => setOpen(true)}
                   size="small"
-                  disabled={!isOk || !canEdit}
+                  disabled={!isOk || !canEdit || !supportsOffChainSignatures}
                 >
                   <SvgIcon component={EditIcon} inheritViewBox color="border" fontSize="small" />
                 </IconButton>

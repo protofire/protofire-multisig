@@ -169,9 +169,13 @@ export const getTotalFeeFormatted = (
   gasLimit: bigint | undefined,
   chain: Chain | undefined,
 ) => {
-  return gasLimit && maxFeePerGas
-    ? formatVisualAmount(getTotalFee(maxFeePerGas, gasLimit), chain?.nativeCurrency.decimals)
-    : '> 0.001'
+  // Hashio (Hedera's EVM JSON-RPC relay) quotes gas price in the standard 18-decimal "weibar"
+  // convention regardless of HBAR's own 8-decimal display (chain.nativeCurrency.decimals) — so
+  // the price x gasLimit fee total must be formatted at 18 decimals for Hedera, not 8, or it
+  // reads ~10^10 too large. Keep the raw maxFeePerGas itself untouched everywhere else: it's the
+  // real value the transaction is actually submitted with.
+  const decimals = chain && hasFeature(chain, FEATURES.HEDERA) ? 18 : chain?.nativeCurrency.decimals
+  return gasLimit && maxFeePerGas ? formatVisualAmount(getTotalFee(maxFeePerGas, gasLimit), decimals) : '> 0.001'
 }
 
 const SPEED_UP_MAX_PRIO_FACTOR = 2n

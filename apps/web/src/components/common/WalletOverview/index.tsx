@@ -7,6 +7,7 @@ import EthHashInfo from '@/components/common/EthHashInfo'
 import WalletIcon from '@/components/common/WalletIcon'
 import type { ConnectedWallet } from '@/hooks/wallets/useOnboard'
 import { useChain } from '@/hooks/useChains'
+import useHederaAccountId from '@/hooks/useHederaAccountId'
 import WalletBalance from '@/components/common/WalletBalance'
 import { FEATURES, hasFeature } from '@safe-global/utils/utils/chains'
 
@@ -37,6 +38,10 @@ const WalletOverview = ({
   const walletChain = useChain(wallet.chainId)
   const prefix = walletChain?.shortName
   const hideNativeToken = walletChain && hasFeature(walletChain, FEATURES.HIDE_NATIVE_TOKEN)
+  // Hedera's chain shortName ("hedera") is long enough that a "hedera:0x0000...236F" prefixed
+  // address overflows this compact pill — show the shorter native account id instead, matching
+  // how Hedera wallets identify an account primarily by its 0.0.X id, not its 0x alias.
+  const { accountId: hederaAccountId, isHedera } = useHederaAccountId(wallet.address, wallet.chainId)
 
   return (
     <Box className={css.container}>
@@ -46,6 +51,8 @@ const WalletOverview = ({
         <Typography variant="body2" component="div">
           {wallet.ens ? (
             <div>{wallet.ens}</div>
+          ) : isHedera && hederaAccountId ? (
+            <div>{hederaAccountId}</div>
           ) : (
             <EthHashInfo
               prefix={prefix || ''}

@@ -30,7 +30,13 @@
     "webpack": "5.97.1",
     "@safe-global/safe-deployments@npm:^1.37.51": "patch:@safe-global/safe-deployments@npm%3A1.37.63#~/.yarn/patches/@safe-global-safe-deployments-npm-1.37.63-2a77b7b181.patch",
     "@safe-global/safe-modules-deployments@npm:^2.2.23": "patch:@safe-global/safe-modules-deployments@npm%3A2.2.24#~/.yarn/patches/@safe-global-safe-modules-deployments-npm-2.2.24-ab95306b7d.patch",
-    "@safe-global/protocol-kit@npm:^5.1.1": "patch:@safe-global/protocol-kit@npm%3A5.2.25#~/.yarn/patches/@safe-global-protocol-kit-npm-5.2.25-13c15fafc9.patch"
+    "@safe-global/protocol-kit@npm:^5.1.1": "patch:@safe-global/protocol-kit@npm%3A5.2.25#~/.yarn/patches/@safe-global-protocol-kit-npm-5.2.25-13c15fafc9.patch",
+    "@walletconnect/core": "2.25.0",
+    "@walletconnect/ethereum-provider": "2.25.0",
+    "@walletconnect/sign-client": "2.25.0",
+    "@walletconnect/types": "2.25.0",
+    "@walletconnect/universal-provider": "2.25.0",
+    "@walletconnect/utils": "2.25.0"
   },
   "devDependencies": {
     "@storybook/builder-webpack5": "^10.2.6",

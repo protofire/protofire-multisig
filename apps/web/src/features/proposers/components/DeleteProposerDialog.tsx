@@ -1,4 +1,7 @@
 import CheckWallet from '@/components/common/CheckWallet'
+import useSupportsOffChainSignatures, {
+  OFF_CHAIN_SIGNATURES_UNSUPPORTED,
+} from '@/hooks/wallets/useSupportsOffChainSignatures'
 import Track from '@/components/common/Track'
 import {
   encodeEIP1271Signature,
@@ -177,6 +180,8 @@ const InternalDeleteProposer = ({ wallet, safeAddress, chainId, proposer }: Dele
     setMultiSigInitiated(false)
   }
 
+  const supportsOffChainSignatures = useSupportsOffChainSignatures()
+
   const canDelete =
     sameAddress(wallet?.address, proposer.delegate) ||
     sameAddress(wallet?.address, proposer.delegator) ||
@@ -189,11 +194,13 @@ const InternalDeleteProposer = ({ wallet, safeAddress, chainId, proposer }: Dele
           <Track {...SETTINGS_EVENTS.PROPOSERS.REMOVE_PROPOSER}>
             <Tooltip
               title={
-                isOk && canDelete
+                !supportsOffChainSignatures
+                  ? OFF_CHAIN_SIGNATURES_UNSUPPORTED
+                  : isOk && canDelete
                   ? 'Delete proposer'
                   : isOk && !canDelete
-                    ? 'Only the owner of this proposer or the proposer itself can delete them'
-                    : undefined
+                  ? 'Only the owner of this proposer or the proposer itself can delete them'
+                  : undefined
               }
             >
               <span>
@@ -202,7 +209,7 @@ const InternalDeleteProposer = ({ wallet, safeAddress, chainId, proposer }: Dele
                   onClick={() => setOpen(true)}
                   color="error"
                   size="small"
-                  disabled={!isOk || !canDelete}
+                  disabled={!isOk || !canDelete || !supportsOffChainSignatures}
                 >
                   <SvgIcon component={DeleteIcon} inheritViewBox color="error" fontSize="small" />
                 </IconButton>

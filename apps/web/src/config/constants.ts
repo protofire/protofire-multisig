@@ -92,6 +92,12 @@ export const DATADOG_RUM_DEFAULT_PRIVACY_LEVEL = (process.env.NEXT_PUBLIC_DATADO
 // Wallets
 export const WC_PROJECT_ID = process.env.NEXT_PUBLIC_WC_PROJECT_ID || ''
 
+// Hedera mirror node
+export const HEDERA_MIRROR_NODE_MAINNET_URL =
+  process.env.NEXT_PUBLIC_HEDERA_MIRROR_NODE_MAINNET_URL || 'https://mainnet-public.mirrornode.hedera.com'
+export const HEDERA_MIRROR_NODE_TESTNET_URL =
+  process.env.NEXT_PUBLIC_HEDERA_MIRROR_NODE_TESTNET_URL || 'https://testnet.mirrornode.hedera.com'
+
 // Safe Token
 export const SAFE_TOKEN_ADDRESSES: { [chainId: string]: string } = {
   [chains.eth]: '0x5aFE3855358E112B5647B952709E6165e1c1eEEe',

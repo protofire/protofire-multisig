@@ -1,4 +1,5 @@
 import type { TransactionDetails, Transaction } from '@safe-global/store/gateway/AUTO_GENERATED/transactions'
+import type { HederaTransactionDetails } from '@/utils/hedera'
 import useIsExpiredSwap from '@/features/swap/hooks/useIsExpiredSwap'
 import React, { type ReactElement, useEffect, useRef, useState, useMemo } from 'react'
 import { Box, CircularProgress, Typography } from '@mui/material'
@@ -52,7 +53,7 @@ export const NOT_AVAILABLE = 'n/a'
 
 type TxDetailsProps = {
   txSummary: Transaction
-  txDetails: TransactionDetails
+  txDetails: HederaTransactionDetails
 }
 
 const TxDetailsBlock = ({ txSummary, txDetails }: TxDetailsProps): ReactElement => {
@@ -205,7 +206,9 @@ const TxDetailsBlock = ({ txSummary, txDetails }: TxDetailsProps): ReactElement 
 
           {isQueue && <hn.HnSecuritySection txDetails={txDetails} safeTxHash={safeTxHash} chainId={safe.chainId} />}
 
-          {txDetails.txHash && <TxExplorerLink txHash={txDetails.txHash} />}
+          {txDetails.txHash && (
+            <TxExplorerLink txHash={txDetails.txHash} hederaTransactionId={txDetails.hederaTransactionId} />
+          )}
 
           {isQueue && (
             <Box className={css.buttons}>

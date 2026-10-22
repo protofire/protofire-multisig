@@ -74,6 +74,8 @@ enum ErrorCodes {
   _820 = '820: Error signing or submitting delegation',
   _821 = '821: Failed checking ERC-8176 attestation',
   _822 = '822: Failed loading ERC-8176 auditor profile',
+  _823 = '823: Failed to create token association transaction',
+  _824 = '824: Failed to create token dissociation transaction',
 
   _900 = '900: Error loading Safe App',
   _901 = '901: Error processing Safe Apps SDK request',

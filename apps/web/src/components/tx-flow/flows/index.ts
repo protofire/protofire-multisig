@@ -1,11 +1,13 @@
 import dynamic from 'next/dynamic'
 
 export const AddOwnerFlow = dynamic(() => import('./AddOwner'))
+export const AssociateTokenFlow = dynamic(() => import('./AssociateToken'))
 export const CancelRecoveryFlow = dynamic(() => import('./CancelRecovery'))
 export const ChangeThresholdFlow = dynamic(() => import('./ChangeThreshold'))
 export const ConfirmBatchFlow = dynamic(() => import('./ConfirmBatch'))
 export const ConfirmTxFlow = dynamic(() => import('./ConfirmTx'))
 export const CreateNestedSafeFlow = dynamic(() => import('./CreateNestedSafe'))
+export const DissociateTokenFlow = dynamic(() => import('./DissociateToken'))
 export const ExecuteBatchFlow = dynamic(() => import('./ExecuteBatch'))
 export const ManageSignersFlow = dynamic(() => import('./ManagerSigners'))
 export const MigrateSafeL2Flow = dynamic(() => import('./MigrateSafeL2'))

@@ -9,6 +9,8 @@ import { chainBuilder } from '@/tests/builders/chains'
 import { FEATURES } from '@safe-global/store/gateway/types'
 import { checksumAddress } from '@safe-global/utils/utils/addresses'
 import type { AddressBook } from '@/store/addressBookSlice'
+import { FEATURES as CHAIN_FEATURES } from '@safe-global/utils/utils/chains'
+import * as hedera from '@/utils/hedera'
 
 // We use Rinkeby and chainId 4 here as this is our default url chain (see jest.setup.js)
 const mockChain = chainBuilder()
@@ -59,6 +61,24 @@ const TestForm = ({
           canAdd={canAdd}
         />
         <button type="submit">Submit</button>
+      </form>
+    </FormProvider>
+  )
+}
+
+// Mirrors the token transfer form: nested field name, onChange mode and a delayed error
+const HederaTestForm = () => {
+  const methods = useForm<{ recipients: { recipient: string }[] }>({
+    defaultValues: { recipients: [{ recipient: '' }] },
+    mode: 'onChange',
+    delayError: 500,
+  })
+
+  return (
+    <FormProvider {...methods}>
+      <form>
+        <AddressBookInput name="recipients.0.recipient" />
+        <span data-testid="form-error">{methods.formState.errors.recipients?.[0]?.recipient?.message}</span>
       </form>
     </FormProvider>
   )
@@ -272,4 +292,34 @@ describe('AddressBookInput', () => {
 
     await waitFor(() => expect(utils.queryByText('add it to your address book', { exact: false })).toBeNull())
   })
+
+  it.each(['0.0.10821673', '0.0.10821673-lzocw'])(
+    'should not keep a delayed "Invalid address format" error once the Hedera account id %s has resolved',
+    async (accountId) => {
+      const hederaChain = chainBuilder()
+        .with({ chainId: '295', shortName: 'hedera', isTestnet: false, features: [CHAIN_FEATURES.HEDERA] })
+        .build()
+      jest.spyOn(useChains, 'useCurrentChain').mockImplementation(() => hederaChain)
+      jest.spyOn(hedera, 'getHederaEvmAddress').mockResolvedValue('0xa8f3298bb334215236a6a791c6b04ba85191941a')
+
+      const utils = render(<HederaTestForm />)
+      const input = utils.getByLabelText('Recipient address', { exact: false }) as HTMLInputElement
+
+      act(() => {
+        fireEvent.change(input, { target: { value: accountId } })
+      })
+
+      // Resolves before the form's 500ms error delay has elapsed
+      for (let i = 0; i < 20; i++) {
+        await act(async () => {
+          jest.advanceTimersByTime(50)
+        })
+      }
+
+      expect(hedera.getHederaEvmAddress).toHaveBeenCalledWith(hedera.HederaNetwork.MAINNET, accountId)
+      expect(input.value).toBe('0xA8F3298BB334215236a6a791c6B04BA85191941A')
+      expect(utils.getByTestId('form-error')).toBeEmptyDOMElement()
+      expect(utils.queryByLabelText('Invalid address format', { exact: false })).toBeNull()
+    },
+  )
 })

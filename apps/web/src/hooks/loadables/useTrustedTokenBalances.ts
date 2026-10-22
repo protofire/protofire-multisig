@@ -3,8 +3,10 @@ import { useBalancesGetBalancesV1Query } from '@safe-global/store/gateway/AUTO_G
 import { useAppSelector } from '@/store'
 import { selectCurrency } from '@/store/settingsSlice'
 import useSafeInfo from '../useSafeInfo'
+import { useCurrentChain } from '../useChains'
 import { POLLING_INTERVAL } from '@/config/constants'
 import { useCounterfactualBalances } from '@/features/counterfactual/hooks'
+import { FEATURES, hasFeature } from '@safe-global/utils/utils/chains'
 import type { AsyncResult } from '@safe-global/utils/hooks/useAsync'
 import { type PortfolioBalances, createPortfolioBalances, useTokenListSetting } from './useLoadBalances'
 
@@ -17,6 +19,8 @@ export const useTrustedTokenBalances = (): AsyncResult<PortfolioBalances> => {
   const currency = useAppSelector(selectCurrency)
   const isTrustedTokenList = useTokenListSetting()
   const { safe, safeAddress } = useSafeInfo()
+  const chain = useCurrentChain()
+  const isHederaChain = !!chain && hasFeature(chain, FEATURES.HEDERA)
   const isReady = safeAddress && safe.deployed && isTrustedTokenList !== undefined
   const isCounterfactual = !safe.deployed
 
@@ -43,15 +47,15 @@ export const useTrustedTokenBalances = (): AsyncResult<PortfolioBalances> => {
 
   return useMemo<AsyncResult<PortfolioBalances>>(() => {
     if (isCounterfactual && cfData) {
-      return [createPortfolioBalances(cfData), cfError, cfLoading]
+      return [createPortfolioBalances(cfData, isHederaChain), cfError, cfLoading]
     }
 
     if (txServiceBalances) {
       const error = txServiceError ? new Error(String(txServiceError)) : undefined
-      return [createPortfolioBalances(txServiceBalances), error, txServiceLoading]
+      return [createPortfolioBalances(txServiceBalances, isHederaChain), error, txServiceLoading]
     }
 
     const error = txServiceError ? new Error(String(txServiceError)) : undefined
     return [undefined, error, true]
-  }, [isCounterfactual, cfData, cfError, cfLoading, txServiceBalances, txServiceError, txServiceLoading])
+  }, [isCounterfactual, cfData, cfError, cfLoading, txServiceBalances, txServiceError, txServiceLoading, isHederaChain])
 }

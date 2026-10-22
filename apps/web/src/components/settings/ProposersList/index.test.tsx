@@ -17,6 +17,7 @@ const mockWalletAddress = faker.finance.ethereumAddress()
 jest.mock('@/hooks/wallets/useWallet', () => ({
   __esModule: true,
   default: jest.fn(() => ({
+    label: 'MetaMask',
     address: mockWalletAddress,
   })),
 }))
@@ -80,6 +81,7 @@ describe('ProposersList', () => {
     ;(useIsWalletProposer as jest.MockedFunction<typeof useIsWalletProposer>).mockReturnValue(false)
     ;(useHasFeature as jest.MockedFunction<typeof useHasFeature>).mockReturnValue(true)
     ;(useWallet as jest.MockedFunction<typeof useWallet>).mockReturnValue({
+      label: 'MetaMask',
       address: mockWalletAddress,
     } as ReturnType<typeof useWallet>)
     ;(useSafeInfo as jest.MockedFunction<typeof useSafeInfo>).mockReturnValue({
@@ -101,6 +103,17 @@ describe('ProposersList', () => {
 
     const button = getByTestId('add-proposer-btn')
     expect(button).not.toBeDisabled()
+  })
+
+  it('should disable the Add proposer button for a HashPack wallet, which cannot sign the delegation', () => {
+    ;(useWallet as jest.MockedFunction<typeof useWallet>).mockReturnValue({
+      label: 'HashPack',
+      address: mockWalletAddress,
+    } as ReturnType<typeof useWallet>)
+
+    const { getByTestId } = render(<ProposersList />)
+
+    expect(getByTestId('add-proposer-btn')).toBeDisabled()
   })
 
   it('should enable the Add proposer button when user is a nested Safe owner', () => {

@@ -7,8 +7,10 @@ import { useForm, FormProvider } from 'react-hook-form'
 import AddressInput, { type AddressInputProps } from '.'
 import { useCurrentChain } from '@/hooks/useChains'
 import useNameResolver from '@/components/common/AddressInput/useNameResolver'
+import useHederaAccountIdResolver from '@/components/common/AddressInput/useHederaAccountIdResolver'
 import { chainBuilder } from '@/tests/builders/chains'
 import { FEATURES } from '@safe-global/store/gateway/types'
+import { FEATURES as CHAIN_FEATURES } from '@safe-global/utils/utils/chains'
 import userEvent from '@testing-library/user-event'
 import { ContactSource } from '@/hooks/useAllAddressBooks'
 import * as tronUtils from '@/utils/tron'
@@ -33,6 +35,16 @@ jest.mock('@/components/common/AddressInput/useNameResolver', () => ({
   default: jest.fn((val: string) => ({
     address: val === 'zero.eth' ? '0x0000000000000000000000000000000000000000' : undefined,
     resolverError: val === 'bogus.eth' ? new Error('Failed to resolve') : undefined,
+    resolving: false,
+  })),
+}))
+
+// mock useHederaAccountIdResolver
+jest.mock('@/components/common/AddressInput/useHederaAccountIdResolver', () => ({
+  __esModule: true,
+  default: jest.fn((val: string) => ({
+    address: val === '0.0.10814740' ? '0x000000000000000000000000000000000000004d' : undefined,
+    resolverError: val === '0.0.notfound' ? new Error('Failed to resolve Hedera account') : undefined,
     resolving: false,
   })),
 }))
@@ -224,6 +236,89 @@ describe('AddressInput tests', () => {
     expect(useNameResolver).toHaveBeenCalledWith('')
     await waitFor(() => expect(input.value).toBe('zero.eth'))
     await waitFor(() => expect(utils.getByLabelText('Invalid address format', { exact: false })).toBeDefined())
+  })
+
+  it('should resolve a native Hedera account id (0.0.X) on a Hedera chain', async () => {
+    const hederaChain = chainBuilder()
+      .with({ chainId: '296', shortName: 'hedera', isTestnet: true, features: [CHAIN_FEATURES.HEDERA] })
+      .build()
+    ;(useCurrentChain as jest.Mock).mockImplementation(() => hederaChain)
+
+    const { input } = setup('')
+
+    act(() => {
+      fireEvent.change(input, { target: { value: '0.0.10814740' } })
+    })
+
+    await waitFor(() => {
+      expect(input.value).toBe('0x000000000000000000000000000000000000004D')
+      expect(useHederaAccountIdResolver).toHaveBeenCalledWith('0.0.10814740', 'testnet')
+    })
+  })
+
+  it('should show an error if Hedera account id resolution has failed', async () => {
+    const hederaChain = chainBuilder()
+      .with({ chainId: '296', shortName: 'hedera', isTestnet: true, features: [CHAIN_FEATURES.HEDERA] })
+      .build()
+    ;(useCurrentChain as jest.Mock).mockImplementation(() => hederaChain)
+
+    const { input, utils } = setup('')
+
+    act(() => {
+      fireEvent.change(input, { target: { value: '0.0.notfound' } })
+      jest.advanceTimersByTime(1000)
+    })
+
+    expect(useHederaAccountIdResolver).toHaveBeenCalledWith('0.0.notfound', 'testnet')
+    await waitFor(() =>
+      expect(utils.getByLabelText(`Failed to resolve Hedera account`, { exact: false })).toBeDefined(),
+    )
+  })
+
+  it('should not flash an "Invalid address format" error once a Hedera account id has resolved', async () => {
+    // Regression test: once resolution succeeds, `watchedValue` becomes the resolved 0x address,
+    // which is no longer a valid Hedera account id shape — so the resolver mock (matching real
+    // `useHederaAccountIdResolver` behaviour) reports `address: undefined` again on the next
+    // render. That transient flip used to unconditionally re-trigger validation on an unchanged,
+    // already-valid value and could intermittently surface a stale "Invalid address format" error.
+    const hederaChain = chainBuilder()
+      .with({ chainId: '296', shortName: 'hedera', isTestnet: true, features: [CHAIN_FEATURES.HEDERA] })
+      .build()
+    ;(useCurrentChain as jest.Mock).mockImplementation(() => hederaChain)
+
+    const { input, utils } = setup('')
+
+    act(() => {
+      fireEvent.change(input, { target: { value: '0.0.10814740' } })
+    })
+
+    await waitFor(() => {
+      expect(input.value).toBe('0x000000000000000000000000000000000000004D')
+    })
+
+    // Blur and refocus — this is what re-triggers validation in the real app.
+    act(() => {
+      fireEvent.blur(input)
+      jest.advanceTimersByTime(200)
+    })
+    act(() => {
+      fireEvent.focus(input)
+      jest.advanceTimersByTime(200)
+    })
+
+    expect(utils.queryByLabelText('Invalid address format', { exact: false })).toBeNull()
+    expect(input.value).toBe('0x000000000000000000000000000000000000004D')
+  })
+
+  it('should not resolve Hedera account ids on a non-Hedera chain', async () => {
+    const { input } = setup('')
+
+    act(() => {
+      fireEvent.change(input, { target: { value: '0.0.10814740' } })
+      jest.advanceTimersByTime(1000)
+    })
+
+    expect(useHederaAccountIdResolver).toHaveBeenCalledWith('', undefined)
   })
 
   it('should show chain prefix in an adornment', async () => {

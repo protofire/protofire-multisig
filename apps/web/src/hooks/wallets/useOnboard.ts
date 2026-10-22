@@ -12,8 +12,9 @@ import { selectRpc } from '@/store/settingsSlice'
 import { formatAmount } from '@safe-global/utils/utils/formatNumber'
 import { isTronChain } from '@/utils/tron'
 import { localItem } from '@/services/local-storage/local'
-import { isTronWallet, isWalletConnect, isWalletUnlocked } from '@/utils/wallets'
+import { isHashPackWallet, isTronWallet, isWalletConnect, isWalletUnlocked } from '@/utils/wallets'
 import { useUrlChainId } from '@/hooks/useChainId'
+import { FEATURES, hasFeature } from '@safe-global/utils/utils/chains'
 import { setUnauthenticated } from '@/store/authSlice'
 import type { EnvState } from '@safe-global/store/settingsSlice'
 import { getTronChainIds } from '@/utils/tron-chains'
@@ -163,12 +164,31 @@ export const switchWallet = async (onboard: OnboardAPI) => {
 
 const lastWalletStorage = localItem<string>('lastWallet')
 
-const connectLastWallet = async (onboard: OnboardAPI, urlChainId: string | undefined, tronChainIds: string[]) => {
+// getSupportedWallets() offers HashPack + a plain injected wallet (MetaMask etc., detected via
+// its legacy identity flag) on Hedera chains, and every *other* module (Ledger, Coinbase,
+// WalletConnect, private key) off Hedera — HashPack is never offered off Hedera. Don't
+// auto-reconnect a stale wallet type that getSupportedWallets() wouldn't offer for this chain.
+// injected-wallets' label set is loaded lazily, only on Hedera, to keep it out of the main bundle.
+const isValidForHederaFamily = async (chain: Chain, walletLabel: string): Promise<boolean> => {
+  const isHashPack = isHashPackWallet(walletLabel)
+  if (!hasFeature(chain, FEATURES.HEDERA)) return !isHashPack
+  if (isHashPack) return true
+
+  const { ProviderLabel } = await import('@web3-onboard/injected-wallets')
+  return Object.values<string>(ProviderLabel).includes(walletLabel)
+}
+
+export const connectLastWallet = async (
+  onboard: OnboardAPI,
+  chain: Chain,
+  urlChainId: string | undefined,
+  tronChainIds: string[],
+) => {
   const lastWalletLabel = lastWalletStorage.get()
   // A link to a chain of the other family wins over the last wallet: don't reconnect a wallet that can't use it
   const isOtherFamily =
     !!lastWalletLabel && !!urlChainId && isTronChain(urlChainId) !== isTronWallet({ label: lastWalletLabel })
-  if (lastWalletLabel && !isOtherFamily) {
+  if (lastWalletLabel && !isOtherFamily && (await isValidForHederaFamily(chain, lastWalletLabel))) {
     const isUnlocked = await isWalletUnlocked(lastWalletLabel)
 
     // A silent (disableModals: true) autoSelect whose getInterface throws never settles in
@@ -236,7 +256,7 @@ export const useInitOnboard = () => {
       if (!isRuntimeData) return
 
       // Reconnect last wallet and mark wallet provider as ready
-      await connectLastWallet(onboard, urlChainId, tronChainIds)
+      await connectLastWallet(onboard, chain, urlChainId, tronChainIds)
 
       setWalletReady(true)
     })
@@ -258,7 +278,7 @@ export const useInitOnboard = () => {
           // also skip if a wallet connected while we waited (nothing to reconnect), and wait for
           // runtime data for the same reason as the silent reconnect above.
           if (cancelled || !isRuntimeData || onboard.state.get().wallets.length > 0) return
-          await connectLastWallet(onboard, urlChainId, tronChainIds)
+          await connectLastWallet(onboard, chain, urlChainId, tronChainIds)
         })
       })
     }

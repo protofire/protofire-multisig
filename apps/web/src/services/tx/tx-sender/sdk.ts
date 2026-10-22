@@ -19,6 +19,7 @@ import { UncheckedJsonRpcSigner } from '@/utils/providers/UncheckedJsonRpcSigner
 import get from 'lodash/get'
 import { maybePlural } from '@safe-global/utils/utils/formatters'
 import { isTronChain } from '@/utils/tron-chains'
+import { getRpcNativeCurrencyDecimals } from '@/utils/rpcNativeDecimals'
 
 export const getAndValidateSafeSDK = (): Safe => {
   const safeSDK = getSafeSDK()
@@ -63,7 +64,11 @@ async function switchOrAddChain(walletProvider: ConnectedWallet['provider'], cha
           {
             chainId: hexChainId,
             chainName: chain.chainName,
-            nativeCurrency: chain.nativeCurrency,
+            // Wallets only accept 18 here — Hedera's relay reports HBAR in weibar, not CGW's 8-decimal tinybar
+            nativeCurrency: {
+              ...chain.nativeCurrency,
+              decimals: getRpcNativeCurrencyDecimals(chain) ?? chain.nativeCurrency.decimals,
+            },
             rpcUrls: [chain.publicRpcUri.value],
             blockExplorerUrls: [new URL(chain.blockExplorerUriTemplate.address).origin],
           },

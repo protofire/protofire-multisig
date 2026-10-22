@@ -22,6 +22,9 @@ import { HelpCenterArticle } from '@safe-global/utils/config/constants'
 import useSafeInfo from '@/hooks/useSafeInfo'
 import { Tooltip } from '@mui/material'
 import NamedAddressInfo from '@/components/common/NamedAddressInfo'
+import useSupportsOffChainSignatures, {
+  OFF_CHAIN_SIGNATURES_UNSUPPORTED,
+} from '@/hooks/wallets/useSupportsOffChainSignatures'
 
 const headCells = [
   {
@@ -39,30 +42,42 @@ const headCells = [
 ]
 const SafeNotActivated = 'You need to activate the Safe before transacting'
 
-const AddProposerButton = ({ onAdd, isUndeployedSafe }: { onAdd: () => void; isUndeployedSafe: boolean }) => (
-  <Box mb={2}>
-    <CheckWallet allowProposer={false}>
-      {(isOk) => (
-        <Track {...SETTINGS_EVENTS.PROPOSERS.ADD_PROPOSER}>
-          <Tooltip title={isUndeployedSafe ? SafeNotActivated : ''}>
-            <span>
-              <Button
-                data-testid="add-proposer-btn"
-                onClick={onAdd}
-                variant="text"
-                startIcon={<SvgIcon component={AddIcon} inheritViewBox fontSize="small" />}
-                disabled={!isOk || isUndeployedSafe}
-                size="medium"
-              >
-                Add proposer
-              </Button>
-            </span>
-          </Tooltip>
-        </Track>
-      )}
-    </CheckWallet>
-  </Box>
-)
+const AddProposerButton = ({ onAdd, isUndeployedSafe }: { onAdd: () => void; isUndeployedSafe: boolean }) => {
+  const supportsOffChainSignatures = useSupportsOffChainSignatures()
+
+  return (
+    <Box mb={2}>
+      <CheckWallet allowProposer={false}>
+        {(isOk) => (
+          <Track {...SETTINGS_EVENTS.PROPOSERS.ADD_PROPOSER}>
+            <Tooltip
+              title={
+                isUndeployedSafe
+                  ? SafeNotActivated
+                  : !supportsOffChainSignatures
+                  ? OFF_CHAIN_SIGNATURES_UNSUPPORTED
+                  : ''
+              }
+            >
+              <span>
+                <Button
+                  data-testid="add-proposer-btn"
+                  onClick={onAdd}
+                  variant="text"
+                  startIcon={<SvgIcon component={AddIcon} inheritViewBox fontSize="small" />}
+                  disabled={!isOk || isUndeployedSafe || !supportsOffChainSignatures}
+                  size="medium"
+                >
+                  Add proposer
+                </Button>
+              </span>
+            </Tooltip>
+          </Track>
+        )}
+      </CheckWallet>
+    </Box>
+  )
+}
 
 const ProposersList = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState<boolean>()

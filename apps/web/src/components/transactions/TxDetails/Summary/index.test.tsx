@@ -14,6 +14,10 @@ import { type SafeTransaction } from '@safe-global/types-kit'
 import DecodedTx from '.'
 import { waitFor } from '@testing-library/react'
 import { createMockTransactionDetails } from '@/tests/transactions'
+import * as useChains from '@/hooks/useChains'
+import { chainBuilder } from '@/tests/builders/chains'
+import { FEATURES } from '@safe-global/utils/utils/chains'
+import type { HederaTransactionDetails } from '@/utils/hedera'
 
 jest.mock('@next/third-parties/google')
 
@@ -310,5 +314,47 @@ describe('DecodedTx', () => {
     fireEvent.click(result.getByText('Transaction details'))
 
     expect(result.queryAllByText('deposit').pop()).toBeInTheDocument()
+  })
+})
+
+describe('Summary transaction hash / Hedera transaction id', () => {
+  const TX_HASH = '0x96a96c11b8d013ff5d7a6ce960b22e961046cfa42eff422ac71c1daf6adef2e0'
+  const HEDERA_TRANSACTION_ID = '0.0.10822511-1787674970-069053976'
+
+  afterEach(() => {
+    jest.restoreAllMocks()
+  })
+
+  const mockChain = (features: FEATURES[]) =>
+    jest
+      .spyOn(useChains, 'useCurrentChain')
+      .mockReturnValue(chainBuilder().with({ chainId: '295', features, isTestnet: false }).build())
+
+  it('should render the transaction hash for an ordinary transaction', () => {
+    mockChain([])
+    const result = render(
+      <DecodedTx txData={txDetails.txData} txDetails={{ ...txDetails, txHash: TX_HASH }} showDecodedData={false} />,
+    )
+
+    expect(result.getByTestId('tx-hash')).toBeInTheDocument()
+    expect(result.queryByTestId('tx-hedera-transaction-id')).not.toBeInTheDocument()
+  })
+
+  it('should render the Hedera transaction id linking to HashScan for a native Hedera transfer', () => {
+    mockChain([FEATURES.HEDERA])
+    const hederaTxDetails: HederaTransactionDetails = {
+      ...txDetails,
+      txHash: TX_HASH,
+      hederaTransactionId: HEDERA_TRANSACTION_ID,
+    }
+    const result = render(<DecodedTx txData={txDetails.txData} txDetails={hederaTxDetails} showDecodedData={false} />)
+
+    expect(result.queryByTestId('tx-hash')).not.toBeInTheDocument()
+    const row = result.getByTestId('tx-hedera-transaction-id')
+    expect(within(row).getByText('0.0.10822511@1787674970.069053976')).toBeInTheDocument()
+    expect(within(row).getByTestId('explorer-btn')).toHaveAttribute(
+      'href',
+      `https://hashscan.io/mainnet/transaction/${HEDERA_TRANSACTION_ID}`,
+    )
   })
 })

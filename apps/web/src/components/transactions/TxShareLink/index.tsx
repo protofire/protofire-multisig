@@ -6,12 +6,15 @@ import TxShareLink from './TxShareLink'
 import { getBlockExplorerLink } from '@safe-global/utils/utils/chains'
 import { useCurrentChain } from '@/hooks/useChains'
 import ExplorerButton from '@/components/common/ExplorerButton'
+import useHederaTransactionExplorerLink from '@/hooks/useHederaTransactionExplorerLink'
 
 import css from './styles.module.css'
 
-export function TxExplorerLink({ txHash }: { txHash: string }) {
+export function TxExplorerLink({ txHash, hederaTransactionId }: { txHash: string; hederaTransactionId?: string }) {
   const chain = useCurrentChain()
-  const explorerLink = chain ? getBlockExplorerLink(chain, txHash) : undefined
+  // Native Hedera transfers have no real EVM tx hash, link to their native transaction id instead
+  const hederaExplorerLink = useHederaTransactionExplorerLink(hederaTransactionId)
+  const explorerLink = hederaExplorerLink ?? (chain ? getBlockExplorerLink(chain, txHash) : undefined)
 
   return (
     <Button variant="neutral" fullWidth>

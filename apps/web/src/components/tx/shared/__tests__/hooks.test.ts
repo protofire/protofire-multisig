@@ -22,11 +22,14 @@ import * as recommendedNonce from '@/services/tx/tx-sender/recommendedNonce'
 import { defaultSafeInfo } from '@safe-global/store/slices/SafeInfo/utils'
 import { chainBuilder } from '@/tests/builders/chains'
 import * as useChains from '@/hooks/useChains'
+import { FEATURES } from '@safe-global/utils/utils/chains'
 import { MockEip1193Provider } from '@/tests/mocks/providers'
 import { type SignerWallet } from '@/components/common/WalletProvider'
 import { type NestedWallet } from '@/utils/nested-safe-wallet'
 
-const chainInfo = chainBuilder().with({ chainId: '1' }).build()
+// features: [] avoids chainBuilder()'s random default feature set flipping Hedera-specific
+// behavior (hasFeature(chain, FEATURES.HEDERA)) on for tests that aren't about Hedera at all.
+const chainInfo = chainBuilder().with({ chainId: '1', features: [] }).build()
 
 describe('SignOrExecute hooks', () => {
   const extendedSafeInfo = extendedSafeInfoBuilder().build()
@@ -318,6 +321,52 @@ describe('SignOrExecute hooks', () => {
 
       const id = await signTx(createSafeTx(), '456')
       expect(signSpy).toHaveBeenCalled()
+      expect(id).toBe('456')
+    })
+
+    it('should sign a tx on-chain for a Hedera chain even if the wallet is not detected as a smart contract', async () => {
+      jest.spyOn(walletHooks, 'isSmartContractWallet').mockReturnValue(Promise.resolve(false))
+
+      jest.spyOn(wallet, 'useSigner').mockReturnValue({
+        chainId: '296',
+        address: '0x1234567890000000000000000000000000000000',
+        provider: MockEip1193Provider,
+      } as unknown as NestedWallet)
+
+      jest.spyOn(useChains, 'useCurrentChain').mockReturnValue(
+        chainBuilder()
+          .with({ chainId: '296', features: [FEATURES.HEDERA] })
+          .build(),
+      )
+
+      jest.spyOn(useSafeInfoHook, 'default').mockImplementation(() => ({
+        safe: {
+          ...extendedSafeInfo,
+          version: '1.3.0',
+          address: { value: zeroPadValue('0x0000', 20) },
+          nonce: 100,
+          threshold: 2,
+          owners: [{ value: zeroPadValue('0x0123', 20) }, { value: zeroPadValue('0x0456', 20) }],
+          chainId: '296',
+        },
+        safeAddress: '0x123',
+        safeError: undefined,
+        safeLoading: false,
+        safeLoaded: true,
+      }))
+
+      jest
+        .spyOn(txSender, 'dispatchTxProposal')
+        .mockImplementation((() => Promise.resolve({ txId: '123' })) as unknown as typeof txSender.dispatchTxProposal)
+      const onChainSignSpy = jest.spyOn(txSender, 'dispatchOnChainSigning').mockImplementation(() => Promise.resolve())
+      const offChainSignSpy = jest.spyOn(txSender, 'dispatchTxSigning')
+
+      const { result } = renderHook(() => useTxActions())
+      const { signTx } = result.current
+
+      const id = await signTx(createSafeTx(), '456')
+      expect(onChainSignSpy).toHaveBeenCalled()
+      expect(offChainSignSpy).not.toHaveBeenCalled()
       expect(id).toBe('456')
     })
 

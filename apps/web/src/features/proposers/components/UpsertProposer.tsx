@@ -13,6 +13,8 @@ import {
 import { useDelegatorSelection } from '@/features/proposers/hooks/useDelegatorSelection'
 import { buildDelegationOrigin, createDelegationMessage } from '@/features/proposers/services/delegationMessages'
 import useChainId from '@/hooks/useChainId'
+import { useCurrentChain } from '@/hooks/useChains'
+import { isHederaChain, isHederaLongZeroAddress } from '@/utils/hedera'
 import useSafeAddress from '@/hooks/useSafeAddress'
 import useWallet from '@/hooks/wallets/useWallet'
 import { SETTINGS_EVENTS, trackEvent } from '@/services/analytics'
@@ -53,6 +55,9 @@ import SignerSelector from '@/components/common/SignerSelector'
 import InfoIcon from '@/public/images/notifications/info.svg'
 import SignatureIcon from '@/public/images/transactions/signature.svg'
 import type { TypedData } from '@safe-global/store/gateway/AUTO_GENERATED/messages'
+
+const HEDERA_LONG_ZERO_PROPOSER_ERROR =
+  "Hedera accounts without an ECDSA EVM address can't sign as proposers. Use an ECDSA address, e.g. from MetaMask"
 
 type UpsertProposerProps = {
   onClose: () => void
@@ -106,12 +111,14 @@ const UpsertProposer = ({ onClose, onSuccess, proposer }: UpsertProposerProps) =
   })
 
   const safeOwnerAddresses = useMemo(() => safe.owners.map((owner) => owner.value), [safe.owners])
+  const isHedera = isHederaChain(useCurrentChain())
 
   const validateAddress = useCallback<Validate<string>>(
     (value) =>
       addressIsNotCurrentSafe(safeAddress, 'Cannot add Safe Account itself as proposer')(value) ??
-      addressIsNotOwner(safeOwnerAddresses, 'Cannot add Safe Owner as proposer')(value),
-    [safeAddress, safeOwnerAddresses],
+      addressIsNotOwner(safeOwnerAddresses, 'Cannot add Safe Owner as proposer')(value) ??
+      (isHedera && isHederaLongZeroAddress(value) ? HEDERA_LONG_ZERO_PROPOSER_ERROR : undefined),
+    [safeAddress, safeOwnerAddresses, isHedera],
   )
 
   const { handleSubmit, formState } = methods

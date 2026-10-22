@@ -28,6 +28,7 @@ import {
   isVaultRedeemTxInfo,
 } from '@/utils/transaction-guards'
 import { ellipsis, maybePlural, shortenAddress } from '@safe-global/utils/utils/formatters'
+import { getRpcNativeCurrencyDecimals } from '@/utils/rpcNativeDecimals'
 import { useCurrentChain } from '@/hooks/useChains'
 import { SwapTx } from '@/features/swap/components/SwapTxInfo/SwapTx'
 import { StakingTxDepositInfo, StakingTxExitInfo, StakingTxWithdrawInfo } from './Staking'
@@ -52,11 +53,15 @@ export const TransferTx = ({
   const direction = omitSign ? undefined : info.direction
 
   if (isNativeTokenTransfer(transfer)) {
+    // Only an incoming native transfer is indexed via the JSON-RPC relay (weibar on Hedera) — an
+    // outgoing one carries the value we proposed ourselves, in the native currency's own decimals
+    const decimals =
+      info.direction === 'INCOMING' ? getRpcNativeCurrencyDecimals(chainConfig) : nativeCurrency?.decimals
     return (
       <TokenAmount
         direction={direction}
         value={transfer.value ?? '0'}
-        decimals={nativeCurrency?.decimals}
+        decimals={decimals}
         tokenSymbol={nativeCurrency?.symbol}
         logoUri={withLogo ? nativeCurrency?.logoUri : undefined}
         preciseAmount={preciseAmount}

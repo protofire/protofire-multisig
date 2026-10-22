@@ -44,6 +44,144 @@ describe('portfolioBalances helpers', () => {
       expect(result.positions).toBeUndefined()
       expect(result.items).toEqual(balances.items)
     })
+
+    it('should rescale the native token balance from weibar to tinybar on a Hedera chain, keeping its 8-decimal metadata correct', () => {
+      const balances: Balances = {
+        fiatTotal: '0',
+        items: [
+          {
+            balance: '1000000000000000000', // 1 HBAR, as Hashio reports it (weibar)
+            fiatBalance: '0',
+            fiatConversion: '0',
+            tokenInfo: {
+              address: '0x0000000000000000000000000000000000000000',
+              decimals: 8,
+              logoUri: '',
+              name: 'Hedera',
+              symbol: 'HBAR',
+              type: 'NATIVE_TOKEN',
+            },
+          },
+        ],
+      }
+
+      const result = createPortfolioBalances(balances, true)
+
+      expect(result.items[0]?.tokenInfo.decimals).toBe(8)
+      expect(result.items[0]?.balance).toBe('100000000') // 1 HBAR in tinybar
+    })
+
+    it('should re-derive the native fiat balance and total from the tinybar balance on a Hedera chain', () => {
+      // 3.8589 HBAR at $0.0915: CGW reports fiat priced off the weibar number against 8 decimals
+      const inflatedNativeFiat = (3.8589e18 / 1e8) * 0.0915
+      const balances: Balances = {
+        fiatTotal: String(inflatedNativeFiat + 5),
+        items: [
+          {
+            balance: '3858900000000000000',
+            fiatBalance: String(inflatedNativeFiat),
+            fiatConversion: '0.0915',
+            tokenInfo: {
+              address: '0x0000000000000000000000000000000000000000',
+              decimals: 8,
+              logoUri: '',
+              name: 'Hedera',
+              symbol: 'HBAR',
+              type: 'NATIVE_TOKEN',
+            },
+          },
+          {
+            balance: '5000000',
+            fiatBalance: '5',
+            fiatConversion: '1',
+            tokenInfo: {
+              address: '0x000000000000000000000000000000000006f89a',
+              decimals: 6,
+              logoUri: '',
+              name: 'USD Coin',
+              symbol: 'USDC',
+              type: 'ERC20',
+            },
+          },
+        ],
+      }
+
+      const result = createPortfolioBalances(balances, true)
+
+      expect(Number(result.items[0]?.fiatBalance)).toBeCloseTo(3.8589 * 0.0915, 8)
+      expect(result.items[1]?.fiatBalance).toBe('5')
+      expect(Number(result.fiatTotal)).toBeCloseTo(3.8589 * 0.0915 + 5, 6)
+      expect(result.tokensFiatTotal).toBe(result.fiatTotal)
+    })
+
+    it('should give the same result if CGW already priced the native balance correctly', () => {
+      const balances: Balances = {
+        fiatTotal: String(3.8589 * 0.0915),
+        items: [
+          {
+            balance: '3858900000000000000',
+            fiatBalance: String(3.8589 * 0.0915),
+            fiatConversion: '0.0915',
+            tokenInfo: {
+              address: '0x0000000000000000000000000000000000000000',
+              decimals: 8,
+              logoUri: '',
+              name: 'Hedera',
+              symbol: 'HBAR',
+              type: 'NATIVE_TOKEN',
+            },
+          },
+        ],
+      }
+
+      const result = createPortfolioBalances(balances, true)
+
+      expect(Number(result.fiatTotal)).toBeCloseTo(3.8589 * 0.0915, 8)
+    })
+
+    it('should leave non-native token balances untouched on a Hedera chain', () => {
+      const balances: Balances = {
+        fiatTotal: '0',
+        items: [
+          {
+            balance: '100',
+            fiatBalance: '0',
+            fiatConversion: '0',
+            tokenInfo: { address: '0x1', decimals: 6, logoUri: '', name: 'USDC', symbol: 'USDC', type: 'ERC20' },
+          },
+        ],
+      }
+
+      const result = createPortfolioBalances(balances, true)
+
+      expect(result.items[0]?.balance).toBe('100')
+      expect(result.items[0]?.tokenInfo.decimals).toBe(6)
+    })
+
+    it('should leave the native token balance untouched on a non-Hedera chain', () => {
+      const balances: Balances = {
+        fiatTotal: '0',
+        items: [
+          {
+            balance: '1000000000000000000',
+            fiatBalance: '0',
+            fiatConversion: '0',
+            tokenInfo: {
+              address: '0x0000000000000000000000000000000000000000',
+              decimals: 18,
+              logoUri: '',
+              name: 'Ether',
+              symbol: 'ETH',
+              type: 'NATIVE_TOKEN',
+            },
+          },
+        ],
+      }
+
+      const result = createPortfolioBalances(balances, false)
+
+      expect(result.items[0]?.balance).toBe('1000000000000000000')
+    })
   })
 
   describe('transformPortfolioToBalances', () => {

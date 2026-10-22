@@ -54,6 +54,8 @@ describe('GasParams', () => {
     }
 
     const chainInfo = {
+      chainId: '11155111',
+      features: [],
       nativeCurrency: {
         symbol: 'SepoliaETH',
         decimals: 9,

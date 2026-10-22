@@ -1,6 +1,7 @@
 import { formatVisualAmount } from '@safe-global/utils/utils/formatters'
 import { Skeleton } from '@mui/material'
 import { useCurrentChain } from '@/hooks/useChains'
+import { getRpcNativeCurrencyDecimals } from '@/utils/rpcNativeDecimals'
 
 const WalletBalance = ({ balance }: { balance: string | bigint | undefined }) => {
   const currentChain = useCurrentChain()
@@ -13,10 +14,11 @@ const WalletBalance = ({ balance }: { balance: string | bigint | undefined }) =>
     return <>{balance}</>
   }
 
+  const decimals = getRpcNativeCurrencyDecimals(currentChain) ?? 18
+
   return (
     <>
-      {formatVisualAmount(balance, currentChain?.nativeCurrency.decimals ?? 18)}{' '}
-      {currentChain?.nativeCurrency.symbol ?? 'ETH'}
+      {formatVisualAmount(balance, decimals)} {currentChain?.nativeCurrency.symbol ?? 'ETH'}
     </>
   )
 }
