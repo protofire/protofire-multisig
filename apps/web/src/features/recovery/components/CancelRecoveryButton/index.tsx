@@ -15,13 +15,13 @@ import { trackError, Errors } from '@/services/exceptions'
 import { asError } from '@safe-global/utils/services/exceptions/utils'
 import { useRecoveryTxState } from '@/features/recovery/hooks/useRecoveryTxState'
 import { RecoveryListItemContext } from '../RecoveryListItem/RecoveryListItemContext'
-import type { RecoveryQueueItem } from '@/features/recovery/services/recovery-state'
+import type { AnyRecoveryQueueItem } from '@/features/recovery/services/recovery-state'
 
 export default function CancelRecoveryButton({
   recovery,
   compact = false,
 }: {
-  recovery: RecoveryQueueItem
+  recovery: AnyRecoveryQueueItem
   compact?: boolean
 }): ReactElement {
   const { setSubmitError } = useContext(RecoveryListItemContext)

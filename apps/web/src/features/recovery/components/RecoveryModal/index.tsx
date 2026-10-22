@@ -4,6 +4,7 @@ import { useRouter } from 'next/router'
 import type { ReactElement } from 'react'
 
 import { useRecoveryQueue } from '@/features/recovery/hooks/useRecoveryQueue'
+import { useRecoveryUnavailable } from '@/features/recovery/hooks/useRecovery'
 import { RecoveryInProgressCard } from '../RecoveryCards/RecoveryInProgressCard'
 import { RecoveryProposalCard } from '../RecoveryCards/RecoveryProposalCard'
 import useIsSafeOwner from '@/hooks/useIsSafeOwner'
@@ -22,12 +23,14 @@ function InternalRecoveryModal({
   queue,
   wallet,
   isSidebarRoute = true,
+  isRecoveryUnavailable = false,
 }: {
   isOwner: boolean
   isRecoverer: boolean
   queue: Array<RecoveryQueueItem>
   wallet: ReturnType<typeof useWallet>
   isSidebarRoute?: boolean
+  isRecoveryUnavailable?: boolean
 }): ReactElement {
   const { wasProposalDismissed, dismissProposal } = useDidDismissProposal()
   const { wasInProgressDismissed, dismissInProgress } = useDidDismissInProgress()
@@ -58,6 +61,8 @@ function InternalRecoveryModal({
         return <RecoveryInProgressCard onClose={onCloseWithDismiss} recovery={next} />
       }
 
+      if (isRecoveryUnavailable) return null
+
       if (wallet?.address && isRecoverer && !wasProposalDismissed(wallet.address)) {
         const onCloseWithDismiss = () => {
           dismissProposal(wallet.address)
@@ -81,6 +86,7 @@ function InternalRecoveryModal({
     wasInProgressDismissed,
     wasProposalDismissed,
     isSidebarRoute,
+    isRecoveryUnavailable,
   ])
 
   // Close modal on navigation
@@ -111,6 +117,7 @@ const RecoveryModal = madProps(InternalRecoveryModal, {
   queue: useRecoveryQueue,
   wallet: useWallet,
   isSidebarRoute: useSidebar,
+  isRecoveryUnavailable: useRecoveryUnavailable,
 })
 
 // Exports

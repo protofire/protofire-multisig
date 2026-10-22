@@ -6,7 +6,7 @@ import { sameAddress } from '@safe-global/utils/utils/addresses'
 import { getModuleInstance, KnownContracts } from '@gnosis.pm/zodiac'
 import type { MetaTransactionData } from '@safe-global/types-kit'
 import { type SafeState, type AddressInfo } from '@safe-global/store/gateway/AUTO_GENERATED/safes'
-import type { RecoveryQueueItem } from '@/features/recovery/services/recovery-state'
+import type { AnyRecoveryQueueItem } from '@/features/recovery/services/recovery-state'
 import type { Provider } from 'ethers'
 
 export function getRecoveryProposalTransactions({
@@ -101,7 +101,7 @@ export function getRecoveryProposalTransactions({
 }
 
 export async function getRecoverySkipTransaction(
-  recovery: RecoveryQueueItem,
+  recovery: AnyRecoveryQueueItem,
   provider: Provider,
 ): Promise<MetaTransactionData> {
   const delayModifier = getModuleInstance(KnownContracts.DELAY, recovery.address, provider)

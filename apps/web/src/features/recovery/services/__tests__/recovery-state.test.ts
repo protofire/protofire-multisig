@@ -1,17 +1,15 @@
 import { faker } from '@faker-js/faker'
-import { id, zeroPadValue } from 'ethers'
-import { JsonRpcProvider } from 'ethers'
+import { id, toBeHex, zeroPadValue } from 'ethers'
 import cloneDeep from 'lodash/cloneDeep'
-import type { TransactionAddedEvent, Delay } from '@gnosis.pm/zodiac/dist/cjs/types/Delay'
-import type { TransactionReceipt } from 'ethers'
+import type { Delay } from '@gnosis.pm/zodiac/dist/cjs/types/Delay'
+import type { Block, JsonRpcProvider, TransactionReceipt } from 'ethers'
 
 import {
+  _addedTransactionsCache,
   _getRecoveryStateItem,
   _getRecoveryQueueItemTimestamps,
-  _getSafeCreationReceipt,
   _isMaliciousRecovery,
 } from '../recovery-state'
-import { useWeb3ReadOnly } from '@/hooks/wallets/web3'
 import { encodeMultiSendData } from '@safe-global/protocol-kit/dist/src/utils/transactions/utils'
 import { getMultiSendCallOnlyDeployment, getSafeSingletonDeployment } from '@safe-global/safe-deployments'
 import { Interface } from 'ethers'
@@ -19,11 +17,14 @@ import { chainBuilder } from '@/tests/builders/chains'
 import { getLatestSafeVersion } from '@safe-global/utils/utils/chains'
 import { getModuleInstance, KnownContracts, ContractAbis } from '@gnosis.pm/zodiac'
 import { createMockWeb3Provider } from '@safe-global/utils/tests/web3Provider'
+import { MULTICALL_ABI } from '@safe-global/utils/utils/multicall'
 import { SENTINEL_ADDRESS } from '@safe-global/protocol-kit/dist/src/utils/constants'
+import { logError, Errors } from '@/services/exceptions'
 
-jest.mock('@/hooks/wallets/web3')
-
-const mockUseWeb3ReadOnly = useWeb3ReadOnly as jest.MockedFunction<typeof useWeb3ReadOnly>
+jest.mock('@/services/exceptions', () => ({
+  ...jest.requireActual('@/services/exceptions'),
+  logError: jest.fn(),
+}))
 
 const latestSafeVersion = getLatestSafeVersion(
   chainBuilder().with({ chainId: '1', recommendedMasterCopyVersion: '1.4.1' }).build(),
@@ -39,8 +40,7 @@ const DELAY_INTERFACE = new Interface(ContractAbis[KnownContracts.DELAY])
 
 describe('recovery-state', () => {
   beforeEach(() => {
-    // Clear memoization cache
-    _getSafeCreationReceipt.cache.clear?.()
+    _addedTransactionsCache.clear()
   })
 
   describe('isMaliciousRecovery', () => {
@@ -214,21 +214,12 @@ describe('recovery-state', () => {
   })
 
   describe('getRecoveryQueueItemTimestamps', () => {
-    it('should return a recovery queue item timestamps', async () => {
-      const delayModifier = {
-        txCreatedAt: () => Promise.resolve(BigInt(1)),
-      } as unknown as Delay
-      const transactionAdded = {
-        args: {
-          queueNonce: 0n,
-        },
-      } as TransactionAddedEvent.Log
+    it('should return a recovery queue item timestamps', () => {
       const delay = 1n
       const expiry = 2n
 
-      const item = await _getRecoveryQueueItemTimestamps({
-        delayModifier,
-        transactionAdded,
+      const item = _getRecoveryQueueItemTimestamps({
+        createdAt: 1n,
         delay,
         expiry,
       })
@@ -240,21 +231,12 @@ describe('recovery-state', () => {
       })
     })
 
-    it('should return a recovery queue item timestamps with expiresAt null if expiry is zero', async () => {
-      const delayModifier = {
-        txCreatedAt: () => Promise.resolve(BigInt(1)),
-      } as unknown as Delay
-      const transactionAdded = {
-        args: {
-          queueNonce: 0n,
-        },
-      } as TransactionAddedEvent.Log
+    it('should return a recovery queue item timestamps with expiresAt null if expiry is zero', () => {
       const delay = 1n
       const expiry = 0n
 
-      const item = await _getRecoveryQueueItemTimestamps({
-        delayModifier,
-        transactionAdded,
+      const item = _getRecoveryQueueItemTimestamps({
+        createdAt: 1n,
         delay,
         expiry,
       })
@@ -267,257 +249,450 @@ describe('recovery-state', () => {
     })
   })
 
-  describe('getSafeCreationReceipt', () => {
-    beforeEach(() => {
-      jest.clearAllMocks()
-    })
-
-    it('should return the Safe creation receipt', async () => {
-      const transactionService = faker.internet.url({ appendSlash: false })
-      const safeAddress = faker.finance.ethereumAddress()
-      const transactionHash = `0x${faker.string.hexadecimal()}`
-      const receipt = {
-        blockHash: faker.string.alphanumeric(),
-      } as TransactionReceipt
-
-      global.fetch = jest.fn().mockImplementation(() => {
-        return Promise.resolve({
-          json: () => Promise.resolve({ transactionHash }),
-          status: 200,
-          ok: true,
-        })
-      })
-
-      const provider = {
-        getTransactionReceipt: () => Promise.resolve(receipt),
-      } as unknown as JsonRpcProvider
-      mockUseWeb3ReadOnly.mockReturnValue(provider)
-
-      const creationReceipt = await _getSafeCreationReceipt({
-        transactionService,
-        safeAddress,
-        provider,
-      })
-
-      expect(receipt).toStrictEqual(creationReceipt)
-    })
-
-    it('should memoize the Safe creation receipt', async () => {
-      const transactionService = faker.internet.url({ appendSlash: false })
-      const safeAddress = faker.finance.ethereumAddress()
-      const transactionHash = `0x${faker.string.hexadecimal()}`
-      const receipt = {
-        blockHash: faker.string.alphanumeric(),
-      } as TransactionReceipt
-
-      global.fetch = jest.fn().mockImplementation(() => {
-        return Promise.resolve({
-          json: () => Promise.resolve({ transactionHash }),
-          status: 200,
-          ok: true,
-        })
-      })
-
-      const provider = {
-        getTransactionReceipt: () => Promise.resolve(receipt),
-      } as unknown as JsonRpcProvider
-      mockUseWeb3ReadOnly.mockReturnValue(provider)
-
-      Array.from({ length: 3 }).forEach(async () => {
-        await _getSafeCreationReceipt({
-          transactionService,
-          safeAddress,
-          provider,
-        })
-      })
-
-      expect(global.fetch).toHaveBeenCalledTimes(1)
-    })
-
-    it('should throw an error if the Safe creation receipt cannot be fetched', async () => {
-      const transactionService = faker.internet.url({ appendSlash: false })
-      const safeAddress = faker.finance.ethereumAddress()
-
-      global.fetch = jest.fn().mockImplementation(() => {
-        return Promise.resolve({
-          status: 500,
-          ok: false,
-        })
-      })
-
-      const provider = new JsonRpcProvider()
-      mockUseWeb3ReadOnly.mockReturnValue(provider)
-
-      expect(
-        _getSafeCreationReceipt({
-          transactionService,
-          safeAddress,
-          provider,
-        }),
-      ).rejects.toThrow('Error fetching Safe creation details')
-    })
-  })
-
   describe('getRecoveryState', () => {
-    it('should return the recovery state from the Safe creation block', async () => {
-      const safeAddress = faker.finance.ethereumAddress()
-      const chainId = '1'
-      const version = '1.3.0'
-      const transactionService = faker.internet.url({ appendSlash: false })
-      const transactionHash = `0x${faker.string.hexadecimal()}`
-      const safeCreationReceipt = {
-        blockNumber: faker.number.int(),
-      } as TransactionReceipt
-      const transactionAddedReceipt = {
-        from: faker.finance.ethereumAddress(),
-      } as TransactionReceipt
+    type MockTransactionAdded = {
+      args: { queueNonce: bigint; txHash: string; to: string; value: bigint; data: string }
+      blockNumber: number
+      removed?: boolean
+    }
+    type DelayStorage = Partial<Record<string, (...args: Array<bigint>) => Array<unknown>>>
 
-      global.fetch = jest.fn().mockImplementation(() => {
-        return Promise.resolve({
-          json: () => Promise.resolve({ transactionHash }),
-          status: 200,
-          ok: true,
+    const DELAY = 69420n
+    const TX_NONCE = 2n
+    const QUEUE_NONCE = 5n
+    const EVENT_TOPIC = id('TransactionAdded(uint256,bytes32,address,uint256,bytes,uint8)')
+    // Block n is mined at 1_000 + n, so the nonces below were queued in blocks 420, 500 and 600
+    const CREATED_AT_BY_NONCE: Record<string, bigint> = { '2': 1_420n, '3': 1_500n, '4': 1_600n }
+    const TX_HASH_BY_NONCE: Record<string, string> = { '2': id('tx 2'), '3': id('tx 3'), '4': id('tx 4') }
+    const MULTICALL_INTERFACE = new Interface(MULTICALL_ABI)
+
+    beforeEach(() => {
+      jest.mocked(logError).mockClear()
+    })
+
+    // Answers the multicalls to the Delay Modifier from `storage`. A read missing from it fails
+    const mockDelayStorage = (provider: JsonRpcProvider, storage: DelayStorage) => {
+      provider.call = jest.fn(async ({ data }: { data: string }) => {
+        const [calls] = MULTICALL_INTERFACE.decodeFunctionData('aggregate3', data)
+        const results = calls.map(([, , callData]: [string, boolean, string]) => {
+          const { name, args } = DELAY_INTERFACE.parseTransaction({ data: callData })!
+          const read = storage[name]
+          return read
+            ? { success: true, returnData: DELAY_INTERFACE.encodeFunctionResult(name, read(...args)) }
+            : { success: false, returnData: '0x' }
         })
-      })
+        return MULTICALL_INTERFACE.encodeFunctionResult('aggregate3', [results])
+      }) as unknown as JsonRpcProvider['call']
+    }
 
+    const setupQueuedState = ({
+      queryFilterResult,
+      storage,
+    }: {
+      queryFilterResult?: (topics: Array<string>) => Promise<Array<unknown>>
+      storage?: DelayStorage
+    } = {}) => {
+      const safeAddress = faker.finance.ethereumAddress()
       const recoverers = [faker.finance.ethereumAddress()]
-      const expiry = 0n
-      const delay = 69420n
-      const txNonce = 2n
-      const queueNonce = 4n
-      const transactionsAdded = [
+      const transactionAddedReceipt = { from: faker.finance.ethereumAddress() } as TransactionReceipt
+
+      const transactionsAdded: Array<MockTransactionAdded> = [
         {
-          args: {
-            queueNonce: 2n,
-            to: safeAddress,
-            value: 0n,
-            data: '0x',
-          },
+          args: { queueNonce: 2n, txHash: TX_HASH_BY_NONCE['2'], to: safeAddress, value: 0n, data: '0x' },
+          blockNumber: 420,
         },
+        // Malicious
         {
           args: {
             queueNonce: 3n,
-            to: faker.finance.ethereumAddress(), // Malicious
+            txHash: TX_HASH_BY_NONCE['3'],
+            to: faker.finance.ethereumAddress(),
             value: 0n,
             data: '0x',
           },
+          blockNumber: 500,
+        },
+        // Reorg
+        {
+          args: { queueNonce: 4n, txHash: TX_HASH_BY_NONCE['4'], to: safeAddress, value: 0n, data: '0x' },
+          blockNumber: 600,
+          removed: true,
         },
         {
-          args: {
-            queueNonce: 4n,
-            to: safeAddress,
-            value: 0n,
-            data: '0x',
-          },
-          removed: true, // Reorg
-        } as unknown,
-      ] as Array<TransactionAddedEvent.InputTuple>
-
-      const topics = [id('TransactionAdded(uint256,bytes32,address,uint256,bytes,uint8)')]
-      const queryFilterMock = jest.fn()
-      const defaultTransactionAddedFilter = {
-        getTopicFilter: jest.fn().mockResolvedValue([...topics]),
-      }
-
-      const mockProvider = createMockWeb3Provider([
-        {
-          signature: DELAY_INTERFACE.getFunction('getModulesPaginated')?.selector!,
-          returnType: 'raw',
-          returnValue: DELAY_INTERFACE.encodeFunctionResult('getModulesPaginated', [recoverers, SENTINEL_ADDRESS]),
+          args: { queueNonce: 4n, txHash: TX_HASH_BY_NONCE['4'], to: safeAddress, value: 0n, data: '0x' },
+          blockNumber: 600,
         },
-        {
-          signature: DELAY_INTERFACE.getFunction('txExpiration')?.selector!,
-          returnType: 'uint256',
-          returnValue: expiry,
-        },
-        {
-          signature: DELAY_INTERFACE.getFunction('txCooldown')?.selector!,
-          returnType: 'uint256',
-          returnValue: delay,
-        },
-        {
-          signature: DELAY_INTERFACE.getFunction('txNonce')?.selector!,
-          returnType: 'uint256',
-          returnValue: txNonce,
-        },
-        {
-          signature: DELAY_INTERFACE.getFunction('queueNonce')?.selector!,
-          returnType: 'uint256',
-          returnValue: queueNonce,
-        },
-      ])
-      ;(mockProvider.getTransactionReceipt as jest.MockedFunction<JsonRpcProvider['getTransactionReceipt']>)
-        .mockResolvedValueOnce(safeCreationReceipt)
-        .mockResolvedValue(transactionAddedReceipt)
+      ]
 
-      const mockDelayModifierAddress = faker.finance.ethereumAddress()
+      const queryFilterMock = jest.fn(
+        queryFilterResult ??
+          ((topics: Array<string>) =>
+            Promise.resolve(transactionsAdded.filter(({ args }) => toBeHex(args.queueNonce, 32) === topics[1]))),
+      )
 
-      const delayModifier = getModuleInstance(KnownContracts.DELAY, mockDelayModifierAddress, mockProvider)
-
-      const patchedDelayModifier = {
-        ...delayModifier,
-        filters: {
-          TransactionAdded: () => cloneDeep(defaultTransactionAddedFilter),
-        },
-        getAddress: jest.fn().mockResolvedValue(mockDelayModifierAddress),
-        txCreatedAt: jest
-          .fn()
-          .mockResolvedValueOnce(420n)
-          .mockResolvedValueOnce(69420n)
-          .mockResolvedValueOnce(6942069n),
-        queryFilter: queryFilterMock.mockImplementation(() => Promise.resolve(transactionsAdded)),
-      }
-
-      const recoveryState = await _getRecoveryStateItem({
-        delayModifier: patchedDelayModifier as unknown as Delay,
-        safeAddress,
-        transactionService,
-        provider: mockProvider,
-        chainId,
-        version,
+      const mockProvider = createMockWeb3Provider([])
+      mockDelayStorage(mockProvider, {
+        getModulesPaginated: () => [recoverers, SENTINEL_ADDRESS],
+        txExpiration: () => [0n],
+        txCooldown: () => [DELAY],
+        txNonce: () => [TX_NONCE],
+        queueNonce: () => [QUEUE_NONCE],
+        txCreatedAt: (nonce) => [CREATED_AT_BY_NONCE[nonce.toString()]],
+        txHash: (nonce) => [TX_HASH_BY_NONCE[nonce.toString()]],
+        ...storage,
       })
+      mockProvider.getBlockNumber = jest.fn().mockResolvedValue(10_000)
+      mockProvider.getBlock = jest.fn((n) => Promise.resolve({ number: n, timestamp: 1_000 + Number(n) } as Block))
+      ;(
+        mockProvider.getTransactionReceipt as jest.MockedFunction<JsonRpcProvider['getTransactionReceipt']>
+      ).mockResolvedValue(transactionAddedReceipt)
+
+      const delayModifierAddress = faker.finance.ethereumAddress()
+      const delayModifier = {
+        ...getModuleInstance(KnownContracts.DELAY, delayModifierAddress, mockProvider),
+        filters: {
+          TransactionAdded: () => ({ getTopicFilter: jest.fn().mockResolvedValue([EVENT_TOPIC]) }),
+        },
+        getAddress: jest.fn().mockResolvedValue(delayModifierAddress),
+        queryFilter: queryFilterMock,
+      } as unknown as Delay
+
+      return {
+        args: {
+          delayModifier,
+          safeAddress,
+          provider: mockProvider,
+          chainId: '1',
+          version: '1.3.0' as const,
+        },
+        delayModifierAddress,
+        recoverers,
+        transactionsAdded,
+        transactionAddedReceipt,
+        queryFilterMock,
+        mockProvider,
+      }
+    }
+
+    it('should look up each queued transaction in the blocks mined at its txCreatedAt', async () => {
+      const { args, delayModifierAddress, recoverers, transactionsAdded, transactionAddedReceipt, queryFilterMock } =
+        setupQueuedState()
+
+      const recoveryState = await _getRecoveryStateItem(args)
 
       expect({
         ...recoveryState,
         recoverers: recoveryState.recoverers.map((recoverer) => recoverer.toLowerCase()),
       }).toEqual({
-        address: await delayModifier.getAddress(),
+        address: delayModifierAddress,
         recoverers,
-        expiry,
-        delay,
-        txNonce,
-        queueNonce,
+        expiry: 0n,
+        delay: DELAY,
+        txNonce: TX_NONCE,
+        queueNonce: QUEUE_NONCE,
         queue: [
           {
             ...transactionsAdded[0],
-            timestamp: 420n * 1_000n,
-            validFrom: (420n + delay) * 1_000n,
+            timestamp: 1_420n * 1_000n,
+            validFrom: (1_420n + DELAY) * 1_000n,
             expiresAt: null,
             isMalicious: false,
             executor: transactionAddedReceipt.from,
           },
           {
             ...transactionsAdded[1],
-            timestamp: 69420n * 1_000n,
-            validFrom: (69420n + delay) * 1_000n,
+            timestamp: 1_500n * 1_000n,
+            validFrom: (1_500n + DELAY) * 1_000n,
             expiresAt: null,
             isMalicious: true,
             executor: transactionAddedReceipt.from,
           },
+          {
+            ...transactionsAdded[3],
+            timestamp: 1_600n * 1_000n,
+            validFrom: (1_600n + DELAY) * 1_000n,
+            expiresAt: null,
+            isMalicious: false,
+            executor: transactionAddedReceipt.from,
+          },
         ],
+        unavailableQueue: [],
       })
+      expect(queryFilterMock).toHaveBeenCalledTimes(3)
       expect(queryFilterMock).toHaveBeenCalledWith(
-        [...topics, [zeroPadValue('0x02', 32), zeroPadValue('0x03', 32)]],
-        safeCreationReceipt.blockNumber,
-        'latest',
+        [EVENT_TOPIC, zeroPadValue('0x02', 32), TX_HASH_BY_NONCE['2']],
+        419,
+        421,
+      )
+      expect(queryFilterMock).toHaveBeenCalledWith(
+        [EVENT_TOPIC, zeroPadValue('0x03', 32), TX_HASH_BY_NONCE['3']],
+        499,
+        501,
+      )
+      expect(queryFilterMock).toHaveBeenCalledWith(
+        [EVENT_TOPIC, zeroPadValue('0x04', 32), TX_HASH_BY_NONCE['4']],
+        599,
+        601,
       )
     })
+
+    it('should read the stored creation time and hash of all queued transactions in one call', async () => {
+      const { args, mockProvider } = setupQueuedState()
+
+      await _getRecoveryStateItem(args)
+
+      // The Delay Modifier settings, then the queued transactions
+      expect(mockProvider.call).toHaveBeenCalledTimes(2)
+    })
+
+    it('should list a queued transaction as unavailable when its event does not match the stored txHash', async () => {
+      const { args, transactionsAdded } = setupQueuedState()
+      // E.g. a log from another fork returned by a node of a load-balanced RPC
+      transactionsAdded[1].args.txHash = id('another fork')
+
+      const recoveryState = await _getRecoveryStateItem(args)
+
+      expect(recoveryState.unavailableQueue).toEqual([
+        expect.objectContaining({ args: { queueNonce: 3n, txHash: TX_HASH_BY_NONCE['3'] } }),
+      ])
+      expect(recoveryState.queue.map((item) => item.args.queueNonce)).toEqual([2n, 4n])
+    })
+
+    // The details of a queued transaction can fail to load for many reasons. It must still be listed from
+    // what the Delay Modifier stores, so that owners see it and can cancel it
+    it('should list queued transactions whose blocks the RPC no longer returns as unavailable', async () => {
+      const { args, delayModifierAddress, queryFilterMock, mockProvider } = setupQueuedState()
+      // Nonce 2 was queued in block 420, before the history the RPC serves
+      mockProvider.getBlock = jest.fn((n) =>
+        Number(n) < 450
+          ? Promise.reject(new Error('any error'))
+          : Promise.resolve({ number: n, timestamp: 1_000 + Number(n) } as Block),
+      )
+
+      const recoveryState = await _getRecoveryStateItem(args)
+
+      expect(recoveryState.unavailableQueue).toEqual([
+        {
+          address: delayModifierAddress,
+          args: { queueNonce: 2n, txHash: TX_HASH_BY_NONCE['2'] },
+          timestamp: 1_420n * 1_000n,
+          validFrom: (1_420n + DELAY) * 1_000n,
+          expiresAt: null,
+        },
+      ])
+      expect(recoveryState.queue.map((item) => item.args.queueNonce)).toEqual([3n, 4n])
+      expect(queryFilterMock.mock.calls.map(([topics]) => topics[1])).not.toContain(zeroPadValue('0x02', 32))
+    })
+
+    it('should list a queued transaction as unavailable when a block it needs is not returned', async () => {
+      const { args, mockProvider } = setupQueuedState()
+      // Blocks around nonce 3 (block 500) are missing, e.g. on a load-balanced node with less history
+      mockProvider.getBlock = jest.fn((n) =>
+        Number(n) >= 480 && Number(n) <= 520
+          ? Promise.resolve(null)
+          : Promise.resolve({ number: n, timestamp: 1_000 + Number(n) } as Block),
+      )
+
+      const recoveryState = await _getRecoveryStateItem(args)
+
+      expect(recoveryState.unavailableQueue.map((item) => item.args.queueNonce)).toEqual([3n])
+      expect(recoveryState.queue.map((item) => item.args.queueNonce)).toEqual([2n, 4n])
+    })
+
+    it('should list queued transactions as unavailable when the RPC fails to return blocks', async () => {
+      const { args, mockProvider } = setupQueuedState()
+      mockProvider.getBlock = jest.fn().mockRejectedValue(new Error('rate limit: server busy'))
+
+      const recoveryState = await _getRecoveryStateItem(args)
+
+      expect(recoveryState.unavailableQueue.map((item) => item.args.queueNonce)).toEqual([2n, 3n, 4n])
+      expect(recoveryState.queue).toEqual([])
+    })
+
+    it('should list queued transactions as unavailable when the latest block cannot be read', async () => {
+      const { args, mockProvider, queryFilterMock } = setupQueuedState()
+      const error = new Error('rate limit: server busy')
+      mockProvider.getBlockNumber = jest.fn().mockRejectedValue(error)
+
+      const recoveryState = await _getRecoveryStateItem(args)
+
+      expect(recoveryState.unavailableQueue.map((item) => item.args.queueNonce)).toEqual([2n, 3n, 4n])
+      expect(recoveryState.queue).toEqual([])
+      expect(queryFilterMock).not.toHaveBeenCalled()
+      expect(logError).toHaveBeenCalledWith(Errors._618, error)
+    })
+
+    it('should list queued transactions as unavailable and log when their events fail to load', async () => {
+      const error = new Error('rate limit: server busy')
+      const { args } = setupQueuedState({ queryFilterResult: () => Promise.reject(error) })
+
+      const recoveryState = await _getRecoveryStateItem(args)
+
+      expect(recoveryState.unavailableQueue.map((item) => item.args.queueNonce)).toEqual([2n, 3n, 4n])
+      expect(recoveryState.queue).toEqual([])
+      expect(logError).toHaveBeenCalledTimes(3)
+      expect(logError).toHaveBeenCalledWith(Errors._618, error)
+    })
+
+    it('should list a queued transaction as unavailable when its event cannot be found', async () => {
+      const { args } = setupQueuedState({ queryFilterResult: () => Promise.resolve([]) })
+
+      const recoveryState = await _getRecoveryStateItem(args)
+
+      expect(recoveryState.unavailableQueue.map((item) => item.args.queueNonce)).toEqual([2n, 3n, 4n])
+      expect(logError).not.toHaveBeenCalled()
+    })
+
+    it('should list a queued transaction as unavailable when its only event was removed in a reorg', async () => {
+      const { args } = setupQueuedState({
+        queryFilterResult: () =>
+          Promise.resolve([{ args: { queueNonce: 2n, txHash: TX_HASH_BY_NONCE['2'] }, removed: true }]),
+      })
+
+      const recoveryState = await _getRecoveryStateItem(args)
+
+      expect(recoveryState.unavailableQueue.map((item) => item.args.queueNonce)).toEqual([2n, 3n, 4n])
+    })
+
+    it('should list a queued transaction as unavailable when it is newer than the latest block of the RPC', async () => {
+      const { args, mockProvider } = setupQueuedState()
+      mockProvider.getBlockNumber = jest.fn().mockResolvedValue(450)
+
+      const recoveryState = await _getRecoveryStateItem(args)
+
+      expect(recoveryState.unavailableQueue.map((item) => item.args.queueNonce)).toEqual([3n, 4n])
+      expect(recoveryState.queue.map((item) => item.args.queueNonce)).toEqual([2n])
+    })
+
+    it.each([
+      ['is not returned', () => Promise.resolve(null)],
+      ['fails to load', () => Promise.reject(new Error('rate limit: server busy'))],
+    ])('should list a found queued transaction without its proposer when its receipt %s', async (_, getReceipt) => {
+      const { args, mockProvider } = setupQueuedState()
+      mockProvider.getTransactionReceipt = jest.fn(getReceipt)
+
+      const recoveryState = await _getRecoveryStateItem(args)
+
+      expect(recoveryState.queue.map((item) => item.args.queueNonce)).toEqual([2n, 3n, 4n])
+      expect(recoveryState.queue.map((item) => item.executor)).toEqual([undefined, undefined, undefined])
+      expect(recoveryState.unavailableQueue).toEqual([])
+    })
+
+    it('should log when the receipt of a found queued transaction fails to load', async () => {
+      const { args, mockProvider } = setupQueuedState()
+      const error = new Error('rate limit: server busy')
+      mockProvider.getTransactionReceipt = jest.fn().mockRejectedValue(error)
+
+      await _getRecoveryStateItem(args)
+
+      expect(logError).toHaveBeenCalledTimes(3)
+      expect(logError).toHaveBeenCalledWith(Errors._615, error)
+    })
+
+    describe('session cache', () => {
+      const queriedNonces = (queryFilterMock: jest.Mock) =>
+        queryFilterMock.mock.calls.map(([topics]) => BigInt(topics[1]))
+
+      it('should not search again for events found earlier in the session', async () => {
+        const { args, queryFilterMock, mockProvider } = setupQueuedState()
+
+        const first = await _getRecoveryStateItem(args)
+        queryFilterMock.mockClear()
+        ;(mockProvider.getBlock as jest.Mock).mockClear()
+        ;(mockProvider.getBlockNumber as jest.Mock).mockClear()
+        const second = await _getRecoveryStateItem(args)
+
+        expect(second.queue).toEqual(first.queue)
+        expect(queryFilterMock).not.toHaveBeenCalled()
+        expect(mockProvider.getBlock).not.toHaveBeenCalled()
+        expect(mockProvider.getBlockNumber).not.toHaveBeenCalled()
+      })
+
+      it('should only search for events missing from the cache', async () => {
+        const { args, queryFilterMock, mockProvider } = setupQueuedState()
+        // Blocks around nonce 3 (block 500) are missing on the first load
+        mockProvider.getBlock = jest.fn((n) =>
+          Number(n) >= 480 && Number(n) <= 520
+            ? Promise.resolve(null)
+            : Promise.resolve({ number: n, timestamp: 1_000 + Number(n) } as Block),
+        )
+        await _getRecoveryStateItem(args)
+
+        mockProvider.getBlock = jest.fn((n) => Promise.resolve({ number: n, timestamp: 1_000 + Number(n) } as Block))
+        queryFilterMock.mockClear()
+        const recoveryState = await _getRecoveryStateItem(args)
+
+        expect(queriedNonces(queryFilterMock)).toEqual([3n])
+        expect(recoveryState.queue.map((item) => item.args.queueNonce)).toEqual([2n, 3n, 4n])
+        expect(recoveryState.unavailableQueue).toEqual([])
+      })
+
+      it('should not cache events still within reorg range of the chain head', async () => {
+        const { args, queryFilterMock, mockProvider } = setupQueuedState()
+        // Nonce 4 was queued in block 600, 11 blocks deep
+        mockProvider.getBlockNumber = jest.fn().mockResolvedValue(611)
+
+        await _getRecoveryStateItem(args)
+        queryFilterMock.mockClear()
+        await _getRecoveryStateItem(args)
+
+        expect(queriedNonces(queryFilterMock)).toEqual([4n])
+      })
+
+      it('should cache events exactly at the reorg range of the chain head', async () => {
+        const { args, queryFilterMock, mockProvider } = setupQueuedState()
+        mockProvider.getBlockNumber = jest.fn().mockResolvedValue(612)
+
+        await _getRecoveryStateItem(args)
+        queryFilterMock.mockClear()
+        await _getRecoveryStateItem(args)
+
+        expect(queryFilterMock).not.toHaveBeenCalled()
+      })
+
+      it('should search again when a cached event does not match the stored txHash', async () => {
+        const { args, queryFilterMock, transactionsAdded } = setupQueuedState()
+        await _getRecoveryStateItem(args)
+
+        _addedTransactionsCache.forEach((event, key) => {
+          if (event.args.queueNonce === 2n) {
+            _addedTransactionsCache.set(key, {
+              ...event,
+              args: { ...event.args, txHash: id('another fork') },
+            } as typeof event)
+          }
+        })
+        queryFilterMock.mockClear()
+        const recoveryState = await _getRecoveryStateItem(args)
+
+        expect(queriedNonces(queryFilterMock)).toEqual([2n])
+        expect(recoveryState.queue[0].args.txHash).toBe(transactionsAdded[0].args.txHash)
+      })
+
+      it('should keep cached events separate per Delay Modifier', async () => {
+        const first = setupQueuedState()
+        await _getRecoveryStateItem(first.args)
+
+        const second = setupQueuedState()
+        await _getRecoveryStateItem(second.args)
+
+        expect(queriedNonces(second.queryFilterMock)).toEqual([2n, 3n, 4n])
+      })
+    })
+
+    it.each(['txCreatedAt', 'txHash'])(
+      'should throw when %s of the queued transactions cannot be read',
+      async (read) => {
+        const { args } = setupQueuedState({ storage: { [read]: undefined } })
+
+        await expect(_getRecoveryStateItem(args)).rejects.toThrow('Queued recovery transactions could not be read')
+      },
+    )
 
     it('should not query data if the queueNonce equals the txNonce', async () => {
       const safeAddress = faker.finance.ethereumAddress()
       const chainId = '1'
       const version = '1.3.0'
-      const transactionService = faker.internet.url({ appendSlash: true })
 
       const recoverers = [faker.finance.ethereumAddress()]
       const expiry = 0n
@@ -580,7 +755,6 @@ describe('recovery-state', () => {
       const recoveryState = await _getRecoveryStateItem({
         delayModifier: patchedDelayModifier as unknown as Delay,
         safeAddress,
-        transactionService,
         provider: mockProvider,
         chainId,
         version,
@@ -597,6 +771,7 @@ describe('recovery-state', () => {
         txNonce,
         queueNonce,
         queue: [],
+        unavailableQueue: [],
       })
       expect(queryFilterMock).not.toHaveBeenCalled()
     })

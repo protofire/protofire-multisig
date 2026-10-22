@@ -1,0 +1,40 @@
+diff --git a/dist/cjs/contracts.js b/dist/cjs/contracts.js
+index e250bbacb01b31f106f829944a1f593846460ee5..b43fd5ac23b5327a2cc14d6ac07cee2d95f3ac31 100644
+--- a/dist/cjs/contracts.js
++++ b/dist/cjs/contracts.js
+@@ -85,6 +85,8 @@
+     SupportedNetworks[SupportedNetworks["CoreTestnet"] = 1115] = "CoreTestnet";
+     SupportedNetworks[SupportedNetworks["Core"] = 1116] = "Core";
+     SupportedNetworks[SupportedNetworks["Base"] = 8453] = "Base";
++    SupportedNetworks[SupportedNetworks["SeiTestnet"] = 1328] = "SeiTestnet";
++    SupportedNetworks[SupportedNetworks["Sei"] = 1329] = "Sei";
+ })(SupportedNetworks || (exports.SupportedNetworks = SupportedNetworks = {}));
+ // const canonicalMasterCopyAddress = (contract: KnownContracts) => {
+ //   const { initCode, salt } = MasterCopyInitData[contract];
+@@ -224,4 +224,6 @@
+     [SupportedNetworks.Base]: Object.assign(Object.assign({}, CanonicalAddresses), { [types_1.KnownContracts.OPTIMISTIC_GOVERNOR]: {
+             "1.2.0": "0x80bCA2E1c272239AdFDCdc87779BC8Af6E12e633",
+         } }),
++    [SupportedNetworks.SeiTestnet]: CanonicalAddresses,
++    [SupportedNetworks.Sei]: CanonicalAddresses,
+ };
+diff --git a/dist/esm/contracts.js b/dist/esm/contracts.js
+index ccbe6948e801946e1db4e67da0681f9f6f03c53e..00baf66f0ecfc2660d65dab6c8c0ca0291160d2b 100644
+--- a/dist/esm/contracts.js
++++ b/dist/esm/contracts.js
+@@ -56,6 +56,8 @@
+     SupportedNetworks[SupportedNetworks["CoreTestnet"] = 1115] = "CoreTestnet";
+     SupportedNetworks[SupportedNetworks["Core"] = 1116] = "Core";
+     SupportedNetworks[SupportedNetworks["Base"] = 8453] = "Base";
++    SupportedNetworks[SupportedNetworks["SeiTestnet"] = 1328] = "SeiTestnet";
++    SupportedNetworks[SupportedNetworks["Sei"] = 1329] = "Sei";
+ })(SupportedNetworks || (SupportedNetworks = {}));
+ // const canonicalMasterCopyAddress = (contract: KnownContracts) => {
+ //   const { initCode, salt } = MasterCopyInitData[contract];
+@@ -195,4 +195,6 @@
+     [SupportedNetworks.Base]: Object.assign(Object.assign({}, CanonicalAddresses), { [KnownContracts.OPTIMISTIC_GOVERNOR]: {
+             "1.2.0": "0x80bCA2E1c272239AdFDCdc87779BC8Af6E12e633",
+         } }),
++    [SupportedNetworks.SeiTestnet]: CanonicalAddresses,
++    [SupportedNetworks.Sei]: CanonicalAddresses,
+ };

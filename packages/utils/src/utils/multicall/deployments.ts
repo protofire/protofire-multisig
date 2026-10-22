@@ -1168,7 +1168,12 @@ export const MULTICALL_DEPLOYMENTS: MulticallDeployment[] = [
   {
     name: 'Sei EVM Mainnet',
     chainId: 1329,
-    url: 'https://seitrace.com/address/0xcA11bde05977b3631167028862bE2a173976CA11?chain=pacific-1&tab=contract',
+    url: 'https://seiscan.io/address/0xcA11bde05977b3631167028862bE2a173976CA11#code',
+  },
+  {
+    name: 'Sei EVM Testnet',
+    chainId: 1328,
+    url: 'https://testnet.seiscan.io/address/0xcA11bde05977b3631167028862bE2a173976CA11',
   },
   {
     name: 'Hekla (Taiko A7 Testnet)',

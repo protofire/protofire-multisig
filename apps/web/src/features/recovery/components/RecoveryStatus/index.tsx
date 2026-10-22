@@ -5,7 +5,7 @@ import ClockIcon from '@/public/images/common/clock.svg'
 import { useRecoveryTxState } from '@/features/recovery/hooks/useRecoveryTxState'
 import { RecoveryEvent } from '@/features/recovery/services/recoveryEvents'
 import store from '../RecoveryContext'
-import type { RecoveryQueueItem } from '@/features/recovery/services/recovery-state'
+import type { AnyRecoveryQueueItem } from '@/features/recovery/services/recovery-state'
 import TxStatusChip from '@/components/transactions/TxStatusChip'
 
 const STATUS_LABELS: Partial<Record<RecoveryEvent, string>> = {
@@ -13,7 +13,7 @@ const STATUS_LABELS: Partial<Record<RecoveryEvent, string>> = {
   [RecoveryEvent.PROCESSED]: 'Loading',
 }
 
-const RecoveryStatus = ({ recovery }: { recovery: RecoveryQueueItem }): ReactElement => {
+const RecoveryStatus = ({ recovery }: { recovery: AnyRecoveryQueueItem }): ReactElement => {
   const { isExecutable, isExpired } = useRecoveryTxState(recovery)
   const pending = store.useStore()?.pending
 

@@ -53,9 +53,11 @@ export default function RecoverySigners({ item }: { item: RecoveryQueueItem }): 
           </ListItemIcon>
           <ListItemText primaryTypographyProps={{ fontWeight: 700 }}>Created</ListItemText>
         </ListItem>
-        <ListItem sx={{ py: 0, pb: 1, ml: 4 }}>
-          <EthHashInfo address={item.executor} hasExplorer showCopyButton />
-        </ListItem>
+        {item.executor && (
+          <ListItem sx={{ py: 0, pb: 1, ml: 4 }}>
+            <EthHashInfo address={item.executor} hasExplorer showCopyButton />
+          </ListItem>
+        )}
         <ListItem sx={{ py: 0 }}>
           <ListItemIcon>
             <SvgIcon

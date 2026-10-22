@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import type { ReactElement } from 'react'
 
 import { useRecoveryQueue } from '@/features/recovery/hooks/useRecoveryQueue'
+import { useRecoveryUnavailable } from '@/features/recovery/hooks/useRecovery'
 import { useIsRecoverer } from '@/features/recovery/hooks/useIsRecoverer'
 import madProps from '@/utils/mad-props'
 import { RecoveryProposalCard } from '@/features/recovery/components/RecoveryCards/RecoveryProposalCard'
@@ -13,10 +14,12 @@ function InternalRecoveryHeader({
   isProposalInProgress,
   isRecoverer,
   queue,
+  isRecoveryUnavailable = false,
 }: {
   isProposalInProgress: boolean
   isRecoverer: boolean
   queue: Array<RecoveryQueueItem>
+  isRecoveryUnavailable?: boolean
 }): ReactElement | null {
   const next = queue[0]
 
@@ -25,6 +28,8 @@ function InternalRecoveryHeader({
   if (next) {
     return <RecoveryInProgressCard orientation="horizontal" recovery={next} />
   }
+
+  if (isRecoveryUnavailable) return null
 
   if (isRecoverer && !isProposalInProgress) {
     return <RecoveryProposalCard orientation="horizontal" />
@@ -60,6 +65,7 @@ const RecoveryHeader = madProps(InternalRecoveryHeader, {
   isProposalInProgress: useIsProposalInProgress,
   isRecoverer: useIsRecoverer,
   queue: useRecoveryQueue,
+  isRecoveryUnavailable: useRecoveryUnavailable,
 })
 
 // Export for tests

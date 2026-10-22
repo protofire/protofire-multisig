@@ -313,7 +313,7 @@ interface RecoveryQueueItem {
   validFrom: bigint // When it can be executed
   expiresAt: bigint | null // When it expires (null = never)
   isMalicious: boolean // Is this a suspicious proposal
-  executor: string // Who created the proposal
+  executor?: string // Who created the proposal (undefined if the RPC does not return the receipt)
   args: {
     txHash: string
     to: string

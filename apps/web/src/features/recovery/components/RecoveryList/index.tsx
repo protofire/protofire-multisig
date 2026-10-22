@@ -3,7 +3,10 @@ import type { ReactElement } from 'react'
 
 import { TxListGrid } from '@/components/transactions/TxList'
 import RecoveryListItem from '@/features/recovery/components/RecoveryListItem'
-import { useRecoveryQueue } from '@/features/recovery/hooks/useRecoveryQueue'
+import { useRecoveryQueue, useUnavailableRecoveryQueue } from '@/features/recovery/hooks/useRecoveryQueue'
+import useRecovery from '@/features/recovery/hooks/useRecovery'
+import { RecoveryLoadError } from '@/features/recovery/components/RecoveryLoadError'
+import UnavailableRecoveryListItem from '@/features/recovery/components/UnavailableRecoveryListItem'
 import { groupRecoveryTransactions } from '@/utils/tx-list'
 import useTxQueue from '@/hooks/useTxQueue'
 import GroupedRecoveryListItems from '../GroupedRecoveryListItems'
@@ -42,19 +45,31 @@ function InternalRecoveryList({ recoveryQueue }: { recoveryQueue: Array<Recovery
 
 function RecoveryList(): ReactElement | null {
   const supportsRecovery = useIsRecoverySupported()
+  const [, recoveryError] = useRecovery()
   const recoveryQueue = useRecoveryQueue()
+  const unavailableRecoveryQueue = useUnavailableRecoveryQueue()
+  const hasPendingRecovery = recoveryQueue.length > 0 || unavailableRecoveryQueue.length > 0
 
-  if (!supportsRecovery || recoveryQueue.length === 0) {
-    return null
-  }
+  if (!supportsRecovery) return null
+  if (!recoveryError && !hasPendingRecovery) return null
 
   return (
     <>
-      <div className={labelCss.container}>Pending recovery</div>
+      {recoveryError && <RecoveryLoadError />}
 
-      <TxListGrid>
-        <InternalRecoveryList recoveryQueue={recoveryQueue} />
-      </TxListGrid>
+      {hasPendingRecovery && (
+        <>
+          <div className={labelCss.container}>Pending recovery</div>
+
+          <TxListGrid>
+            {unavailableRecoveryQueue.map((item) => (
+              <UnavailableRecoveryListItem item={item} key={`${item.address}-${item.args.queueNonce}`} />
+            ))}
+
+            {recoveryQueue.length > 0 && <InternalRecoveryList recoveryQueue={recoveryQueue} />}
+          </TxListGrid>
+        </>
+      )}
     </>
   )
 }

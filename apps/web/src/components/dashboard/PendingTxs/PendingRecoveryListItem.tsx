@@ -8,15 +8,15 @@ import type { ReactElement } from 'react'
 import { RecoveryFeature } from '@/features/recovery'
 import { useLoadFeature } from '@/features/__core__'
 import { AppRoutes } from '@/config/routes'
-import type { RecoveryQueueItem } from '@/features/recovery'
+import type { AnyRecoveryQueueItem } from '@/features/recovery'
 
 import css from './styles.module.css'
 import classnames from 'classnames'
 
-function PendingRecoveryListItem({ transaction }: { transaction: RecoveryQueueItem }): ReactElement {
+function PendingRecoveryListItem({ transaction }: { transaction: AnyRecoveryQueueItem }): ReactElement {
   const router = useRouter()
   const { RecoveryType, RecoveryInfo, RecoveryStatus } = useLoadFeature(RecoveryFeature)
-  const { isMalicious } = transaction
+  const isMalicious = 'isMalicious' in transaction && transaction.isMalicious
 
   const url = useMemo(
     () => ({

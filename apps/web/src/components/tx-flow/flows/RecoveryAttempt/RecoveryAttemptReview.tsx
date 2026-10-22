@@ -80,11 +80,15 @@ const RecoveryAttemptReview = ({ item }: RecoveryAttemptReviewProps) => {
         >
           <Typography>Execute this transaction to finalize the recovery.</Typography>
 
-          <FieldsGrid title="Initiator">
-            <EthHashInfo address={item.executor} showName showCopyButton hasExplorer />
-          </FieldsGrid>
+          {item.executor && (
+            <>
+              <FieldsGrid title="Initiator">
+                <EthHashInfo address={item.executor} showName showCopyButton hasExplorer />
+              </FieldsGrid>
 
-          <Divider sx={{ mx: -3 }} />
+              <Divider sx={{ mx: -3 }} />
+            </>
+          )}
 
           <RecoveryDescription item={item} />
 

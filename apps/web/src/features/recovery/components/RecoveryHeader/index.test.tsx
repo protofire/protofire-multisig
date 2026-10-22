@@ -16,7 +16,7 @@ describe('RecoveryHeader', () => {
   })
 
   it('should render the in-progress widget if there is a queue for recoverers', () => {
-    const queue = [{ validFrom: BigInt(0) }] as any
+    const queue = [{ validFrom: BigInt(Date.now() + 60_000) }] as any
     store.setStore({ state: [[{ queue }]] } as any)
 
     const { queryByText } = render(<InternalRecoveryHeader isProposalInProgress={false} isRecoverer queue={queue} />)
@@ -31,6 +31,16 @@ describe('RecoveryHeader', () => {
     const { queryByText } = render(<InternalRecoveryHeader isProposalInProgress={false} isRecoverer queue={queue} />)
 
     expect(queryByText(/Recover this account\./)).toBeTruthy()
+  })
+
+  it('should not offer a new proposal when recovery data is unavailable', () => {
+    const queue = [] as any
+
+    const { container } = render(
+      <InternalRecoveryHeader isProposalInProgress={false} isRecoverer queue={queue} isRecoveryUnavailable />,
+    )
+
+    expect(container).toBeEmptyDOMElement()
   })
 
   it('should not render the proposal widget when there is no queue for recoverers and proposal is in progress', () => {

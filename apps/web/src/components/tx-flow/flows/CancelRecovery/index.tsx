@@ -1,7 +1,7 @@
 import { useMemo, type ReactElement } from 'react'
 import { CancelRecoveryFlowReview } from './CancelRecoveryFlowReview'
 import { CancelRecoveryOverview } from './CancelRecoveryOverview'
-import type { RecoveryQueueItem } from '@/features/recovery/services/recovery-state'
+import type { AnyRecoveryQueueItem } from '@/features/recovery/services/recovery-state'
 import { TxFlowType } from '@/services/analytics'
 import { TxFlow } from '../../TxFlow'
 import { TxFlowStep } from '../../TxFlowStep'
@@ -10,7 +10,7 @@ import type ReviewTransaction from '@/components/tx/ReviewTransactionV2'
 const TITLE = 'Cancel Account recovery'
 
 type CancelRecoveryFlowProps = {
-  recovery: RecoveryQueueItem
+  recovery: AnyRecoveryQueueItem
 }
 
 function CancelRecoveryFlow({ recovery }: CancelRecoveryFlowProps): ReactElement {

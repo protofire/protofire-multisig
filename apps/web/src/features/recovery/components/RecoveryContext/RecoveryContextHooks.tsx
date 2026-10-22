@@ -3,6 +3,7 @@ import { useRecoveryState } from './useRecoveryState'
 import { useRecoveryDelayModifiers } from './useRecoveryDelayModifiers'
 import { useRecoveryPendingTxs } from './useRecoveryPendingTxs'
 import { useRecoverySuccessEvents } from './useRecoverySuccessEvents'
+import { logError, Errors } from '@/services/exceptions'
 import store from '.'
 
 function RecoveryContextHooks(): null {
@@ -15,6 +16,12 @@ function RecoveryContextHooks(): null {
   const data = recoveryState
   const error = delayModifiersError || recoveryStateError
   const loading = delayModifiersLoading || recoveryStateLoading
+
+  useEffect(() => {
+    if (error) {
+      logError(Errors._617, error)
+    }
+  }, [error])
 
   useEffect(() => {
     store.setStore({

@@ -3,6 +3,7 @@ import { faker } from '@faker-js/faker'
 import {
   selectDelayModifierByRecoverer,
   selectRecoveryQueues,
+  selectUnavailableRecoveryQueues,
   selectDelayModifierByTxHash,
   selectDelayModifierByAddress,
 } from '../selectors'
@@ -53,6 +54,30 @@ describe('selectors', () => {
         { timestamp: BigInt(4) },
         { timestamp: BigInt(5) },
         { timestamp: BigInt(6) },
+      ])
+    })
+  })
+
+  describe('selectUnavailableRecoveryQueues', () => {
+    it('should return all unavailable recovery queues sorted by timestamp', () => {
+      const delayModifier1 = {
+        unavailableQueue: [{ timestamp: BigInt(1) }, { timestamp: BigInt(4) }],
+      } as unknown as RecoveryStateItem
+
+      const delayModifier2 = {
+        unavailableQueue: [{ timestamp: BigInt(2) }],
+      } as unknown as RecoveryStateItem
+
+      const delayModifier3 = {
+        unavailableQueue: [],
+      } as unknown as RecoveryStateItem
+
+      const data = [delayModifier1, delayModifier2, delayModifier3]
+
+      expect(selectUnavailableRecoveryQueues(data)).toStrictEqual([
+        { timestamp: BigInt(1) },
+        { timestamp: BigInt(2) },
+        { timestamp: BigInt(4) },
       ])
     })
   })

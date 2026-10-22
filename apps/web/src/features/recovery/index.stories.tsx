@@ -659,6 +659,55 @@ export const RecoveryListItem: StoryObj = {
   },
 }
 
+// Queued proposal whose details couldn't be loaded from the RPC
+export const UnavailableRecoveryListItem: StoryObj = {
+  render: () => (
+    <Paper sx={{ maxWidth: 600 }}>
+      <Accordion defaultExpanded>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
+            <MockRecoveryType isMalicious={false} />
+            <Typography variant="body2" color="text.secondary">
+              Details unavailable
+            </Typography>
+            <Box sx={{ flex: 1 }} />
+            <MockRecoveryStatus status="ready" />
+          </Box>
+        </AccordionSummary>
+        <AccordionDetails>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Alert severity="warning">
+              The details of this recovery proposal couldn&apos;t be loaded from the network. It can still be executed
+              once the review window has passed. If you don&apos;t recognise it, cancel it.
+            </Alert>
+            <Box>
+              <Typography variant="caption" color="text.secondary">
+                Queue nonce
+              </Typography>
+              <Typography variant="body2" fontFamily="monospace">
+                0
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <Button variant="outlined" color="error" size="small">
+                Cancel
+              </Button>
+            </Box>
+          </Box>
+        </AccordionDetails>
+      </Accordion>
+    </Paper>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Queued recovery proposal whose details could not be loaded from the RPC. Only what the Delay Modifier stores is known, so it can be cancelled but not executed or reviewed.',
+      },
+    },
+  },
+}
+
 // Recovery settings card
 export const RecoverySettingsCard: StoryObj = {
   render: () => (

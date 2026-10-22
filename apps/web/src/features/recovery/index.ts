@@ -51,10 +51,17 @@ export type { RecoveryContract } from './contract'
 // Keep hooks lightweight - minimal imports, heavy logic in services if needed
 export { useIsRecoverer } from './hooks/useIsRecoverer'
 export { useIsRecoverySupported } from './hooks/useIsRecoverySupported'
-export { default as useRecovery } from './hooks/useRecovery'
-export { useRecoveryQueue } from './hooks/useRecoveryQueue'
+export { default as useRecovery, useRecoveryUnavailable } from './hooks/useRecovery'
+export { RECOVERY_LOAD_ERROR_MESSAGE } from './recoveryLoadError'
+export { useRecoveryQueue, useUnavailableRecoveryQueue } from './hooks/useRecoveryQueue'
 // NOTE: useIsValidRecoveryExecTransactionFromModule is NOT exported here because it
 // imports @gnosis.pm/zodiac which is heavy. Import directly from hooks file if needed.
 
 // Public types (type-only exports are tree-shaken by bundler)
-export type { RecoveryQueueItem, RecoveryStateItem, RecoveryState } from './services/recovery-state'
+export type {
+  AnyRecoveryQueueItem,
+  RecoveryQueueItem,
+  RecoveryStateItem,
+  RecoveryState,
+  UnavailableRecoveryQueueItem,
+} from './services/recovery-state'

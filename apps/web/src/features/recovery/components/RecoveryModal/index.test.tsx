@@ -58,7 +58,10 @@ describe('RecoveryModal', () => {
 
       const wallet = connectedWalletBuilder().build()
       const queue = [
-        { validFrom: BigInt(0), transactionHash: faker.string.hexadecimal() } as unknown as RecoveryQueueItem,
+        {
+          validFrom: BigInt(Date.now() + 60_000),
+          transactionHash: faker.string.hexadecimal(),
+        } as unknown as RecoveryQueueItem,
       ]
 
       store.setStore({
@@ -83,7 +86,7 @@ describe('RecoveryModal', () => {
     describe('in-progress', () => {
       it('should render the in-progress modal when there is a queue for recoverers', () => {
         const wallet = connectedWalletBuilder().build()
-        const queue = [{ validFrom: BigInt(0) } as RecoveryQueueItem]
+        const queue = [{ validFrom: BigInt(Date.now() + 60_000) } as RecoveryQueueItem]
 
         store.setStore({
           state: [[{ queue }]],
@@ -99,7 +102,7 @@ describe('RecoveryModal', () => {
 
       it('should render the in-progress modal when there is a queue for owners', () => {
         const wallet = connectedWalletBuilder().build()
-        const queue = [{ validFrom: BigInt(0) } as RecoveryQueueItem]
+        const queue = [{ validFrom: BigInt(Date.now() + 60_000) } as RecoveryQueueItem]
 
         store.setStore({
           state: [[{ queue }]],

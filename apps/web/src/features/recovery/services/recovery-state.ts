@@ -1,15 +1,15 @@
 import { SENTINEL_ADDRESS } from '@safe-global/protocol-kit/dist/src/utils/constants'
-import memoize from 'lodash/memoize'
 import { getMultiSendCallOnlyDeployment } from '@safe-global/safe-deployments'
 import { type SafeState } from '@safe-global/store/gateway/AUTO_GENERATED/safes'
 import type { Delay } from '@gnosis.pm/zodiac'
 import type { TransactionAddedEvent } from '@gnosis.pm/zodiac/dist/cjs/types/Delay'
-import { toBeHex, type JsonRpcProvider, type TransactionReceipt } from 'ethers'
-import { trimTrailingSlash } from '@/utils/url'
+import { toBeHex, type JsonRpcProvider } from 'ethers'
 import { sameAddress } from '@safe-global/utils/utils/addresses'
 import { isMultiSendCalldata } from '@/utils/transaction-calldata'
 import { decodeMultiSendData } from '@safe-global/protocol-kit/dist/src/utils'
 import { multicall } from '@safe-global/utils/utils/multicall'
+import { logError, Errors } from '@/services/exceptions'
+import { createBlockTimestampReader, findBlockWindowForTimestamp, type GetBlockTimestamp } from './block-by-timestamp'
 
 export const MAX_RECOVERER_PAGE_SIZE = 100
 
@@ -19,8 +19,22 @@ export type RecoveryQueueItem = AddedEvent & {
   validFrom: bigint
   expiresAt: bigint | null
   isMalicious: boolean
-  executor: string
+  // Undefined when the RPC doesn't return the receipt of the proposing transaction
+  executor?: string
 }
+
+/**
+ * A queued transaction whose `TransactionAdded` event couldn't be loaded from the RPC.
+ * Only what the Delay Modifier stores is known: enough to show and cancel it, but not to execute it.
+ */
+export type UnavailableRecoveryQueueItem = Pick<
+  RecoveryQueueItem,
+  'address' | 'timestamp' | 'validFrom' | 'expiresAt'
+> & {
+  args: Pick<RecoveryQueueItem['args'], 'queueNonce' | 'txHash'>
+}
+
+export type AnyRecoveryQueueItem = RecoveryQueueItem | UnavailableRecoveryQueueItem
 
 export type RecoveryStateItem = {
   address: string
@@ -30,6 +44,7 @@ export type RecoveryStateItem = {
   txNonce: bigint
   queueNonce: bigint
   queue: Array<RecoveryQueueItem>
+  unavailableQueue: Array<UnavailableRecoveryQueueItem>
 }
 
 export type RecoveryState = Array<RecoveryStateItem>
@@ -72,18 +87,16 @@ export function _isMaliciousRecovery({
   )
 }
 
-export const _getRecoveryQueueItemTimestamps = async ({
-  delayModifier,
-  transactionAdded,
+export const _getRecoveryQueueItemTimestamps = ({
+  createdAt,
   delay,
   expiry,
 }: {
-  delayModifier: Delay
-  transactionAdded: AddedEvent
+  createdAt: bigint
   delay: bigint
   expiry: bigint
-}): Promise<Pick<RecoveryQueueItem, 'timestamp' | 'validFrom' | 'expiresAt'>> => {
-  const timestamp = BigInt(await delayModifier.txCreatedAt(transactionAdded.args.queueNonce))
+}): Pick<RecoveryQueueItem, 'timestamp' | 'validFrom' | 'expiresAt'> => {
+  const timestamp = createdAt
   const validFrom = timestamp + delay
   const expiresAt =
     expiry === BigInt(0)
@@ -97,65 +110,220 @@ export const _getRecoveryQueueItemTimestamps = async ({
   }
 }
 
-export const _getSafeCreationReceipt = memoize(
-  async ({
-    transactionService,
-    safeAddress,
-    provider,
-  }: {
-    transactionService: string
-    safeAddress: string
-    provider: JsonRpcProvider
-  }): Promise<TransactionReceipt | null> => {
-    const url = `${trimTrailingSlash(transactionService)}/api/v1/safes/${safeAddress}/creation/`
+const RECOVERY_LOG_LOOKUP_CONCURRENCY = 4
 
-    const { transactionHash } = await fetch(url).then((res) => {
-      if (res.ok && res.status === 200) {
-        return res.json() as Promise<{ transactionHash: string } & unknown>
-      } else {
-        throw new Error('Error fetching Safe creation details')
-      }
-    })
+// Past any reorg on record (deepest ever 7 blocks, 1 since the Merge). A log shallower than this
+// can still be replaced, and the cached arguments would then make executeNextTx revert.
+const REORG_DEPTH_BLOCKS = 12
 
-    return provider.getTransactionReceipt(transactionHash)
-  },
-  ({ transactionService, safeAddress }) => transactionService + safeAddress,
-)
+type QueuedTransaction = {
+  queueNonce: bigint
+  createdAt: bigint
+  txHash: string
+}
 
-const queryAddedTransactions = async (
-  delayModifier: Delay,
-  queueNonce: bigint,
-  txNonce: bigint,
-  transactionService: string,
-  provider: JsonRpcProvider,
-  safeAddress: string,
+type QueuedTransactionLookup = QueuedTransaction & {
+  transactionAdded: AddedEvent | null
+}
+
+type DelayModifierContext = {
+  delayModifier: Delay
+  delayModifierAddress: string
+  provider: JsonRpcProvider
+  chainId: string
+}
+
+/** `TransactionAdded` events found during the session, so that each refresh only searches for new ones */
+export const _addedTransactionsCache = new Map<string, AddedEvent>()
+
+const getCacheKey = ({ chainId, delayModifierAddress }: DelayModifierContext, nonce: bigint) =>
+  `${chainId}:${delayModifierAddress.toLowerCase()}:${nonce}`
+
+const getCachedTransactionAdded = (context: DelayModifierContext, { queueNonce, txHash }: QueuedTransaction) => {
+  const event = _addedTransactionsCache.get(getCacheKey(context, queueNonce))
+  return event?.args.txHash === txHash ? event : null
+}
+
+const cacheSettledTransactionsAdded = (
+  context: DelayModifierContext,
+  lookups: Array<QueuedTransactionLookup>,
+  latestBlock: number,
 ) => {
+  for (const { queueNonce, transactionAdded } of lookups) {
+    if (transactionAdded && latestBlock - transactionAdded.blockNumber >= REORG_DEPTH_BLOCKS) {
+      _addedTransactionsCache.set(getCacheKey(context, queueNonce), transactionAdded)
+    }
+  }
+}
+
+/**
+ * What the Delay Modifier stores about each queued transaction, read in a single multicall.
+ * Without it a queued transaction can't be shown at all, so a failure fails the whole load.
+ */
+const readQueuedTransactions = async ({
+  delayModifier,
+  delayModifierAddress,
+  txNonce,
+  queueNonce,
+  provider,
+}: {
+  delayModifier: Delay
+  delayModifierAddress: string
+  txNonce: bigint
+  queueNonce: bigint
+  provider: JsonRpcProvider
+}): Promise<Array<QueuedTransaction>> => {
   if (queueNonce === txNonce) {
     // There are no queued txs
     return []
   }
 
-  // We filter for the valid nonces while fetching the event logs.
-  // The nonce has to be one between the current queueNonce and the txNonce.
-  const diff = queueNonce - txNonce
-  const queryNonces = Array.from({ length: Number(diff) }, (_, idx) => {
-    return toBeHex(BigInt(txNonce + BigInt(idx)), 32)
-  })
+  const queuedNonces = Array.from({ length: Number(queueNonce - txNonce) }, (_, idx) => txNonce + BigInt(idx))
+  const calls = queuedNonces.flatMap((nonce) => [
+    { to: delayModifierAddress, data: delayModifier.interface.encodeFunctionData('txCreatedAt', [nonce]) },
+    { to: delayModifierAddress, data: delayModifier.interface.encodeFunctionData('txHash', [nonce]) },
+  ])
+  const callResults = await multicall(provider, calls)
 
+  if (callResults.some(({ success }) => !success)) {
+    throw new Error('Queued recovery transactions could not be read')
+  }
+
+  return queuedNonces.map((nonce, index) => ({
+    queueNonce: nonce,
+    createdAt: BigInt(callResults[index * 2].returnData),
+    txHash: delayModifier.interface.decodeFunctionResult('txHash', callResults[index * 2 + 1].returnData)[0],
+  }))
+}
+
+/**
+ * The `TransactionAdded` event of a queued transaction, or null if it can't be loaded from the RPC for
+ * any reason: history the RPC no longer serves, rate limits, a lagging node. The transaction is then
+ * shown from what the Delay Modifier stores, so a failure here never hides it.
+ */
+const findTransactionAdded = async ({
+  delayModifier,
+  eventTopic,
+  transaction,
+  latestBlock,
+  getTimestamp,
+}: {
+  delayModifier: Delay
+  eventTopic: string
+  transaction: QueuedTransaction
+  latestBlock: number
+  getTimestamp: GetBlockTimestamp
+}): Promise<AddedEvent | null> => {
+  const { queueNonce, createdAt, txHash } = transaction
+
+  try {
+    const window = await findBlockWindowForTimestamp({ timestamp: Number(createdAt), latestBlock, getTimestamp })
+    if (!window) return null
+
+    const events: Array<AddedEvent> = await delayModifier.queryFilter(
+      // @ts-expect-error raw topic arrays are supported by ethers at runtime
+      [eventTopic, toBeHex(queueNonce, 32), txHash],
+      window.fromBlock,
+      window.toBlock,
+    )
+    // A log from another fork or a lagging node must not describe what the Delay Modifier will execute
+    return events.find((event) => !event.removed && event.args.txHash === txHash) ?? null
+  } catch (error) {
+    logError(Errors._618, error)
+    return null
+  }
+}
+
+/**
+ * The Delay Modifier stores when each queued transaction was created (`txCreatedAt`) but not its data.
+ * Instead of scanning logs, find the blocks mined at that time and only query the `TransactionAdded`
+ * event there.
+ */
+const searchTransactionsAdded = async (
+  context: DelayModifierContext,
+  queuedTransactions: Array<QueuedTransaction>,
+): Promise<Array<QueuedTransactionLookup>> => {
+  const { delayModifier, provider } = context
   const transactionAddedFilter = delayModifier.filters.TransactionAdded() as TransactionAddedEvent.Filter
+  const [eventTopic] = await transactionAddedFilter.getTopicFilter()
 
-  const topics = await transactionAddedFilter.getTopicFilter()
-  topics[1] = queryNonces
+  const latestBlock = await provider.getBlockNumber().catch((error) => {
+    logError(Errors._618, error)
+    return undefined
+  })
+  if (latestBlock === undefined) {
+    // Nothing can be searched, but the queue is already known from the Delay Modifier storage
+    return queuedTransactions.map((transaction) => ({ ...transaction, transactionAdded: null }))
+  }
 
-  const { blockNumber } = (await _getSafeCreationReceipt({ transactionService, provider, safeAddress }))!
+  const getTimestamp = createBlockTimestampReader(provider)
 
-  // @ts-expect-error
-  return await delayModifier.queryFilter(topics, blockNumber, 'latest')
+  const lookups: Array<QueuedTransactionLookup> = []
+  for (let index = 0; index < queuedTransactions.length; index += RECOVERY_LOG_LOOKUP_CONCURRENCY) {
+    const batch = queuedTransactions.slice(index, index + RECOVERY_LOG_LOOKUP_CONCURRENCY)
+    const found = await Promise.all(
+      batch.map(async (transaction) => ({
+        ...transaction,
+        transactionAdded: await findTransactionAdded({
+          delayModifier,
+          eventTopic: eventTopic as string,
+          transaction,
+          latestBlock,
+          getTimestamp,
+        }),
+      })),
+    )
+    lookups.push(...found)
+  }
+
+  cacheSettledTransactionsAdded(context, lookups, latestBlock)
+
+  return lookups
+}
+
+const queryAddedTransactions = async (
+  context: DelayModifierContext,
+  queuedTransactions: Array<QueuedTransaction>,
+): Promise<Array<QueuedTransactionLookup>> => {
+  const cachedLookups = queuedTransactions.map((transaction) => ({
+    ...transaction,
+    transactionAdded: getCachedTransactionAdded(context, transaction),
+  }))
+  const missing = cachedLookups.filter(({ transactionAdded }) => !transactionAdded)
+
+  if (missing.length === 0) {
+    return cachedLookups
+  }
+
+  const searched = await searchTransactionsAdded(context, missing)
+  const searchedByNonce = new Map(searched.map((lookup) => [lookup.queueNonce, lookup]))
+
+  return cachedLookups.map((lookup) => searchedByNonce.get(lookup.queueNonce) ?? lookup)
+}
+
+const getUnavailableRecoveryQueueItem = ({
+  delayModifierAddress,
+  transaction,
+  delay,
+  expiry,
+}: {
+  delayModifierAddress: string
+  transaction: QueuedTransaction
+  delay: bigint
+  expiry: bigint
+}): UnavailableRecoveryQueueItem => {
+  const { queueNonce, createdAt, txHash } = transaction
+
+  return {
+    address: delayModifierAddress,
+    args: { queueNonce, txHash },
+    ..._getRecoveryQueueItemTimestamps({ createdAt, delay, expiry }),
+  }
 }
 
 const getRecoveryQueueItem = async ({
-  delayModifier,
   transactionAdded,
+  createdAt,
   delay,
   expiry,
   provider,
@@ -163,8 +331,8 @@ const getRecoveryQueueItem = async ({
   version,
   safeAddress,
 }: {
-  delayModifier: Delay
   transactionAdded: AddedEvent
+  createdAt: bigint
   delay: bigint
   expiry: bigint
   provider: JsonRpcProvider
@@ -172,15 +340,12 @@ const getRecoveryQueueItem = async ({
   version: SafeState['version']
   safeAddress: string
 }): Promise<RecoveryQueueItem> => {
-  const [timestamps, receipt] = await Promise.all([
-    _getRecoveryQueueItemTimestamps({
-      delayModifier,
-      transactionAdded,
-      delay,
-      expiry,
-    }),
-    provider.getTransactionReceipt(transactionAdded.transactionHash),
-  ])
+  const timestamps = _getRecoveryQueueItemTimestamps({ createdAt, delay, expiry })
+  // Only tells who proposed the transaction, so a receipt the RPC doesn't return must not hide it
+  const receipt = await provider.getTransactionReceipt(transactionAdded.transactionHash).catch((error) => {
+    logError(Errors._615, error)
+    return null
+  })
 
   const isMalicious = _isMaliciousRecovery({
     chainId,
@@ -193,20 +358,18 @@ const getRecoveryQueueItem = async ({
     ...transactionAdded,
     ...timestamps,
     isMalicious,
-    executor: receipt!.from,
+    executor: receipt?.from,
   }
 }
 
 export const _getRecoveryStateItem = async ({
   delayModifier,
-  transactionService,
   safeAddress,
   provider,
   chainId,
   version,
 }: {
   delayModifier: Delay
-  transactionService: string
   safeAddress: string
   provider: JsonRpcProvider
   chainId: string
@@ -251,20 +414,27 @@ export const _getRecoveryStateItem = async ({
     BigInt(callResults[4].returnData),
   ]
 
-  const queuedTransactionsAdded = await queryAddedTransactions(
+  const queuedTransactions = await readQueuedTransactions({
     delayModifier,
-    queueNonce,
+    delayModifierAddress,
     txNonce,
-    transactionService,
+    queueNonce,
     provider,
-    safeAddress,
+  })
+  const lookups = await queryAddedTransactions(
+    { delayModifier, delayModifierAddress, provider, chainId },
+    queuedTransactions,
   )
+  const found = lookups.flatMap(({ transactionAdded, createdAt }) =>
+    transactionAdded ? [{ transactionAdded, createdAt }] : [],
+  )
+  const unavailable = lookups.filter(({ transactionAdded }) => !transactionAdded)
 
   const queue = await Promise.all(
-    queuedTransactionsAdded.map((transactionAdded) => {
+    found.map(({ transactionAdded, createdAt }) => {
       return getRecoveryQueueItem({
-        delayModifier,
         transactionAdded,
+        createdAt,
         delay: BigInt(delay),
         expiry: BigInt(expiry),
         provider,
@@ -272,6 +442,15 @@ export const _getRecoveryStateItem = async ({
         version,
         safeAddress,
       })
+    }),
+  )
+
+  const unavailableQueue = unavailable.map((transaction) =>
+    getUnavailableRecoveryQueueItem({
+      delayModifierAddress,
+      transaction,
+      delay: BigInt(delay),
+      expiry: BigInt(expiry),
     }),
   )
 
@@ -283,6 +462,7 @@ export const _getRecoveryStateItem = async ({
     txNonce: BigInt(txNonce),
     queueNonce: BigInt(queueNonce),
     queue: queue.filter((item) => !item.removed),
+    unavailableQueue,
   }
 }
 
@@ -291,7 +471,6 @@ export function getRecoveryState({
   ...rest
 }: {
   delayModifiers: Array<Delay>
-  transactionService: string
   safeAddress: string
   provider: JsonRpcProvider
   chainId: string

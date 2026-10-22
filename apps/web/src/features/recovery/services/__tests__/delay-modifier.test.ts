@@ -27,6 +27,15 @@ describe('delay-modifier', () => {
       })
     })
 
+    it.each(['1328', '1329'])('should return true for the official Delay Modifier on Sei chain %s', async (chainId) => {
+      const provider = {
+        getCode: () => Promise.resolve(faker.string.hexadecimal()),
+      } as unknown as JsonRpcProvider
+
+      const type = await _getZodiacContract(chainId, DELAY_MODULE['1.0.1'], provider)
+      expect(type).toBe(KnownContracts.DELAY)
+    })
+
     it('should otherwise return false', async () => {
       const chainId = '5'
       const moduleAddress = faker.finance.ethereumAddress()
