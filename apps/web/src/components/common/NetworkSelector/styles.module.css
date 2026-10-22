@@ -100,6 +100,16 @@
   border-color: var(--color-border-main);
 }
 
+.selectedChips {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  max-height: 84px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
 .comingSoon {
   background-color: var(--color-border-light);
   border-radius: 4px;

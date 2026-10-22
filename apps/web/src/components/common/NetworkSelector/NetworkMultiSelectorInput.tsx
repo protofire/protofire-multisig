@@ -4,6 +4,7 @@ import type { Chain } from '@safe-global/store/gateway/AUTO_GENERATED/chains'
 import partition from 'lodash/partition'
 import ChainIndicator from '../ChainIndicator'
 import css from './styles.module.css'
+import { scrollableChainListCss } from '@/components/common/ScrollableChainList'
 import { useFormContext } from 'react-hook-form'
 import useChains from '@/hooks/useChains'
 import NetworkGroupDivider from './NetworkGroupDivider'
@@ -96,16 +97,20 @@ const NetworkMultiSelectorInput = ({
         )
       }
 
-      return selectedOptions.map((chain) => (
-        <Chip
-          variant="outlined"
-          key={chain.chainId}
-          avatar={<ChainIndicator chainId={chain.chainId} onlyLogo inline />}
-          label={chain.chainName}
-          onDelete={() => handleDelete(chain.chainId)}
-          className={css.multiChainChip}
-        />
-      ))
+      return (
+        <Box className={`${css.selectedChips} ${scrollableChainListCss.scrollbar}`}>
+          {selectedOptions.map((chain) => (
+            <Chip
+              variant="outlined"
+              key={chain.chainId}
+              avatar={<ChainIndicator chainId={chain.chainId} onlyLogo inline />}
+              label={chain.chainName}
+              onDelete={() => handleDelete(chain.chainId)}
+              className={css.multiChainChip}
+            />
+          ))}
+        </Box>
+      )
     },
     [showSelectAll, isAllSelected, handleDelete],
   )

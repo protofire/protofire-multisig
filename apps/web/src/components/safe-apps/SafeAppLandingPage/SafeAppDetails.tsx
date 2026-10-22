@@ -3,6 +3,7 @@ import { Box } from '@mui/system'
 import Typography from '@mui/material/Typography'
 import Divider from '@mui/material/Divider'
 import ChainIndicator from '@/components/common/ChainIndicator'
+import ScrollableChainList from '@/components/common/ScrollableChainList'
 import WarningIcon from '@/public/images/notifications/warning.svg'
 import SvgIcon from '@mui/material/SvgIcon'
 import SafeAppIconCard from '@/components/safe-apps/SafeAppIconCard'
@@ -44,12 +45,14 @@ const SafeAppDetails = ({ app, showDefaultListWarning }: DetailsProps) => (
       </Typography>
     </Box>
     <Box sx={{ mt: 2 }}>
-      <Typography variant="body1">Available networks</Typography>
-      <Box sx={{ display: 'flex', gap: 2, mt: 1, flexWrap: 'wrap' }}>
+      <Typography variant="body1" sx={{ mb: 1 }}>
+        Available networks ({app.chainIds.length})
+      </Typography>
+      <ScrollableChainList layout="grid" columns={3} maxHeight={200} bordered>
         {app.chainIds.map((chainId) => (
           <ChainIndicator key={chainId} chainId={chainId} inline showUnknown={false} />
         ))}
-      </Box>
+      </ScrollableChainList>
     </Box>
     <Divider sx={{ mt: 4 }} />
     {showDefaultListWarning && (

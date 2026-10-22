@@ -1,0 +1,2335 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`./NetworkMultiSelectorInput.stories FewSelected 1`] = `
+<div
+  style="background-color: rgb(255, 255, 255); padding: 1rem;"
+>
+  <div
+    class="MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation0 mui-style-1xulk7h-MuiPaper-root"
+    style="--Paper-shadow: none;"
+  >
+    <h5>
+      Select networks (
+      3
+      )
+    </h5>
+    <div
+      class="MuiAutocomplete-root MuiAutocomplete-hasClearIcon MuiAutocomplete-hasPopupIcon mui-style-o5oj2-MuiAutocomplete-root"
+    >
+      <div
+        class="MuiFormControl-root MuiFormControl-fullWidth MuiTextField-root mui-style-cmpglg-MuiFormControl-root-MuiTextField-root"
+      >
+        <div
+          class="MuiInputBase-root MuiOutlinedInput-root MuiInputBase-colorPrimary MuiInputBase-fullWidth MuiInputBase-formControl MuiInputBase-adornedStart MuiInputBase-adornedEnd MuiAutocomplete-inputRoot mui-style-z2d8l3-MuiInputBase-root-MuiOutlinedInput-root"
+        >
+          <div
+            class="selectedChips scrollbar MuiBox-root mui-style-0"
+          >
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <img
+                  alt="Ethereum Logo"
+                  height="24"
+                  loading="lazy"
+                  src="https://safe-transaction-assets.staging.5afe.dev/chains/1/chain_logo.png"
+                  style="border-radius: 50%;"
+                  width="24"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 1
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 2
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 3
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+          </div>
+          <input
+            aria-autocomplete="list"
+            aria-expanded="false"
+            aria-invalid="false"
+            autocapitalize="none"
+            autocomplete="off"
+            class="MuiInputBase-input MuiOutlinedInput-input MuiInputBase-inputAdornedStart MuiInputBase-inputAdornedEnd MuiAutocomplete-input MuiAutocomplete-inputFocused mui-style-1pmlxf8-MuiInputBase-input-MuiOutlinedInput-input"
+            id="«r0»"
+            role="combobox"
+            spellcheck="false"
+            type="text"
+            value=""
+          />
+          <div
+            class="MuiAutocomplete-endAdornment mui-style-1uhhrmm-MuiAutocomplete-endAdornment"
+          >
+            <button
+              aria-label="Clear"
+              class="MuiButtonBase-root MuiIconButton-root MuiIconButton-sizeMedium MuiAutocomplete-clearIndicator mui-style-hsc0qk-MuiButtonBase-root-MuiIconButton-root-MuiAutocomplete-clearIndicator"
+              tabindex="-1"
+              title="Clear"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeSmall mui-style-tqxw8e-MuiSvgIcon-root"
+                data-testid="CloseIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
+                />
+              </svg>
+            </button>
+            <button
+              aria-label="Open"
+              class="MuiButtonBase-root MuiIconButton-root MuiIconButton-sizeMedium MuiAutocomplete-popupIndicator mui-style-fxyqc5-MuiButtonBase-root-MuiIconButton-root-MuiAutocomplete-popupIndicator"
+              tabindex="-1"
+              title="Open"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="ArrowDropDownIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M7 10l5 5 5-5z"
+                />
+              </svg>
+            </button>
+          </div>
+          <fieldset
+            aria-hidden="true"
+            class="MuiOutlinedInput-notchedOutline mui-style-1focg1t-MuiOutlinedInput-notchedOutline"
+          >
+            <legend
+              class="mui-style-w4cd9x"
+            >
+              <span
+                aria-hidden="true"
+                class="notranslate"
+              >
+                ​
+              </span>
+            </legend>
+          </fieldset>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`./NetworkMultiSelectorInput.stories FortyPlusSelected 1`] = `
+<div
+  style="background-color: rgb(255, 255, 255); padding: 1rem;"
+>
+  <div
+    class="MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation0 mui-style-1xulk7h-MuiPaper-root"
+    style="--Paper-shadow: none;"
+  >
+    <h5>
+      Select networks (
+      42
+      )
+    </h5>
+    <div
+      class="MuiAutocomplete-root MuiAutocomplete-hasClearIcon MuiAutocomplete-hasPopupIcon mui-style-o5oj2-MuiAutocomplete-root"
+    >
+      <div
+        class="MuiFormControl-root MuiFormControl-fullWidth MuiTextField-root mui-style-cmpglg-MuiFormControl-root-MuiTextField-root"
+      >
+        <div
+          class="MuiInputBase-root MuiOutlinedInput-root MuiInputBase-colorPrimary MuiInputBase-fullWidth MuiInputBase-formControl MuiInputBase-adornedStart MuiInputBase-adornedEnd MuiAutocomplete-inputRoot mui-style-z2d8l3-MuiInputBase-root-MuiOutlinedInput-root"
+        >
+          <div
+            class="selectedChips scrollbar MuiBox-root mui-style-0"
+          >
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <img
+                  alt="Ethereum Logo"
+                  height="24"
+                  loading="lazy"
+                  src="https://safe-transaction-assets.staging.5afe.dev/chains/1/chain_logo.png"
+                  style="border-radius: 50%;"
+                  width="24"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 1
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 2
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 3
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 4
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 5
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 6
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 7
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 8
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 9
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 10
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 11
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 12
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 13
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 14
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 15
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 16
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 17
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 18
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 19
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 20
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 21
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 22
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 23
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 24
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 25
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 26
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 27
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 28
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 29
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 30
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 31
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 32
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 33
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 34
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 35
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 36
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 37
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 38
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 39
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 40
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 41
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 42
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+          </div>
+          <input
+            aria-autocomplete="list"
+            aria-expanded="false"
+            aria-invalid="false"
+            autocapitalize="none"
+            autocomplete="off"
+            class="MuiInputBase-input MuiOutlinedInput-input MuiInputBase-inputAdornedStart MuiInputBase-inputAdornedEnd MuiAutocomplete-input MuiAutocomplete-inputFocused mui-style-1pmlxf8-MuiInputBase-input-MuiOutlinedInput-input"
+            id="«r2»"
+            role="combobox"
+            spellcheck="false"
+            type="text"
+            value=""
+          />
+          <div
+            class="MuiAutocomplete-endAdornment mui-style-1uhhrmm-MuiAutocomplete-endAdornment"
+          >
+            <button
+              aria-label="Clear"
+              class="MuiButtonBase-root MuiIconButton-root MuiIconButton-sizeMedium MuiAutocomplete-clearIndicator mui-style-hsc0qk-MuiButtonBase-root-MuiIconButton-root-MuiAutocomplete-clearIndicator"
+              tabindex="-1"
+              title="Clear"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeSmall mui-style-tqxw8e-MuiSvgIcon-root"
+                data-testid="CloseIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
+                />
+              </svg>
+            </button>
+            <button
+              aria-label="Open"
+              class="MuiButtonBase-root MuiIconButton-root MuiIconButton-sizeMedium MuiAutocomplete-popupIndicator mui-style-fxyqc5-MuiButtonBase-root-MuiIconButton-root-MuiAutocomplete-popupIndicator"
+              tabindex="-1"
+              title="Open"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="ArrowDropDownIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M7 10l5 5 5-5z"
+                />
+              </svg>
+            </button>
+          </div>
+          <fieldset
+            aria-hidden="true"
+            class="MuiOutlinedInput-notchedOutline mui-style-1focg1t-MuiOutlinedInput-notchedOutline"
+          >
+            <legend
+              class="mui-style-w4cd9x"
+            >
+              <span
+                aria-hidden="true"
+                class="notranslate"
+              >
+                ​
+              </span>
+            </legend>
+          </fieldset>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`./NetworkMultiSelectorInput.stories ManySelected 1`] = `
+<div
+  style="background-color: rgb(255, 255, 255); padding: 1rem;"
+>
+  <div
+    class="MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation0 mui-style-1xulk7h-MuiPaper-root"
+    style="--Paper-shadow: none;"
+  >
+    <h5>
+      Select networks (
+      18
+      )
+    </h5>
+    <div
+      class="MuiAutocomplete-root MuiAutocomplete-hasClearIcon MuiAutocomplete-hasPopupIcon mui-style-o5oj2-MuiAutocomplete-root"
+    >
+      <div
+        class="MuiFormControl-root MuiFormControl-fullWidth MuiTextField-root mui-style-cmpglg-MuiFormControl-root-MuiTextField-root"
+      >
+        <div
+          class="MuiInputBase-root MuiOutlinedInput-root MuiInputBase-colorPrimary MuiInputBase-fullWidth MuiInputBase-formControl MuiInputBase-adornedStart MuiInputBase-adornedEnd MuiAutocomplete-inputRoot mui-style-z2d8l3-MuiInputBase-root-MuiOutlinedInput-root"
+        >
+          <div
+            class="selectedChips scrollbar MuiBox-root mui-style-0"
+          >
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <img
+                  alt="Ethereum Logo"
+                  height="24"
+                  loading="lazy"
+                  src="https://safe-transaction-assets.staging.5afe.dev/chains/1/chain_logo.png"
+                  style="border-radius: 50%;"
+                  width="24"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 1
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 2
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 3
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 4
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 5
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 6
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 7
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 8
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 9
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 10
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 11
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 12
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 13
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 14
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 15
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 16
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 17
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+            <div
+              class="MuiButtonBase-root MuiChip-root MuiChip-outlined MuiChip-sizeMedium MuiChip-colorDefault MuiChip-deletable MuiChip-deletableColorDefault MuiChip-outlinedDefault multiChainChip mui-style-1eqhf5i-MuiButtonBase-root-MuiChip-root"
+              role="button"
+              tabindex="0"
+            >
+              <span
+                class="MuiChip-avatar MuiChip-avatarMedium MuiChip-avatarColorDefault inlineIndicator withLogo onlyLogo"
+                data-testid="chain-logo"
+              >
+                <mock-icon
+                  aria-hidden=""
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-156krn5-MuiSvgIcon-root"
+                  focusable="false"
+                />
+              </span>
+              <span
+                class="MuiChip-label MuiChip-labelMedium mui-style-1fh978c-MuiChip-label"
+              >
+                Network 18
+              </span>
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiChip-deleteIcon MuiChip-deleteIconMedium MuiChip-deleteIconColorDefault MuiChip-deleteIconOutlinedColorDefault mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="CancelIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+                />
+              </svg>
+            </div>
+          </div>
+          <input
+            aria-autocomplete="list"
+            aria-expanded="false"
+            aria-invalid="false"
+            autocapitalize="none"
+            autocomplete="off"
+            class="MuiInputBase-input MuiOutlinedInput-input MuiInputBase-inputAdornedStart MuiInputBase-inputAdornedEnd MuiAutocomplete-input MuiAutocomplete-inputFocused mui-style-1pmlxf8-MuiInputBase-input-MuiOutlinedInput-input"
+            id="«r4»"
+            role="combobox"
+            spellcheck="false"
+            type="text"
+            value=""
+          />
+          <div
+            class="MuiAutocomplete-endAdornment mui-style-1uhhrmm-MuiAutocomplete-endAdornment"
+          >
+            <button
+              aria-label="Clear"
+              class="MuiButtonBase-root MuiIconButton-root MuiIconButton-sizeMedium MuiAutocomplete-clearIndicator mui-style-hsc0qk-MuiButtonBase-root-MuiIconButton-root-MuiAutocomplete-clearIndicator"
+              tabindex="-1"
+              title="Clear"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeSmall mui-style-tqxw8e-MuiSvgIcon-root"
+                data-testid="CloseIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
+                />
+              </svg>
+            </button>
+            <button
+              aria-label="Open"
+              class="MuiButtonBase-root MuiIconButton-root MuiIconButton-sizeMedium MuiAutocomplete-popupIndicator mui-style-fxyqc5-MuiButtonBase-root-MuiIconButton-root-MuiAutocomplete-popupIndicator"
+              tabindex="-1"
+              title="Open"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-style-1dhtbeh-MuiSvgIcon-root"
+                data-testid="ArrowDropDownIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M7 10l5 5 5-5z"
+                />
+              </svg>
+            </button>
+          </div>
+          <fieldset
+            aria-hidden="true"
+            class="MuiOutlinedInput-notchedOutline mui-style-1focg1t-MuiOutlinedInput-notchedOutline"
+          >
+            <legend
+              class="mui-style-w4cd9x"
+            >
+              <span
+                aria-hidden="true"
+                class="notranslate"
+              >
+                ​
+              </span>
+            </legend>
+          </fieldset>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;

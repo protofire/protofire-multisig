@@ -19,7 +19,7 @@ const OverviewWidget = ({ safeName, networks }: { safeName: string; networks: Ch
     ...(networks.length
       ? [
           {
-            title: 'Network(s)',
+            title: `Network(s) (${networks.length})`,
             component: <NetworkLogosList networks={networks} />,
           },
         ]

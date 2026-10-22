@@ -11,6 +11,7 @@ import type { SafeApp as SafeAppData } from '@safe-global/store/gateway/AUTO_GEN
 
 import { getSafeAppUrl } from '@/components/safe-apps/SafeAppCard'
 import ChainIndicator from '@/components/common/ChainIndicator'
+import ScrollableChainList from '@/components/common/ScrollableChainList'
 import SafeAppIconCard from '@/components/safe-apps/SafeAppIconCard'
 import SafeAppActionButtons from '@/components/safe-apps/SafeAppActionButtons'
 import SafeAppTags from '@/components/safe-apps/SafeAppTags'
@@ -45,71 +46,74 @@ const SafeAppPreviewDrawer = ({ isOpen, safeApp, isBookmarked, onClose, onBookma
   return (
     <Drawer anchor="right" open={isOpen} onClose={onClose}>
       <Box className={css.drawerContainer}>
-        {/* Toolbar */}
+        <Box className={css.drawerContent}>
+          {/* Toolbar */}
 
-        {safeApp && (
-          <Box display="flex" justifyContent="right">
-            <SafeAppActionButtons safeApp={safeApp} isBookmarked={isBookmarked} onBookmarkSafeApp={onBookmark} />
-            <Tooltip title={`Close ${safeApp.name} preview`} placement="top">
-              <IconButton
-                onClick={onClose}
-                size="small"
-                sx={{
-                  color: 'border.main',
-                  ml: 1,
-                }}
-              >
-                <SvgIcon component={CloseIcon} inheritViewBox color="border" fontSize="small" />
-              </IconButton>
-            </Tooltip>
+          {safeApp && (
+            <Box display="flex" justifyContent="right">
+              <SafeAppActionButtons safeApp={safeApp} isBookmarked={isBookmarked} onBookmarkSafeApp={onBookmark} />
+              <Tooltip title={`Close ${safeApp.name} preview`} placement="top">
+                <IconButton
+                  onClick={onClose}
+                  size="small"
+                  sx={{
+                    color: 'border.main',
+                    ml: 1,
+                  }}
+                >
+                  <SvgIcon component={CloseIcon} inheritViewBox color="border" fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            </Box>
+          )}
+
+          {/* Safe App Info */}
+          <Box sx={{ px: 1 }}>
+            <SafeAppIconCard src={safeApp?.iconUrl} alt={`${safeApp?.name} logo`} width={90} height={90} />
           </Box>
-        )}
 
-        {/* Safe App Info */}
-        <Box sx={{ px: 1 }}>
-          <SafeAppIconCard src={safeApp?.iconUrl} alt={`${safeApp?.name} logo`} width={90} height={90} />
-        </Box>
+          <Typography variant="h4" fontWeight={700} sx={{ mt: 2 }}>
+            {safeApp?.name}
+          </Typography>
 
-        <Typography variant="h4" fontWeight={700} sx={{ mt: 2 }}>
-          {safeApp?.name}
-        </Typography>
+          <Typography variant="body2" color="primary.light" sx={{ mt: 2 }}>
+            {safeApp?.description}
+          </Typography>
 
-        <Typography variant="body2" color="primary.light" sx={{ mt: 2 }}>
-          {safeApp?.description}
-        </Typography>
+          {/* Tags */}
+          <SafeAppTags tags={safeApp?.tags || []} />
 
-        {/* Tags */}
-        <SafeAppTags tags={safeApp?.tags || []} />
+          {/* Networks */}
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 2, mb: 1 }}>
+            Available networks ({safeApp?.chainIds.length ?? 0})
+          </Typography>
 
-        {/* Networks */}
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-          Available networks
-        </Typography>
+          <ScrollableChainList layout="grid" columns={3} maxHeight={200} bordered fill>
+            {safeApp?.chainIds.map((chainId) => (
+              <ChainIndicator key={chainId} chainId={chainId} inline showUnknown={false} />
+            ))}
+          </ScrollableChainList>
 
-        <Box sx={{ display: 'flex', gap: 2, mt: 2, flexWrap: 'wrap' }}>
-          {safeApp?.chainIds.map((chainId) => (
-            <ChainIndicator key={chainId} chainId={chainId} inline showUnknown={false} />
-          ))}
+          {/* Safe App Social Links */}
+          {safeApp && <SafeAppSocialLinksCard safeApp={safeApp} />}
         </Box>
 
         {/* Open Safe App button */}
-        <Link href={safeAppUrl} passHref legacyBehavior>
-          <Button
-            data-testid="open-safe-app-btn"
-            fullWidth
-            variant="contained"
-            color="primary"
-            component="a"
-            href={safeApp?.url}
-            sx={{ mt: 3 }}
-            onClick={onOpenSafe}
-          >
-            Open Safe App
-          </Button>
-        </Link>
-
-        {/* Safe App Social Links */}
-        {safeApp && <SafeAppSocialLinksCard safeApp={safeApp} />}
+        <Box className={css.drawerFooter}>
+          <Link href={safeAppUrl} passHref legacyBehavior>
+            <Button
+              data-testid="open-safe-app-btn"
+              fullWidth
+              variant="contained"
+              color="primary"
+              component="a"
+              href={safeApp?.url}
+              onClick={onOpenSafe}
+            >
+              Open Safe App
+            </Button>
+          </Link>
+        </Box>
       </Box>
     </Drawer>
   )

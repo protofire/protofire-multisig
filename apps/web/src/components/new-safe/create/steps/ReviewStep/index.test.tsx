@@ -250,6 +250,7 @@ describe('ReviewStep', () => {
     )
 
     expect(getByText(/activate your account/)).toBeInTheDocument()
+    expect(getByText('Networks (2)')).toBeInTheDocument()
   })
 
   it('should show the gateway refusal reason when sponsored creation is rejected', async () => {

@@ -46,12 +46,12 @@ import { useAppDispatch, useAppSelector } from '@/store'
 import { hasRemainingRelays } from '@/utils/relaying'
 import { isSmartContract, isWalletRejection } from '@/utils/wallets'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
-import { Box, Button, CircularProgress, Divider, Grid, Tooltip, Typography } from '@mui/material'
+import { Box, Button, CircularProgress, Divider, Grid, Typography } from '@mui/material'
 import { type Chain } from '@safe-global/store/gateway/AUTO_GENERATED/chains'
 import classnames from 'classnames'
 import { useRouter } from 'next/router'
 import { useMemo, useState } from 'react'
-import ChainIndicator from '@/components/common/ChainIndicator'
+import NetworksPopover from './NetworksPopover'
 import NetworkWarning from '../../NetworkWarning'
 import { useAllSafes } from '@/hooks/safes'
 import uniq from 'lodash/uniq'
@@ -104,34 +104,11 @@ export const SafeSetupOverview = ({
   return (
     <Grid container spacing={3}>
       <ReviewRow
-        name={networks.length > 1 ? 'Networks' : 'Network'}
+        name={networks.length > 1 ? `Networks (${networks.length})` : 'Network'}
         value={
-          <Tooltip
-            title={
-              <Box>
-                {networks.map((safeItem) => (
-                  <Box
-                    key={safeItem.chainId}
-                    sx={{
-                      p: '4px 0px',
-                    }}
-                  >
-                    <ChainIndicator chainId={safeItem.chainId} />
-                  </Box>
-                ))}
-              </Box>
-            }
-            arrow
-          >
-            <Box
-              data-testid="network-list"
-              sx={{
-                display: 'inline-block',
-              }}
-            >
-              <NetworkLogosList networks={networks} />
-            </Box>
-          </Tooltip>
+          <NetworksPopover networks={networks}>
+            <NetworkLogosList networks={networks} />
+          </NetworksPopover>
         }
       />
       {name && <ReviewRow name="Name" value={<Typography data-testid="review-step-safe-name">{name}</Typography>} />}

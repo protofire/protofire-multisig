@@ -23,6 +23,8 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
+const createNetworks = (count: number) => Array.from({ length: count }, (_, index) => ({ chainId: `${index + 1}` }))
+
 export const SingleNetwork: Story = {
   args: {
     networks: [{ chainId: '1' }],
@@ -59,5 +61,32 @@ export const ManyNetworksWithoutHasMore: Story = {
   args: {
     networks: [{ chainId: '1' }, { chainId: '137' }, { chainId: '10' }, { chainId: '42161' }, { chainId: '8453' }],
     showHasMore: false,
+  },
+}
+
+export const ThreeNetworks: Story = {
+  args: {
+    networks: createNetworks(3),
+  },
+}
+
+export const TenNetworks: Story = {
+  args: {
+    networks: createNetworks(10),
+  },
+}
+
+export const FortyPlusNetworks: Story = {
+  args: {
+    networks: createNetworks(42),
+  },
+}
+
+export const SuccessDialogVariant: Story = {
+  args: {
+    networks: createNetworks(42),
+    logoSize: 28,
+    maxHeight: 76,
+    centered: true,
   },
 }

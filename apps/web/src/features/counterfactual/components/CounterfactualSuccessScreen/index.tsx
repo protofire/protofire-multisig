@@ -21,6 +21,7 @@ const CounterfactualSuccessScreen = () => {
   const safeName = safeAddress && chain ? addressBooks?.[chain.chainId]?.[safeAddress] : ''
   const isCFCreation = event === SafeCreationEvent.AWAITING_EXECUTION
   const isMultiChain = networks.length > 1
+  const displayedNetworks = networks.length > 0 ? networks : chain ? [chain] : []
   const chainName = isMultiChain ? '' : isCFCreation ? networks[0].chainName : chain?.chainName
 
   useEffect(() => {
@@ -119,7 +120,18 @@ const CounterfactualSuccessScreen = () => {
               fontSize: 14,
             }}
           >
-            <NetworkLogosList networks={networks.length > 0 ? networks : chain ? [chain] : []} />
+            {isMultiChain && (
+              <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ mb: 1 }}>
+                Created on {networks.length} networks
+              </Typography>
+            )}
+            <NetworkLogosList
+              networks={displayedNetworks}
+              logoSize={28}
+              maxHeight={76}
+              centered
+              fadeColor="var(--color-background-main)"
+            />
             <Typography
               variant="h5"
               sx={{

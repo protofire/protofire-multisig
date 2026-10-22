@@ -129,7 +129,7 @@ function SetNameStep({
 
             <Grid xs={12} item>
               <Typography variant="h5" fontWeight={700} display="inline-flex" alignItems="center" gap={1} mt={2}>
-                Select Networks
+                Select networks ({networks.length})
               </Typography>
               <Typography variant="body2" mb={2}>
                 Choose which networks you want your account to be active on. You can add more networks later.{' '}
