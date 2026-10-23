@@ -55,8 +55,8 @@ const AddProposerButton = ({ onAdd, isUndeployedSafe }: { onAdd: () => void; isU
                 isUndeployedSafe
                   ? SafeNotActivated
                   : !supportsOffChainSignatures
-                  ? OFF_CHAIN_SIGNATURES_UNSUPPORTED
-                  : ''
+                    ? OFF_CHAIN_SIGNATURES_UNSUPPORTED
+                    : ''
               }
             >
               <span>

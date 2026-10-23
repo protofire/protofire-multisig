@@ -197,10 +197,10 @@ const InternalDeleteProposer = ({ wallet, safeAddress, chainId, proposer }: Dele
                 !supportsOffChainSignatures
                   ? OFF_CHAIN_SIGNATURES_UNSUPPORTED
                   : isOk && canDelete
-                  ? 'Delete proposer'
-                  : isOk && !canDelete
-                  ? 'Only the owner of this proposer or the proposer itself can delete them'
-                  : undefined
+                    ? 'Delete proposer'
+                    : isOk && !canDelete
+                      ? 'Only the owner of this proposer or the proposer itself can delete them'
+                      : undefined
               }
             >
               <span>

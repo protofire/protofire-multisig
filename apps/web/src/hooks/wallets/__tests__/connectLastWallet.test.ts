@@ -22,7 +22,7 @@ describe('connectLastWallet', () => {
     .build()
   const mainnetChain = chainBuilder().with({ chainId: '1', features: [] }).build()
 
-  const mockOnboard = () => ({ connectWallet: jest.fn().mockResolvedValue([]) } as unknown as OnboardAPI)
+  const mockOnboard = () => ({ connectWallet: jest.fn().mockResolvedValue([]) }) as unknown as OnboardAPI
 
   afterEach(() => {
     lastWalletStorage.remove()

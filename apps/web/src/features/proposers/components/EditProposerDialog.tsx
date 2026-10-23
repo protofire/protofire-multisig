@@ -34,10 +34,10 @@ const EditProposerDialog = ({ proposer }: { proposer: Delegate }) => {
                 !supportsOffChainSignatures
                   ? OFF_CHAIN_SIGNATURES_UNSUPPORTED
                   : isOk && canEdit
-                  ? 'Edit proposer'
-                  : isOk && !canEdit
-                  ? 'Only the owner of this proposer can edit them'
-                  : undefined
+                    ? 'Edit proposer'
+                    : isOk && !canEdit
+                      ? 'Only the owner of this proposer can edit them'
+                      : undefined
               }
             >
               <span>

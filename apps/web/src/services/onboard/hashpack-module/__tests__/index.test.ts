@@ -133,10 +133,10 @@ const buildChain = (chainId: string): Chain =>
 // this narrows the SDK's wider WalletInit return type for test convenience.
 const initModule = (chainId: string): WalletModule | null => {
   const result = HashPackModule(buildChain(chainId))(walletHelpers)
-  return Array.isArray(result) ? result[0] ?? null : result
+  return Array.isArray(result) ? (result[0] ?? null) : result
 }
 
-const buildSession = (): SessionTypes.Struct => ({ topic: 'mock-topic' } as unknown as SessionTypes.Struct)
+const buildSession = (): SessionTypes.Struct => ({ topic: 'mock-topic' }) as unknown as SessionTypes.Struct
 
 const ACCOUNT_ID = '0.0.10814740'
 const EVM_ADDRESS = '0x0000000000000000000000000000000000004d'

@@ -78,10 +78,10 @@ function RecoverySettings(): ReactElement {
     recoveryError && !isRecoveryEnabled
       ? 'Account recovery details could not be loaded.'
       : isPending
-      ? 'Loading account recovery details.'
-      : isRecoveryEnabled
-      ? 'The trusted Recoverer will be able to recover your Safe Account if you ever lose access. You can change Recoverers or alter your recovery setup at any time.'
-      : 'Choose a trusted Recoverer to recover your Safe Account if you ever lose access. Enabling the Account recovery module will require a transaction.'
+        ? 'Loading account recovery details.'
+        : isRecoveryEnabled
+          ? 'The trusted Recoverer will be able to recover your Safe Account if you ever lose access. You can change Recoverers or alter your recovery setup at any time.'
+          : 'Choose a trusted Recoverer to recover your Safe Account if you ever lose access. Enabling the Account recovery module will require a transaction.'
 
   const rows = useMemo(() => {
     return recovery?.flatMap((delayModifier) => {

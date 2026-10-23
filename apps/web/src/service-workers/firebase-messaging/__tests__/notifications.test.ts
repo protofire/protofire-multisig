@@ -56,7 +56,7 @@ const createChainMock = (overrides: Partial<Chain> = {}): Chain =>
     shortName: 'eth',
     features: [],
     ...overrides,
-  } as Chain)
+  }) as Chain
 
 // Helper to mock balances response
 const mockBalancesResponse = (chainId: string, safeAddress: string, items: Balances['items']) => {

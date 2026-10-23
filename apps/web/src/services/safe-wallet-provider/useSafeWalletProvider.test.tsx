@@ -804,7 +804,7 @@ describe('useSafeWalletProvider', () => {
         () =>
           ({
             send: mockSend,
-          } as any),
+          }) as any,
       )
 
       const { result } = renderHook(() => useTxFlowApi('1', '0x1234567890000000000000000000000000000000'))
