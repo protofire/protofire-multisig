@@ -13,14 +13,14 @@ import { chainBuilder } from '@/tests/builders/chains'
 jest.mock('@/hooks/useChains', () => ({
   __esModule: true,
   useChainId: () => '1',
-  useChain: () => chainBuilder().with({ chainId: '1' }).build(),
-  useCurrentChain: () => chainBuilder().with({ chainId: '1' }).build(),
+  useChain: () => chainBuilder().with({ chainId: '1', features: [] }).build(),
+  useCurrentChain: () => chainBuilder().with({ chainId: '1', features: [] }).build(),
   useHasFeature: () => false,
   default: () => ({
     loading: false,
     loaded: true,
     error: undefined,
-    configs: [chainBuilder().with({ chainId: '1' }).build()],
+    configs: [chainBuilder().with({ chainId: '1', features: [] }).build()],
   }),
 }))
 
