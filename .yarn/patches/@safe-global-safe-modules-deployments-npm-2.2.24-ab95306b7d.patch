@@ -2,11 +2,13 @@ diff --git a/dist/assets/allowance-module/v0.1.0/allowance-module.json b/dist/as
 index 8fd727711be01a246b52ec063017f76e6eda7dc8..2babbfd69f179fccf7d7561eb941dc7fea1d465e 100644
 --- a/dist/assets/allowance-module/v0.1.0/allowance-module.json
 +++ b/dist/assets/allowance-module/v0.1.0/allowance-module.json
-@@ -6,18 +6,143 @@
+@@ -6,18 +6,145 @@
          "1": "0xCFbFaC74C26F8647cBDb8c5caf80BB5b32E43134",
          "4": "0xCFbFaC74C26F8647cBDb8c5caf80BB5b32E43134",
          "5": "0xCFbFaC74C26F8647cBDb8c5caf80BB5b32E43134",
 +        "10": "0xE46FE78DBfCa5E835667Ba9dCd3F3315E7623F8a",
++        "30": "0xE46FE78DBfCa5E835667Ba9dCd3F3315E7623F8a",
++        "31": "0xE46FE78DBfCa5E835667Ba9dCd3F3315E7623F8a",
          "42": "0xCFbFaC74C26F8647cBDb8c5caf80BB5b32E43134",
          "56": "0xCFbFaC74C26F8647cBDb8c5caf80BB5b32E43134",
 +        "81": "0xE46FE78DBfCa5E835667Ba9dCd3F3315E7623F8a",
