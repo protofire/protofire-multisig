@@ -27,6 +27,9 @@ const mockSignAndExecuteTransaction = jest.fn()
 const mockSessionGetAll = jest.fn().mockReturnValue([])
 const mockOn = jest.fn()
 const mockSetTheme = jest.fn()
+const mockRelayerSubscribe = jest.fn().mockResolvedValue('subscription-id')
+const mockSubscribedTopics: string[] = []
+let mockConnectorCount = 0
 
 type MockExtension = { id: string; name?: string; available: boolean; availableInIframe?: boolean }
 
@@ -37,6 +40,7 @@ class MockDAppConnector {
   walletConnectClient = {
     session: { getAll: mockSessionGetAll },
     on: mockOn,
+    core: { relayer: { subscriber: { topics: mockSubscribedTopics }, subscribe: mockRelayerSubscribe } },
   }
 
   walletConnectModal = { setTheme: mockSetTheme }
@@ -48,12 +52,14 @@ class MockDAppConnector {
   constructor(...args: unknown[]) {
     lastConnectorArgs = args
     lastConnectorInstance = this
+    mockConnectorCount++
   }
 
   init = mockInit
   openModal = mockOpenModal
   connectExtension = mockConnectExtension
   disconnect = mockDisconnect
+  signers: { topic: string }[] = []
   signAndExecuteTransaction = mockSignAndExecuteTransaction
 }
 
@@ -110,7 +116,11 @@ jest.mock('@hiero-ledger/sdk', () => ({
   TransactionId: { generate: (...args: unknown[]) => mockTransactionIdGenerate(...args) },
 }))
 
-import HashPackModule, { HASHPACK_MODULE_LABEL } from '../index'
+import { HASHPACK_MODULE_LABEL } from '../index'
+import type HashPackModuleType from '../index'
+
+// The module keeps one DAppConnector per ledger for the page's lifetime — reload it per test
+let HashPackModule: typeof HashPackModuleType
 
 const walletHelpers: WalletHelpers = { device: { type: null, os: null, browser: null } }
 const RPC_URI: RpcUri = { authentication: 'NO_AUTHENTICATION', value: 'https://testnet.hashio.io/api' }
@@ -147,6 +157,11 @@ describe('HashPackModule', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
+    jest.isolateModules(() => {
+      HashPackModule = require('../index').default
+    })
+    mockConnectorCount = 0
+    mockSubscribedTopics.splice(0, mockSubscribedTopics.length, 'mock-topic')
     mockSessionGetAll.mockReturnValue([])
     mockAccountAndLedgerFromSession.mockReturnValue([{ network: 'TESTNET', account: { toString: () => ACCOUNT_ID } }])
     mockGetHederaEvmAddress.mockResolvedValue(EVM_ADDRESS)
@@ -259,6 +274,91 @@ describe('HashPackModule', () => {
     const accounts = await provider?.request({ method: 'eth_accounts', params: [] })
     expect(accounts).toEqual([EVM_ADDRESS])
     expect(mockOpenModal).not.toHaveBeenCalled()
+  })
+
+  // Regression: every connect leaves a new session behind, and DAppConnector signs through the
+  // first stored session for the account — a stale one whose replies (e.g. a rejection) never arrive
+  it('should keep only the newest cached session on the ledger and disconnect the stale ones', async () => {
+    const staleSession = { topic: 'stale-topic', expiry: 1000 } as unknown as SessionTypes.Struct
+    const newestSession = { topic: 'newest-topic', expiry: 2000 } as unknown as SessionTypes.Struct
+    mockSessionGetAll.mockReturnValue([staleSession, newestSession])
+
+    // DAppConnector builds a signer for every stored session during init()
+    mockInit.mockImplementationOnce(async () => {
+      lastConnectorInstance!.signers = [{ topic: 'stale-topic' }, { topic: 'newest-topic' }]
+    })
+
+    const walletModule = initModule('296')
+    const { provider } = (await walletModule?.getInterface({} as never)) ?? {}
+
+    expect(mockDisconnect).toHaveBeenCalledTimes(1)
+    expect(mockDisconnect).toHaveBeenCalledWith('stale-topic')
+    expect(lastConnectorInstance?.signers).toEqual([{ topic: 'newest-topic' }])
+
+    const sessionDeleteHandler = mockOn.mock.calls.find(([event]) => event === 'session_delete')?.[1]
+    const accountsChanged = jest.fn()
+    provider?.on('accountsChanged', accountsChanged)
+    sessionDeleteHandler?.({ topic: 'newest-topic' })
+    expect(accountsChanged).toHaveBeenCalledWith([])
+  })
+
+  // Regression: DAppConnectors share WalletConnect's global Core, and each SignClient's heartbeat
+  // cleanup unsubscribes relay topics missing from its own session store — a second connector
+  // (e.g. after switching the HashPack account) dropped the session's subscription
+  it('should reuse a single DAppConnector per ledger across reconnects', async () => {
+    await initModule('296')?.getInterface({} as never)
+    await initModule('296')?.getInterface({} as never)
+
+    expect(mockConnectorCount).toBe(1)
+    expect(mockInit).toHaveBeenCalledTimes(1)
+  })
+
+  // Regression: the shared DAppConnector kept the disconnected session's signer, and reconnecting the
+  // same account made the library disconnect that already-deleted session again ("recently deleted")
+  it('should drop the signer of a session it disconnects', async () => {
+    mockSessionGetAll.mockReturnValue([buildSession()])
+    mockInit.mockImplementationOnce(async () => {
+      lastConnectorInstance!.signers = [{ topic: 'mock-topic' }, { topic: 'other-topic' }]
+    })
+
+    const { provider } = (await initModule('296')?.getInterface({} as never)) ?? {}
+    // Typed as void by EIP1193Provider, but this module's implementation is async
+    await (provider?.disconnect as (() => Promise<void>) | undefined)?.()
+
+    expect(mockDisconnect).toHaveBeenCalledWith('mock-topic')
+    expect(lastConnectorInstance?.signers).toEqual([{ topic: 'other-topic' }])
+  })
+
+  // Regression: a dropped subscription is persisted, so HashPack's reply (e.g. a rejection) to a
+  // restored session never arrived even after a reload
+  it('should re-subscribe to the session topic before a request if the subscription is missing', async () => {
+    mockSessionGetAll.mockReturnValue([buildSession()])
+    mockSubscribedTopics.splice(0, mockSubscribedTopics.length)
+    mockSignAndExecuteTransaction.mockResolvedValue({ transactionId: '0.0.10814740@1700000000.000000000' })
+
+    const { provider } = (await initModule('296')?.getInterface({} as never)) ?? {}
+    await provider?.request({
+      method: 'eth_sendTransaction',
+      params: [{ from: EVM_ADDRESS, to: '0xSafeAddress', data: '0x1234abcd' }],
+    })
+
+    expect(mockRelayerSubscribe).toHaveBeenCalledWith('mock-topic')
+    expect(mockRelayerSubscribe.mock.invocationCallOrder[0]).toBeLessThan(
+      mockSignAndExecuteTransaction.mock.invocationCallOrder[0],
+    )
+  })
+
+  it('should not re-subscribe when the session topic is already subscribed', async () => {
+    mockSessionGetAll.mockReturnValue([buildSession()])
+    mockSignAndExecuteTransaction.mockResolvedValue({ transactionId: '0.0.10814740@1700000000.000000000' })
+
+    const { provider } = (await initModule('296')?.getInterface({} as never)) ?? {}
+    await provider?.request({
+      method: 'eth_sendTransaction',
+      params: [{ from: EVM_ADDRESS, to: '0xSafeAddress', data: '0x1234abcd' }],
+    })
+
+    expect(mockRelayerSubscribe).not.toHaveBeenCalled()
   })
 
   // Regression test: the underlying WalletConnect session store is shared across every

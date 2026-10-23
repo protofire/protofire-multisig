@@ -2,13 +2,26 @@ import type { WalletInit } from '@web3-onboard/common'
 import { createEIP1193Provider } from '@web3-onboard/common'
 import type { Chain } from '@safe-global/store/gateway/AUTO_GENERATED/chains'
 import type { SessionTypes } from '@walletconnect/types'
-import { WC_PROJECT_ID } from '@/config/constants'
+import { WC_PROJECT_ID, BRAND_NAME } from '@/config/constants'
 import { numberToHex } from '@/utils/hex'
 import { getRpcServiceUrl } from '@/hooks/wallets/web3'
-import { getHederaEvmAddress, getHederaContractId, getHederaEvmTransactionHash, getHederaNetwork } from '@/utils/hedera'
+import {
+  getHederaEvmAddress,
+  getHederaContractId,
+  getHederaEvmTransactionHash,
+  getHederaNetwork,
+  type HederaNetwork,
+} from '@/utils/hedera'
 import type { TransactionResponseJSON } from '@hiero-ledger/sdk'
+import type { DAppConnector } from '@hashgraph/hedera-wallet-connect'
 
 export const HASHPACK_MODULE_LABEL = 'HashPack'
+
+// One per ledger for the page's lifetime. Every DAppConnector shares WalletConnect's global Core, and
+// each one's SignClient unsubscribes (on every heartbeat) the relay topics missing from its own session
+// store — a second connector, e.g. after switching the HashPack account, drops the session's
+// subscription, so HashPack's replies (e.g. rejection) never arrive.
+const dAppConnectors = new Map<HederaNetwork, Promise<DAppConnector>>()
 
 // Above onboard's own modal (--onboard-modal-z-index: 1301 in styles/onboard.css), same as the walletconnect module's QR modal
 const WC_MODAL_THEME_VARIABLES = {
@@ -123,26 +136,44 @@ const HashPackModule = (chain: Chain): WalletInit => {
         const ledgerId = LedgerId.fromString(network)
         const hederaChainId = ledgerIdToCAIPChainId(ledgerId)
 
-        const dAppConnector = new DAppConnector(
-          {
-            name: 'Safe{Wallet}',
-            description: 'Safe{Wallet} — Hedera',
-            url: window.location.origin,
-            icons: [`${window.location.origin}/images/logo-round.svg`],
-          },
-          ledgerId,
-          WC_PROJECT_ID,
-          // Native Hedera methods only — never an eip155/ECDSA-only method (see module doc comment above).
-          Object.values(HederaJsonRpcMethod),
-          [HederaSessionEvent.ChainChanged, HederaSessionEvent.AccountsChanged],
-          [hederaChainId],
-        )
+        const createDAppConnector = async () => {
+          const connector = new DAppConnector(
+            {
+              name: BRAND_NAME,
+              description: `${BRAND_NAME} — Hedera`,
+              url: window.location.origin,
+              icons: [`${window.location.origin}/images/logo-round.svg`],
+            },
+            ledgerId,
+            WC_PROJECT_ID,
+            // Native Hedera methods only — never an eip155/ECDSA-only method (see module doc comment above).
+            Object.values(HederaJsonRpcMethod),
+            [HederaSessionEvent.ChainChanged, HederaSessionEvent.AccountsChanged],
+            [hederaChainId],
+          )
 
-        // DAppConnector builds its own QR modal with WalletConnect's default z-index, which onboard's
-        // "Connecting to HashPack…" modal would cover whenever no extension is found (e.g. incognito)
-        dAppConnector.walletConnectModal.setTheme({ themeVariables: WC_MODAL_THEME_VARIABLES })
+          // DAppConnector builds its own QR modal with WalletConnect's default z-index, which onboard's
+          // "Connecting to HashPack…" modal would cover whenever no extension is found (e.g. incognito)
+          connector.walletConnectModal.setTheme({ themeVariables: WC_MODAL_THEME_VARIABLES })
 
-        await dAppConnector.init({ logger: 'error' })
+          await connector.init({ logger: 'error' })
+          return connector
+        }
+
+        let connectorPromise = dAppConnectors.get(network)
+        if (!connectorPromise) {
+          connectorPromise = createDAppConnector()
+          dAppConnectors.set(network, connectorPromise)
+          connectorPromise.catch(() => dAppConnectors.delete(network))
+        }
+        const dAppConnector = await connectorPromise
+
+        // The library's own disconnect() keeps the session's signer, and the connector outlives this
+        // interface — a leftover signer would be disconnected again when the same account reconnects
+        const disconnectSession = async (topic: string) => {
+          await dAppConnector.disconnect(topic)
+          dAppConnector.signers = dAppConnector.signers.filter((signer) => signer.topic !== topic)
+        }
 
         // A session's own account+ledger, not just the account — 0.0.123 on mainnet and 0.0.123
         // on testnet are unrelated accounts, so any code that trusts a session's account id must
@@ -190,10 +221,15 @@ const HashPackModule = (chain: Chain): WalletInit => {
         // session left over from Hedera mainnet must never be silently reused while viewing
         // testnet (or vice versa): the same account number can be a completely different, unrelated
         // account on each ledger.
-        let session: SessionTypes.Struct | undefined = dAppConnector.walletConnectClient?.session.getAll().find((s) => {
-          const entry = getAccountAndLedger(s)
-          return !!entry && entry.network.toString() === ledgerId.toString()
-        })
+        //
+        // Only the newest one is kept: every connect leaves a session behind, and DAppConnector signs
+        // through the first stored session for the account — often a stale one whose topic this
+        // client no longer listens on, so HashPack's reply (e.g. a rejection) never arrives.
+        const [newestSession, ...staleSessions] = (dAppConnector.walletConnectClient?.session.getAll() ?? [])
+          .filter((s) => getAccountAndLedger(s)?.network.toString() === ledgerId.toString())
+          .sort((a, b) => b.expiry - a.expiry)
+        await Promise.all(staleSessions.map((s) => disconnectSession(s.topic)))
+        let session: SessionTypes.Struct | undefined = newestSession
         activeAccountId = session && pickActiveAccountId(session)
 
         const accountsChangedListeners = new Set<(accounts: string[]) => void>()
@@ -361,6 +397,13 @@ const HashPackModule = (chain: Chain): WalletInit => {
             .setTransactionId(transactionId)
             .freezeWith(Client.forName(network))
 
+          // A session can be left without a subscription — e.g. dropped by a second connector on an
+          // earlier page load, and persisted — so HashPack's reply would never arrive. Re-subscribe.
+          const relayer = dAppConnector.walletConnectClient?.core.relayer
+          if (relayer && !relayer.subscriber.topics.includes(session.topic)) {
+            await relayer.subscribe(session.topic)
+          }
+
           // The library's declared `SignAndExecuteTransactionResult` type wraps this in a full
           // JSON-RPC envelope (`{ id, jsonrpc, result }`), but the underlying WalletConnect
           // `signClient.request()` already unwraps it — DAppConnector/DAppSigner's own internal
@@ -455,7 +498,7 @@ const HashPackModule = (chain: Chain): WalletInit => {
 
               disconnect: async () => {
                 if (session) {
-                  await dAppConnector.disconnect(session.topic).catch(() => undefined)
+                  await disconnectSession(session.topic).catch(() => undefined)
                   session = undefined
                   activeAccountId = undefined
                 }
