@@ -103,7 +103,7 @@ const SidebarFooter = (): ReactElement => {
             Operated by <SvgIcon component={ProtofireLogo} inheritViewBox fontSize="small" sx={{ mx: 0.5 }} />
             <Link
               target="_blank"
-              href="https://protofire.io/services/solution/safe-deployment"
+              href="https://safe.protofire.io"
               sx={{ color: darkPalette.primary.main, textDecoration: 'none' }}
             >
               Protofire
