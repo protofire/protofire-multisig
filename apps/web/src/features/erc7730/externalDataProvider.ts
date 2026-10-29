@@ -21,7 +21,7 @@ import { createWeb3ReadOnly } from '@/hooks/wallets/web3'
 import { useWeb3ReadOnly } from '@/hooks/wallets/web3ReadOnly'
 import { lookupAddress } from '@/services/ens'
 import { getERC20TokenInfoOnChain } from '@/utils/tokens'
-import { getOrCreate } from './promiseCache'
+import { getOrCreate, withTimeout } from './promiseCache'
 
 export const CLEAR_SIGNING_ETH_PLACEHOLDER = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
 
@@ -118,14 +118,6 @@ const getChainFromConfig = (config: EntityState<Chain, string> | undefined, chai
   config?.entities[String(chainId)]
 
 export const REVOCATION_CALL_TIMEOUT_MS = 10_000
-
-const withTimeout = <T>(promise: Promise<T>, ms: number, message: string): Promise<T> => {
-  let timer: ReturnType<typeof setTimeout> | undefined
-  const timeout = new Promise<never>((_, reject) => {
-    timer = setTimeout(() => reject(new Error(message)), ms)
-  })
-  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer))
-}
 
 export const createMainnetChainClient = (
   getChainsConfig: () => EntityState<Chain, string> | undefined,

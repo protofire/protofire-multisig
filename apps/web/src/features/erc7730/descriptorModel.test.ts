@@ -1,6 +1,6 @@
 import type { DisplayModel } from '@ethereum-sourcify/clear-signing'
 import { ERC7730_REGISTRY_SOURCE_BLOB_BASE } from '@/config/constants.extra'
-import { getDescriptorOwnerUrl, getDescriptorSourceUrl } from './descriptorModel'
+import { getDescriptorOwner, getDescriptorOwnerUrl, getDescriptorSourceUrl } from './descriptorModel'
 
 describe('descriptorModel', () => {
   it('returns the metadata info url for the descriptor owner', () => {
@@ -22,6 +22,23 @@ describe('descriptorModel', () => {
       expect(getDescriptorOwnerUrl({ metadata: { owner: 'Velora', info: { url } } } as DisplayModel)).toBeUndefined()
     },
   )
+
+  it('hides the owner of Safe contract descriptors, which attribute them to a different wallet product', () => {
+    const model = {
+      metadata: { owner: 'Safe{Wallet}', info: { url: 'https://app.safe.global/welcome' } },
+    } as DisplayModel
+
+    expect(getDescriptorOwner(model, 'registry/safe/calldata-Safe-1.4.1.json')).toBeUndefined()
+    expect(getDescriptorOwner(model, '/registry/safe/calldata-SafeL2-1.3.0.json')).toBeUndefined()
+  })
+
+  it('keeps the owner of every other descriptor', () => {
+    const model = { metadata: { owner: 'Aave DAO' } } as DisplayModel
+
+    expect(getDescriptorOwner(model, 'registry/aave/calldata-lpv3.json')).toBe('Aave DAO')
+    expect(getDescriptorOwner(model, 'registry/safebox/calldata.json')).toBe('Aave DAO')
+    expect(getDescriptorOwner(model, undefined)).toBe('Aave DAO')
+  })
 
   it('builds the source url from the descriptor path', () => {
     expect(getDescriptorSourceUrl('/registry/velora/calldata.json')).toBe(

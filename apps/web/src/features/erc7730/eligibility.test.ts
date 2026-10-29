@@ -5,7 +5,6 @@ import type { TransactionData } from '@safe-global/store/gateway/AUTO_GENERATED/
 import { Operation } from '@safe-global/store/gateway/types'
 import { Multi_send__factory } from '@safe-global/utils/types/contracts/factories/@safe-global/safe-deployments/dist/assets/v1.3.0'
 import * as useChains from '@/hooks/useChains'
-import * as useSafeAddress from '@/hooks/useSafeAddress'
 import { useClearSigningLookupEnabled, useIsClearSigningEligible } from './eligibility'
 
 const mockUseHasFeature = () => jest.spyOn(useChains, 'useHasFeature')
@@ -32,11 +31,8 @@ describe('useClearSigningLookupEnabled', () => {
 })
 
 describe('useIsClearSigningEligible', () => {
-  const safeAddress = faker.finance.ethereumAddress()
-
   beforeEach(() => {
     mockUseHasFeature().mockReturnValue(true)
-    jest.spyOn(useSafeAddress, 'default').mockReturnValue(safeAddress)
   })
 
   it('returns true for an enabled CALL with calldata', () => {
@@ -49,11 +45,11 @@ describe('useIsClearSigningEligible', () => {
     expect(result.current).toBe(false)
   })
 
-  it('returns false for a call to the Safe itself', () => {
-    const { result } = renderHook(() =>
-      useIsClearSigningEligible(createTxData({ to: { value: safeAddress.toLowerCase() } })),
-    )
-    expect(result.current).toBe(false)
+  it('returns true for a call to a Safe, which resolves through its singleton', () => {
+    const safeInterface = new Interface(['function changeThreshold(uint256 _threshold)'])
+    const hexData = safeInterface.encodeFunctionData('changeThreshold', [2n])
+    const { result } = renderHook(() => useIsClearSigningEligible(createTxData({ hexData })))
+    expect(result.current).toBe(true)
   })
 
   it.each([null, '', '0x'])('returns false for empty calldata (%p)', (hexData) => {

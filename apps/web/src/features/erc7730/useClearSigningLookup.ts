@@ -5,6 +5,7 @@ import {
   resolveTypedDataDescriptor,
   type ChainClient,
   type CustomResolverOptions,
+  type DescriptorResolver,
   type DisplayModel,
   type ExternalDataProvider,
   type FormatOptions,
@@ -23,15 +24,18 @@ import {
 } from './erc8176/attestation'
 import { withAttesterProfile } from './erc8176/attesterProfile'
 import { getRegistryResolver } from './registryResolver'
+import { withSafeSingletonAlias, type ClearSigningResolvers } from './safeSingleton'
 
 export interface ClearSigningInputAdapter<T> {
   format: (input: T, options: FormatOptions) => Promise<DisplayModel>
   resolve: (input: T, options: CustomResolverOptions, chainClient?: ChainClient) => Promise<ResolveDescriptorResult>
+  prepareResolvers?: (input: T, resolver: DescriptorResolver) => Promise<ClearSigningResolvers>
 }
 
 export const calldataInputAdapter: ClearSigningInputAdapter<Transaction> = {
   format,
   resolve: (tx, options, chainClient) => resolveCalldataDescriptor(tx.chainId, tx.to, options, chainClient),
+  prepareResolvers: (tx, resolver) => withSafeSingletonAlias(resolver, tx.chainId, tx.to),
 }
 
 export const typedDataInputAdapter: ClearSigningInputAdapter<TypedData> = {
@@ -44,16 +48,22 @@ export const formatWithRegistry = async <T>(
   externalDataProvider: ExternalDataProvider,
   adapter: ClearSigningInputAdapter<T>,
 ): Promise<ClearSigningLookupResultData> => {
-  const resolver = await getRegistryResolver(ERC7730_REGISTRY_URL)
+  const registryResolver = await getRegistryResolver(ERC7730_REGISTRY_URL)
+  const resolvers = adapter.prepareResolvers
+    ? await adapter.prepareResolvers(input, registryResolver)
+    : { attestation: registryResolver, format: registryResolver }
   const [attestation, formatted] = await Promise.all([
     resolveAttestation({
-      resolver,
+      resolver: resolvers.attestation,
       chainClient: externalDataProvider.chainClient,
       trustedAttesters: ERC8176_TRUSTED_ATTESTERS,
       resolve: (options, chainClient) => adapter.resolve(input, options, chainClient),
       onFailure: (thrown) => logError(Errors._821, thrown),
     }).then((result) => withAttesterProfile(ERC7730_REGISTRY_URL, result)),
-    adapter.format(input, { externalDataProvider, descriptorResolverOptions: { type: 'custom', resolver } }),
+    adapter.format(input, {
+      externalDataProvider,
+      descriptorResolverOptions: { type: 'custom', resolver: resolvers.format },
+    }),
   ])
   const model = assertClearSigningModelLoaded(formatted)
 

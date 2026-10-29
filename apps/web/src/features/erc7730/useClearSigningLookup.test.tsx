@@ -1,8 +1,9 @@
 import { eip712, type Transaction, type TypedData } from '@ethereum-sourcify/clear-signing'
 import { faker } from '@faker-js/faker'
-import { keccak256, toUtf8Bytes } from 'ethers'
+import { AbiCoder, getAddress, keccak256, toUtf8Bytes } from 'ethers'
 import { http, HttpResponse } from 'msw'
 import * as useChains from '@/hooks/useChains'
+import { setWeb3ReadOnly } from '@/hooks/wallets/web3ReadOnly'
 import { logError } from '@/services/exceptions'
 import { act, render, waitFor } from '@/tests/test-utils'
 import { server } from '@/tests/server'
@@ -11,7 +12,13 @@ import {
   useClearSigningLookupContext,
   type ClearSigningLookupContextValue,
 } from './ClearSigningLookupContext'
-import { createRegistryUrl, mockRegistryConfig, mockRegistryIndexes, REGISTRY_URL } from './testHelpers'
+import {
+  createRegistryUrl,
+  mockRegistryConfig,
+  mockRegistryIndexes,
+  REGISTRY_URL,
+  SAFE_PROXY_RUNTIME_CODE_1_4_1,
+} from './testHelpers'
 import type * as TestHelpers from './testHelpers'
 import {
   calldataInputAdapter,
@@ -224,6 +231,44 @@ describe('useClearSigningLookup', () => {
         intent: 'Send',
         fields: [expect.objectContaining({ label: 'Amount', value: '0' })],
       })
+    })
+
+    it('resolves a call to a Safe proxy through the singleton descriptor and keeps the proxy as target', async () => {
+      const singleton = faker.finance.ethereumAddress()
+      const tx = createTx()
+      const path = 'registry/safe/calldata-Safe-1.4.1.json'
+      mockRegistryIndexes(registryUrl, { calldataIndex: { [`eip155:1:${singleton.toLowerCase()}`]: path } })
+      server.use(
+        http.get(`${registryUrl}/${path}`, () =>
+          HttpResponse.json({
+            context: { contract: { deployments: [{ chainId: 1, address: singleton }] } },
+            metadata: { owner: 'Safe' },
+            display: {
+              formats: {
+                'transfer(address to, uint256 value)': {
+                  intent: 'sign multisig operation',
+                  fields: [{ path: '@.to', label: 'From Safe', format: 'raw' }],
+                },
+              },
+            },
+          }),
+        ),
+      )
+      const call = jest.fn().mockResolvedValue(AbiCoder.defaultAbiCoder().encode(['address'], [singleton]))
+      const getCode = jest.fn().mockResolvedValue(SAFE_PROXY_RUNTIME_CODE_1_4_1)
+      setWeb3ReadOnly({ call, getCode } as never)
+      const { result, request } = renderLookup({ lookupKey: 'tx', input: tx, adapter: calldataInputAdapter })
+
+      request('tx')
+
+      await waitFor(() => expect(result()?.model).toBeDefined())
+      expect(call).toHaveBeenCalledWith({ to: tx.to, data: '0xa619486e' })
+      expect(result()).toMatchObject({ descriptorPath: path })
+      expect(result()?.model).toMatchObject({
+        intent: 'sign multisig operation',
+        fields: [expect.objectContaining({ label: 'From Safe', value: getAddress(tx.to) })],
+      })
+      setWeb3ReadOnly(undefined)
     })
 
     it('returns an error when a typed-data descriptor fails to load', async () => {

@@ -25,6 +25,14 @@ export const shouldShowClearSigningModel = (model: DisplayModel | undefined): mo
   return Boolean(model.interpolatedIntent || model.intent || (model.fields && model.fields.length > 0))
 }
 
+const SAFE_DESCRIPTOR_PATH_PREFIX = 'registry/safe/'
+
+export const isSafeDescriptorPath = (descriptorPath?: string): boolean =>
+  (descriptorPath ?? '').replace(/^\//, '').startsWith(SAFE_DESCRIPTOR_PATH_PREFIX)
+
+export const getDescriptorOwner = (model: DisplayModel, descriptorPath?: string): string | undefined =>
+  isSafeDescriptorPath(descriptorPath) ? undefined : model.metadata?.owner
+
 export const getDescriptorOwnerUrl = (model: DisplayModel): string | undefined => {
   const url = model.metadata?.owner ? model.metadata.info?.url : undefined
   if (!url) {

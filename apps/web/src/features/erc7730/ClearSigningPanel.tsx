@@ -18,7 +18,13 @@ import accordionCss from '@/styles/accordion.module.css'
 import type { ClearSigningLookupResultData } from './ClearSigningLookupContext'
 import { isRevokedAttestation, REVOKED_WARNING, type ClearSigningAttestation } from './erc8176/attestation'
 import { AttestationStatus, AttestationWarning } from './erc8176/AttestationStatus'
-import { getDescriptorOwnerUrl, getDescriptorSourceUrl, getVisibleWarning, getVisibleWarnings } from './descriptorModel'
+import {
+  getDescriptorOwner,
+  getDescriptorOwnerUrl,
+  getDescriptorSourceUrl,
+  getVisibleWarning,
+  getVisibleWarnings,
+} from './descriptorModel'
 import { isClearSigningNativeTokenAddress } from './externalDataProvider'
 import { ClearSigningPill, FieldGrid } from './primitives'
 import css from './styles.module.css'
@@ -275,7 +281,7 @@ export const ClearSigningPanel = ({
   attestation,
 }: ClearSigningLookupResultData & { model: DisplayModel }): ReactElement => {
   const { intent, summaryTags, showIntentInBody } = getClearSigningSummary(model)
-  const owner = model.metadata?.owner
+  const owner = getDescriptorOwner(model, descriptorPath)
   const ownerUrl = getDescriptorOwnerUrl(model)
   const sourceUrl = getDescriptorSourceUrl(descriptorPath)
 
