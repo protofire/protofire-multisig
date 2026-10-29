@@ -129,7 +129,11 @@ const TxDetailsBlock = ({ txSummary, txDetails }: TxDetailsProps): ReactElement 
 
           <div className={css.txData}>
             <ErrorBoundary fallback={<div>Error parsing data</div>}>
-              {txDetails.txData && <ClearSigningCheck txData={txDetails.txData} />}
+              {txDetails.txData && (
+                <div className={css.clearSigning}>
+                  <ClearSigningCheck txData={txDetails.txData} />
+                </div>
+              )}
               <TxData
                 txData={txDetails.txData}
                 txInfo={txDetails.txInfo}

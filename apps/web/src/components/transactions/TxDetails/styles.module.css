@@ -34,6 +34,10 @@
   z-index: 1;
 }
 
+.detailsWrapper:has(.clearSigning :global(.MuiAccordion-root)) .inlineSimulation {
+  position: relative;
+}
+
 .txNote {
   margin: var(--space-1) 0;
   padding: 0 var(--space-2) var(--space-2);
