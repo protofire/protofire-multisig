@@ -6,6 +6,9 @@ export const TERMS_LINK =
 export const COOKIE_LINK =
   process.env.NEXT_PUBLIC_COOKIE_LINK ||
   'https://raw.githubusercontent.com/protofire/safe-legal/refs/heads/main/cookie.md'
+export const PRIVACY_POLICY_LINK =
+  process.env.NEXT_PUBLIC_PRIVACY_POLICY_LINK ||
+  'https://raw.githubusercontent.com/protofire/safe-legal/refs/heads/main/privacy.md'
 
 export const PROTOFIRE_SUPPORT_LINK = 'https://safe-support.protofire.io'
 

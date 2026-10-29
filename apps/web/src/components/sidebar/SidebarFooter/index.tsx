@@ -5,7 +5,7 @@ import { CookieAndTermType, hasConsentFor } from '@/store/cookiesAndTermsSlice'
 import { openCookieBanner } from '@/store/popupSlice'
 import BeamerIcon from '@/public/images/sidebar/whats-new.svg'
 import HelpCenterIcon from '@/public/images/sidebar/help-center.svg'
-import { Divider, IconButton, ListItem, Stack, SvgIcon, Box, useTheme, Link } from '@mui/material'
+import { Divider, IconButton, ListItem, Stack, SvgIcon, Box, Link } from '@mui/material'
 import DebugToggle from '../DebugToggle'
 import { IS_PRODUCTION } from '@/config/constants'
 import Track from '@/components/common/Track'
@@ -25,7 +25,6 @@ const SidebarFooter = (): ReactElement => {
   const dispatch = useAppDispatch()
   const chain = useCurrentChain()
   const hasBeamerConsent = useAppSelector((state) => hasConsentFor(state, CookieAndTermType.UPDATES))
-  const theme = useTheme()
   const isOfficialHost = useIsOfficialHost()
 
   useEffect(() => {
@@ -67,25 +66,9 @@ const SidebarFooter = (): ReactElement => {
 
       <ListItem style={{ padding: '0 var(--space-1) 0' }}>
         <a target="_blank" rel="noopener noreferrer" href={NEW_SUGGESTION_FORM} style={{ width: '100%' }}>
-          <SidebarListItemButton
-            style={{
-              color: 'black',
-              backgroundColor:
-                theme.palette.mode === 'dark' ? theme.palette.primary.main : theme.palette.secondary.main,
-            }}
-          >
-            <SidebarListItemIcon>
-              <Box
-                sx={{
-                  '& svg': {
-                    '& path': () => ({
-                      fill: 'black !important',
-                    }),
-                  },
-                }}
-              >
-                <SuggestionIcon />
-              </Box>
+          <SidebarListItemButton>
+            <SidebarListItemIcon color="primary">
+              <SuggestionIcon />
             </SidebarListItemIcon>
             <SidebarListItemText bold>New Features Suggestion?</SidebarListItemText>
           </SidebarListItemButton>
