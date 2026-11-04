@@ -1,40 +1,112 @@
 diff --git a/dist/cjs/contracts.js b/dist/cjs/contracts.js
-index e250bbacb01b31f106f829944a1f593846460ee5..b43fd5ac23b5327a2cc14d6ac07cee2d95f3ac31 100644
+index e250bbacb01b31f106f829944a1f593846460ee5..7ee6c079328515857c783fc2074129f0e898c5fe 100644
 --- a/dist/cjs/contracts.js
 +++ b/dist/cjs/contracts.js
-@@ -85,6 +85,8 @@
+@@ -85,6 +85,25 @@ var SupportedNetworks;
      SupportedNetworks[SupportedNetworks["CoreTestnet"] = 1115] = "CoreTestnet";
      SupportedNetworks[SupportedNetworks["Core"] = 1116] = "Core";
      SupportedNetworks[SupportedNetworks["Base"] = 8453] = "Base";
 +    SupportedNetworks[SupportedNetworks["SeiTestnet"] = 1328] = "SeiTestnet";
 +    SupportedNetworks[SupportedNetworks["Sei"] = 1329] = "Sei";
++    SupportedNetworks[SupportedNetworks["Unichain"] = 130] = "Unichain";
++    SupportedNetworks[SupportedNetworks["Monad"] = 143] = "Monad";
++    SupportedNetworks[SupportedNetworks["Sonic"] = 146] = "Sonic";
++    SupportedNetworks[SupportedNetworks["Flow"] = 747] = "Flow";
++    SupportedNetworks[SupportedNetworks["LiskSepolia"] = 4202] = "LiskSepolia";
++    SupportedNetworks[SupportedNetworks["MegaETH"] = 4326] = "MegaETH";
++    SupportedNetworks[SupportedNetworks["Mantle"] = 5000] = "Mantle";
++    SupportedNetworks[SupportedNetworks["ZetaChain"] = 7000] = "ZetaChain";
++    SupportedNetworks[SupportedNetworks["Plasma"] = 9745] = "Plasma";
++    SupportedNetworks[SupportedNetworks["PlasmaTestnet"] = 9746] = "PlasmaTestnet";
++    SupportedNetworks[SupportedNetworks["Celo"] = 42220] = "Celo";
++    SupportedNetworks[SupportedNetworks["Ink"] = 57073] = "Ink";
++    SupportedNetworks[SupportedNetworks["Linea"] = 59144] = "Linea";
++    SupportedNetworks[SupportedNetworks["BOB"] = 60808] = "BOB";
++    SupportedNetworks[SupportedNetworks["BaseSepolia"] = 84532] = "BaseSepolia";
++    SupportedNetworks[SupportedNetworks["Scroll"] = 534352] = "Scroll";
++    SupportedNetworks[SupportedNetworks["Katana"] = 747474] = "Katana";
  })(SupportedNetworks || (exports.SupportedNetworks = SupportedNetworks = {}));
  // const canonicalMasterCopyAddress = (contract: KnownContracts) => {
  //   const { initCode, salt } = MasterCopyInitData[contract];
-@@ -224,4 +224,6 @@
+@@ -224,6 +243,25 @@ exports.ContractVersions = {
      [SupportedNetworks.Base]: Object.assign(Object.assign({}, CanonicalAddresses), { [types_1.KnownContracts.OPTIMISTIC_GOVERNOR]: {
              "1.2.0": "0x80bCA2E1c272239AdFDCdc87779BC8Af6E12e633",
          } }),
 +    [SupportedNetworks.SeiTestnet]: CanonicalAddresses,
 +    [SupportedNetworks.Sei]: CanonicalAddresses,
++    [SupportedNetworks.Unichain]: CanonicalAddresses,
++    [SupportedNetworks.Monad]: CanonicalAddresses,
++    [SupportedNetworks.Sonic]: CanonicalAddresses,
++    [SupportedNetworks.Flow]: CanonicalAddresses,
++    [SupportedNetworks.LiskSepolia]: CanonicalAddresses,
++    [SupportedNetworks.MegaETH]: CanonicalAddresses,
++    [SupportedNetworks.Mantle]: CanonicalAddresses,
++    [SupportedNetworks.ZetaChain]: CanonicalAddresses,
++    [SupportedNetworks.Plasma]: CanonicalAddresses,
++    [SupportedNetworks.PlasmaTestnet]: CanonicalAddresses,
++    [SupportedNetworks.Celo]: CanonicalAddresses,
++    [SupportedNetworks.Ink]: CanonicalAddresses,
++    [SupportedNetworks.Linea]: CanonicalAddresses,
++    [SupportedNetworks.BOB]: CanonicalAddresses,
++    [SupportedNetworks.BaseSepolia]: CanonicalAddresses,
++    [SupportedNetworks.Scroll]: CanonicalAddresses,
++    [SupportedNetworks.Katana]: CanonicalAddresses,
  };
+ /** Addresses of the head versions of all contracts */
+ exports.ContractAddresses = Object.fromEntries(Object.entries(exports.ContractVersions).map(([network, contracts]) => [
 diff --git a/dist/esm/contracts.js b/dist/esm/contracts.js
-index ccbe6948e801946e1db4e67da0681f9f6f03c53e..00baf66f0ecfc2660d65dab6c8c0ca0291160d2b 100644
+index ccbe6948e801946e1db4e67da0681f9f6f03c53e..5810fa70527ee1b00a9453acee83bf30d6f82f1d 100644
 --- a/dist/esm/contracts.js
 +++ b/dist/esm/contracts.js
-@@ -56,6 +56,8 @@
+@@ -56,6 +56,25 @@ export var SupportedNetworks;
      SupportedNetworks[SupportedNetworks["CoreTestnet"] = 1115] = "CoreTestnet";
      SupportedNetworks[SupportedNetworks["Core"] = 1116] = "Core";
      SupportedNetworks[SupportedNetworks["Base"] = 8453] = "Base";
 +    SupportedNetworks[SupportedNetworks["SeiTestnet"] = 1328] = "SeiTestnet";
 +    SupportedNetworks[SupportedNetworks["Sei"] = 1329] = "Sei";
++    SupportedNetworks[SupportedNetworks["Unichain"] = 130] = "Unichain";
++    SupportedNetworks[SupportedNetworks["Monad"] = 143] = "Monad";
++    SupportedNetworks[SupportedNetworks["Sonic"] = 146] = "Sonic";
++    SupportedNetworks[SupportedNetworks["Flow"] = 747] = "Flow";
++    SupportedNetworks[SupportedNetworks["LiskSepolia"] = 4202] = "LiskSepolia";
++    SupportedNetworks[SupportedNetworks["MegaETH"] = 4326] = "MegaETH";
++    SupportedNetworks[SupportedNetworks["Mantle"] = 5000] = "Mantle";
++    SupportedNetworks[SupportedNetworks["ZetaChain"] = 7000] = "ZetaChain";
++    SupportedNetworks[SupportedNetworks["Plasma"] = 9745] = "Plasma";
++    SupportedNetworks[SupportedNetworks["PlasmaTestnet"] = 9746] = "PlasmaTestnet";
++    SupportedNetworks[SupportedNetworks["Celo"] = 42220] = "Celo";
++    SupportedNetworks[SupportedNetworks["Ink"] = 57073] = "Ink";
++    SupportedNetworks[SupportedNetworks["Linea"] = 59144] = "Linea";
++    SupportedNetworks[SupportedNetworks["BOB"] = 60808] = "BOB";
++    SupportedNetworks[SupportedNetworks["BaseSepolia"] = 84532] = "BaseSepolia";
++    SupportedNetworks[SupportedNetworks["Scroll"] = 534352] = "Scroll";
++    SupportedNetworks[SupportedNetworks["Katana"] = 747474] = "Katana";
  })(SupportedNetworks || (SupportedNetworks = {}));
  // const canonicalMasterCopyAddress = (contract: KnownContracts) => {
  //   const { initCode, salt } = MasterCopyInitData[contract];
-@@ -195,4 +195,6 @@
+@@ -195,6 +214,25 @@ export const ContractVersions = {
      [SupportedNetworks.Base]: Object.assign(Object.assign({}, CanonicalAddresses), { [KnownContracts.OPTIMISTIC_GOVERNOR]: {
              "1.2.0": "0x80bCA2E1c272239AdFDCdc87779BC8Af6E12e633",
          } }),
 +    [SupportedNetworks.SeiTestnet]: CanonicalAddresses,
 +    [SupportedNetworks.Sei]: CanonicalAddresses,
++    [SupportedNetworks.Unichain]: CanonicalAddresses,
++    [SupportedNetworks.Monad]: CanonicalAddresses,
++    [SupportedNetworks.Sonic]: CanonicalAddresses,
++    [SupportedNetworks.Flow]: CanonicalAddresses,
++    [SupportedNetworks.LiskSepolia]: CanonicalAddresses,
++    [SupportedNetworks.MegaETH]: CanonicalAddresses,
++    [SupportedNetworks.Mantle]: CanonicalAddresses,
++    [SupportedNetworks.ZetaChain]: CanonicalAddresses,
++    [SupportedNetworks.Plasma]: CanonicalAddresses,
++    [SupportedNetworks.PlasmaTestnet]: CanonicalAddresses,
++    [SupportedNetworks.Celo]: CanonicalAddresses,
++    [SupportedNetworks.Ink]: CanonicalAddresses,
++    [SupportedNetworks.Linea]: CanonicalAddresses,
++    [SupportedNetworks.BOB]: CanonicalAddresses,
++    [SupportedNetworks.BaseSepolia]: CanonicalAddresses,
++    [SupportedNetworks.Scroll]: CanonicalAddresses,
++    [SupportedNetworks.Katana]: CanonicalAddresses,
  };
+ /** Addresses of the head versions of all contracts */
+ export const ContractAddresses = Object.fromEntries(Object.entries(ContractVersions).map(([network, contracts]) => [
