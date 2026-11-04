@@ -34,6 +34,7 @@ enum ErrorCodes {
   _611 = '611: Error fetching gasPrice',
   _612 = '612: Error estimating gas',
   _613 = '613: Error fetching Safe message by message hash',
+  _614 = '614: Error loading recovery proposal from the block explorer',
   _615 = '615: Error loading recovery proposal executor',
   _616 = '616: Failed to retrieve recommended nonce',
   _617 = '617: Error fetching recovery data',

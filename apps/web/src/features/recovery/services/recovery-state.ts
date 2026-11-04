@@ -3,13 +3,14 @@ import { getMultiSendCallOnlyDeployment } from '@safe-global/safe-deployments'
 import { type SafeState } from '@safe-global/store/gateway/AUTO_GENERATED/safes'
 import type { Delay } from '@gnosis.pm/zodiac'
 import type { TransactionAddedEvent } from '@gnosis.pm/zodiac/dist/cjs/types/Delay'
-import { toBeHex, type JsonRpcProvider } from 'ethers'
+import { EventLog, Log, solidityPackedKeccak256, toBeHex, ZeroHash, type JsonRpcProvider } from 'ethers'
 import { sameAddress } from '@safe-global/utils/utils/addresses'
 import { isMultiSendCalldata } from '@/utils/transaction-calldata'
 import { decodeMultiSendData } from '@safe-global/protocol-kit/dist/src/utils'
 import { multicall } from '@safe-global/utils/utils/multicall'
 import { logError, Errors } from '@/services/exceptions'
 import { createBlockTimestampReader, findBlockWindowForTimestamp, type GetBlockTimestamp } from './block-by-timestamp'
+import { getExplorerLogs, type ExplorerApi, type ExplorerLog } from './explorer-logs'
 
 export const MAX_RECOVERER_PAGE_SIZE = 100
 
@@ -131,6 +132,7 @@ type DelayModifierContext = {
   delayModifierAddress: string
   provider: JsonRpcProvider
   chainId: string
+  explorer?: ExplorerApi | null
 }
 
 /** `TransactionAdded` events found during the session, so that each refresh only searches for new ones */
@@ -240,22 +242,11 @@ const findTransactionAdded = async ({
  * event there.
  */
 const searchTransactionsAdded = async (
-  context: DelayModifierContext,
+  { delayModifier, provider }: DelayModifierContext,
+  eventTopic: string,
   queuedTransactions: Array<QueuedTransaction>,
+  latestBlock: number,
 ): Promise<Array<QueuedTransactionLookup>> => {
-  const { delayModifier, provider } = context
-  const transactionAddedFilter = delayModifier.filters.TransactionAdded() as TransactionAddedEvent.Filter
-  const [eventTopic] = await transactionAddedFilter.getTopicFilter()
-
-  const latestBlock = await provider.getBlockNumber().catch((error) => {
-    logError(Errors._618, error)
-    return undefined
-  })
-  if (latestBlock === undefined) {
-    // Nothing can be searched, but the queue is already known from the Delay Modifier storage
-    return queuedTransactions.map((transaction) => ({ ...transaction, transactionAdded: null }))
-  }
-
   const getTimestamp = createBlockTimestampReader(provider)
 
   const lookups: Array<QueuedTransactionLookup> = []
@@ -266,7 +257,7 @@ const searchTransactionsAdded = async (
         ...transaction,
         transactionAdded: await findTransactionAdded({
           delayModifier,
-          eventTopic: eventTopic as string,
+          eventTopic,
           transaction,
           latestBlock,
           getTimestamp,
@@ -276,9 +267,102 @@ const searchTransactionsAdded = async (
     lookups.push(...found)
   }
 
-  cacheSettledTransactionsAdded(context, lookups, latestBlock)
-
   return lookups
+}
+
+const hexToNumber = (hex: string) => parseInt(hex, 16) || 0
+
+const toTransactionAdded = ({ delayModifier, provider }: DelayModifierContext, log: ExplorerLog): AddedEvent => {
+  const ethersLog = new Log(
+    {
+      address: log.address,
+      topics: log.topics.filter((topic): topic is string => Boolean(topic)),
+      data: log.data,
+      blockNumber: hexToNumber(log.blockNumber),
+      blockHash: log.blockHash ?? ZeroHash,
+      transactionHash: log.transactionHash,
+      index: hexToNumber(log.logIndex),
+      transactionIndex: hexToNumber(log.transactionIndex),
+      removed: false,
+    },
+    provider,
+  )
+  const fragment = delayModifier.interface.getEvent('TransactionAdded')
+
+  // Decodes the arguments exactly as a log queried from the RPC
+  return new EventLog(ethersLog, delayModifier.interface, fragment) as unknown as AddedEvent
+}
+
+/**
+ * The Delay Modifier stores `keccak256(abi.encodePacked(to, value, data, operation))` as the `txHash` of
+ * each queued transaction, and only executes arguments that hash to it. Arguments from an explorer
+ * matching it can therefore be trusted as much as the Delay Modifier storage.
+ */
+const isAuthenticTransactionAdded = (
+  { delayModifierAddress }: DelayModifierContext,
+  event: AddedEvent,
+  { queueNonce, txHash }: QueuedTransaction,
+) => {
+  const { to, value, data, operation } = event.args
+  const hash = solidityPackedKeccak256(['address', 'uint256', 'bytes', 'uint8'], [to, value, data, operation])
+
+  return (
+    sameAddress(event.address, delayModifierAddress) &&
+    event.args.queueNonce === queueNonce &&
+    event.args.txHash === txHash &&
+    hash === txHash
+  )
+}
+
+/**
+ * The `TransactionAdded` event of a queued transaction from the block explorer, which indexes the whole
+ * history unlike most RPCs. Null if the explorer doesn't return it, or returns arguments that don't
+ * match what the Delay Modifier stores.
+ */
+const findExplorerTransactionAdded = async (
+  context: DelayModifierContext,
+  explorer: ExplorerApi,
+  eventTopic: string,
+  transaction: QueuedTransaction,
+): Promise<AddedEvent | null> => {
+  try {
+    const logs = await getExplorerLogs(explorer, {
+      address: context.delayModifierAddress,
+      topics: [eventTopic, toBeHex(transaction.queueNonce, 32), transaction.txHash],
+    })
+
+    return (
+      logs
+        .map((log) => toTransactionAdded(context, log))
+        .find((event) => isAuthenticTransactionAdded(context, event, transaction)) ?? null
+    )
+  } catch (error) {
+    logError(Errors._614, error)
+    return null
+  }
+}
+
+/** Looks up on the block explorer the events the RPC didn't return, one at a time to respect its rate limit */
+const searchExplorerTransactionsAdded = async (
+  context: DelayModifierContext,
+  eventTopic: string,
+  lookups: Array<QueuedTransactionLookup>,
+): Promise<Array<QueuedTransactionLookup>> => {
+  const { explorer } = context
+  if (!explorer) {
+    return lookups
+  }
+
+  const results: Array<QueuedTransactionLookup> = []
+  for (const lookup of lookups) {
+    results.push(
+      lookup.transactionAdded
+        ? lookup
+        : { ...lookup, transactionAdded: await findExplorerTransactionAdded(context, explorer, eventTopic, lookup) },
+    )
+  }
+
+  return results
 }
 
 const queryAddedTransactions = async (
@@ -295,10 +379,26 @@ const queryAddedTransactions = async (
     return cachedLookups
   }
 
-  const searched = await searchTransactionsAdded(context, missing)
-  const searchedByNonce = new Map(searched.map((lookup) => [lookup.queueNonce, lookup]))
+  const transactionAddedFilter = context.delayModifier.filters.TransactionAdded() as TransactionAddedEvent.Filter
+  const [eventTopic] = (await transactionAddedFilter.getTopicFilter()) as Array<string>
 
-  return cachedLookups.map((lookup) => searchedByNonce.get(lookup.queueNonce) ?? lookup)
+  const latestBlock = await context.provider.getBlockNumber().catch((error) => {
+    logError(Errors._618, error)
+    return undefined
+  })
+
+  // Without the latest block nothing can be searched on the RPC, but the explorer doesn't need it
+  const searched =
+    latestBlock === undefined ? missing : await searchTransactionsAdded(context, eventTopic, missing, latestBlock)
+  const found = await searchExplorerTransactionsAdded(context, eventTopic, searched)
+
+  if (latestBlock !== undefined) {
+    cacheSettledTransactionsAdded(context, found, latestBlock)
+  }
+
+  const foundByNonce = new Map(found.map((lookup) => [lookup.queueNonce, lookup]))
+
+  return cachedLookups.map((lookup) => foundByNonce.get(lookup.queueNonce) ?? lookup)
 }
 
 const getUnavailableRecoveryQueueItem = ({
@@ -368,12 +468,14 @@ export const _getRecoveryStateItem = async ({
   provider,
   chainId,
   version,
+  explorer,
 }: {
   delayModifier: Delay
   safeAddress: string
   provider: JsonRpcProvider
   chainId: string
   version: SafeState['version']
+  explorer?: ExplorerApi | null
 }): Promise<RecoveryStateItem> => {
   const delayModifierAddress = await delayModifier.getAddress()
   const calls = [
@@ -422,7 +524,7 @@ export const _getRecoveryStateItem = async ({
     provider,
   })
   const lookups = await queryAddedTransactions(
-    { delayModifier, delayModifierAddress, provider, chainId },
+    { delayModifier, delayModifierAddress, provider, chainId, explorer },
     queuedTransactions,
   )
   const found = lookups.flatMap(({ transactionAdded, createdAt }) =>
@@ -475,6 +577,7 @@ export function getRecoveryState({
   provider: JsonRpcProvider
   chainId: string
   version: SafeState['version']
+  explorer?: ExplorerApi | null
 }): Promise<RecoveryState> {
   return Promise.all(delayModifiers.map((delayModifier) => _getRecoveryStateItem({ delayModifier, ...rest })))
 }

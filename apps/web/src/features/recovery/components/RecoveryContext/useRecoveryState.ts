@@ -1,10 +1,12 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Delay } from '@gnosis.pm/zodiac'
 
 import useAsync from '@safe-global/utils/hooks/useAsync'
 import useSafeInfo from '@/hooks/useSafeInfo'
 import { useWeb3ReadOnly } from '@/hooks/wallets/web3ReadOnly'
 import { getRecoveryState } from '@/features/recovery/services/recovery-state'
+import { getExplorerApi } from '@/features/recovery/services/explorer-logs'
+import { useCurrentChain } from '@/hooks/useChains'
 import { useAppDispatch } from '@/store'
 import { isCustomTxInfo, isMultiSendTxInfo, isTransactionListItem } from '@/utils/transaction-guards'
 import { sameAddress } from '@safe-global/utils/utils/addresses'
@@ -21,6 +23,8 @@ export function useRecoveryState(delayModifiers?: Array<Delay>): AsyncResult<Rec
   const web3ReadOnly = useWeb3ReadOnly()
   const { safe, safeAddress } = useSafeInfo()
   const dispatch = useAppDispatch()
+  const chain = useCurrentChain()
+  const explorer = useMemo(() => getExplorerApi(chain), [chain])
 
   // Reload recovery data every REFRESH_DELAY
   const [counter] = useIntervalCounter(REFRESH_DELAY)
@@ -97,10 +101,11 @@ export function useRecoveryState(delayModifiers?: Array<Delay>): AsyncResult<Rec
         provider: web3ReadOnly,
         chainId: safe.chainId,
         version: safe.version,
+        explorer,
       })
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [delayModifiers, counter, refetchDep, web3ReadOnly, safeAddress, safe.chainId, safe.version],
+    [delayModifiers, counter, refetchDep, web3ReadOnly, safeAddress, safe.chainId, safe.version, explorer],
     false,
   )
 }

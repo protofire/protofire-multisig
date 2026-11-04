@@ -98,6 +98,9 @@ export const HEDERA_MIRROR_NODE_MAINNET_URL =
 export const HEDERA_MIRROR_NODE_TESTNET_URL =
   process.env.NEXT_PUBLIC_HEDERA_MIRROR_NODE_TESTNET_URL || 'https://testnet.mirrornode.hedera.com'
 
+// Block explorers
+export const ETHERSCAN_API_KEY = process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY || ''
+
 // Safe Token
 export const SAFE_TOKEN_ADDRESSES: { [chainId: string]: string } = {
   [chains.eth]: '0x5aFE3855358E112B5647B952709E6165e1c1eEEe',

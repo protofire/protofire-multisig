@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker'
-import { id, toBeHex, zeroPadValue } from 'ethers'
+import { getAddress, id, solidityPackedKeccak256, toBeHex, zeroPadValue } from 'ethers'
 import cloneDeep from 'lodash/cloneDeep'
 import type { Delay } from '@gnosis.pm/zodiac/dist/cjs/types/Delay'
 import type { Block, JsonRpcProvider, TransactionReceipt } from 'ethers'
@@ -20,6 +20,9 @@ import { createMockWeb3Provider } from '@safe-global/utils/tests/web3Provider'
 import { MULTICALL_ABI } from '@safe-global/utils/utils/multicall'
 import { SENTINEL_ADDRESS } from '@safe-global/protocol-kit/dist/src/utils/constants'
 import { logError, Errors } from '@/services/exceptions'
+import { http, HttpResponse } from 'msw'
+import { server } from '@/tests/server'
+import type { ExplorerApi, ExplorerLog } from '../explorer-logs'
 
 jest.mock('@/services/exceptions', () => ({
   ...jest.requireActual('@/services/exceptions'),
@@ -677,6 +680,198 @@ describe('recovery-state', () => {
         await _getRecoveryStateItem(second.args)
 
         expect(queriedNonces(second.queryFilterMock)).toEqual([2n, 3n, 4n])
+      })
+    })
+
+    describe('block explorer fallback', () => {
+      const EXPLORER: ExplorerApi = { url: 'https://explorer.test/api', params: {} }
+      const EXPLORER_TX_HASH = (nonce: bigint) => id(`proposal ${nonce}`)
+
+      // The explorer data must hash to what the Delay Modifier stores, unlike the RPC mocks above
+      const getProposal = (nonce: bigint) => {
+        const proposal = { to: getAddress(faker.finance.ethereumAddress()), value: nonce, data: '0x', operation: 0 }
+        const txHash = solidityPackedKeccak256(
+          ['address', 'uint256', 'bytes', 'uint8'],
+          [proposal.to, proposal.value, proposal.data, proposal.operation],
+        )
+        return { ...proposal, txHash }
+      }
+
+      const toExplorerLog = (
+        address: string,
+        nonce: bigint,
+        { to, value, data, operation, txHash }: ReturnType<typeof getProposal>,
+      ): ExplorerLog => {
+        const { topics, data: logData } = DELAY_INTERFACE.encodeEventLog('TransactionAdded', [
+          nonce,
+          txHash,
+          to,
+          value,
+          data,
+          operation,
+        ])
+        return {
+          address,
+          // Blockscout pads the topics with null
+          topics: [...topics, null],
+          data: logData,
+          blockNumber: toBeHex(Number(CREATED_AT_BY_NONCE[nonce.toString()]) - 1_000),
+          logIndex: '0x',
+          transactionHash: EXPLORER_TX_HASH(nonce),
+          transactionIndex: '0x1',
+        }
+      }
+
+      const setupExplorerState = () => {
+        const proposals: Record<string, ReturnType<typeof getProposal>> = {
+          '2': getProposal(2n),
+          '3': getProposal(3n),
+          '4': getProposal(4n),
+        }
+        const setup = setupQueuedState({ storage: { txHash: (nonce) => [proposals[nonce.toString()].txHash] } })
+        // History the RPC no longer serves
+        setup.mockProvider.getBlock = jest.fn().mockRejectedValue(new Error('missing trie node'))
+
+        const logs = Object.entries(proposals).map(([nonce, proposal]) =>
+          toExplorerLog(setup.delayModifierAddress, BigInt(nonce), proposal),
+        )
+        const respond = jest.fn((topic1: string | null): Response => {
+          const result = logs.filter(({ topics }) => topics[1] === topic1)
+          return HttpResponse.json({ status: result.length ? '1' : '0', message: 'OK', result })
+        })
+        const requests: Array<URL> = []
+        server.use(
+          http.get(EXPLORER.url, ({ request }) => {
+            const url = new URL(request.url)
+            requests.push(url)
+            return respond(url.searchParams.get('topic1'))
+          }),
+        )
+
+        return { ...setup, args: { ...setup.args, explorer: EXPLORER }, proposals, logs, respond, requests }
+      }
+
+      it('should load queued transactions the RPC cannot find from the explorer', async () => {
+        const { args, proposals, requests, delayModifierAddress, transactionAddedReceipt } = setupExplorerState()
+
+        const recoveryState = await _getRecoveryStateItem(args)
+
+        expect(recoveryState.unavailableQueue).toEqual([])
+        expect(
+          recoveryState.queue.map(({ args, transactionHash, executor }) => ({
+            queueNonce: args.queueNonce,
+            to: args.to,
+            value: args.value,
+            data: args.data,
+            operation: args.operation,
+            txHash: args.txHash,
+            transactionHash,
+            executor,
+          })),
+        ).toEqual(
+          [2n, 3n, 4n].map((nonce) => {
+            const { to, value, data, operation, txHash } = proposals[nonce.toString()]
+            return {
+              queueNonce: nonce,
+              to,
+              value,
+              data,
+              operation: BigInt(operation),
+              txHash,
+              transactionHash: EXPLORER_TX_HASH(nonce),
+              executor: transactionAddedReceipt.from,
+            }
+          }),
+        )
+        expect(recoveryState.queue[0].blockNumber).toBe(420)
+        expect(requests.map((url) => url.searchParams.get('address'))).toEqual(Array(3).fill(delayModifierAddress))
+        expect(requests.map((url) => url.searchParams.get('topic2'))).toEqual(
+          [2n, 3n, 4n].map((nonce) => proposals[nonce.toString()].txHash),
+        )
+      })
+
+      it('should not query the explorer for events the RPC finds', async () => {
+        const { args } = setupQueuedState()
+        const request = jest.fn(() => HttpResponse.json({ status: '1', message: 'OK', result: [] }))
+        server.use(http.get(EXPLORER.url, request))
+
+        const recoveryState = await _getRecoveryStateItem({ ...args, explorer: EXPLORER })
+
+        expect(recoveryState.queue.map((item) => item.args.queueNonce)).toEqual([2n, 3n, 4n])
+        expect(request).not.toHaveBeenCalled()
+      })
+
+      it('should query the explorer when the latest block cannot be read', async () => {
+        const { args, mockProvider, requests } = setupExplorerState()
+        mockProvider.getBlockNumber = jest.fn().mockRejectedValue(new Error('rate limit: server busy'))
+
+        const first = await _getRecoveryStateItem(args)
+        const second = await _getRecoveryStateItem(args)
+
+        expect(first.queue.map((item) => item.args.queueNonce)).toEqual([2n, 3n, 4n])
+        expect(second.queue.map((item) => item.args.queueNonce)).toEqual([2n, 3n, 4n])
+        // How deep the events are is unknown, so none of them is cached
+        expect(requests).toHaveLength(6)
+      })
+
+      it('should cache the events found on the explorer', async () => {
+        const { args, requests } = setupExplorerState()
+
+        await _getRecoveryStateItem(args)
+        await _getRecoveryStateItem(args)
+
+        expect(requests).toHaveLength(3)
+      })
+
+      it('should not use explorer arguments that do not hash to the stored txHash', async () => {
+        const { args, logs } = setupExplorerState()
+        // The topics still carry the stored txHash, but the arguments that would be executed differ
+        const tampered = DELAY_INTERFACE.encodeEventLog('TransactionAdded', [
+          3n,
+          logs[1].topics[2],
+          faker.finance.ethereumAddress(),
+          3n,
+          '0x',
+          0,
+        ])
+        logs[1].data = tampered.data
+
+        const recoveryState = await _getRecoveryStateItem(args)
+
+        expect(recoveryState.queue.map((item) => item.args.queueNonce)).toEqual([2n, 4n])
+        expect(recoveryState.unavailableQueue.map((item) => item.args.queueNonce)).toEqual([3n])
+      })
+
+      it('should not use logs of another contract', async () => {
+        const { args, logs } = setupExplorerState()
+        logs[0].address = faker.finance.ethereumAddress()
+
+        const recoveryState = await _getRecoveryStateItem(args)
+
+        expect(recoveryState.unavailableQueue.map((item) => item.args.queueNonce)).toEqual([2n])
+      })
+
+      it('should list queued transactions as unavailable and log when the explorer fails', async () => {
+        const { args, respond } = setupExplorerState()
+        respond.mockImplementation(() =>
+          HttpResponse.json({ status: '0', message: 'NOTOK', result: 'Max rate limit reached' }),
+        )
+
+        const recoveryState = await _getRecoveryStateItem(args)
+
+        expect(recoveryState.queue).toEqual([])
+        expect(recoveryState.unavailableQueue.map((item) => item.args.queueNonce)).toEqual([2n, 3n, 4n])
+        expect(logError).toHaveBeenCalledWith(Errors._614, new Error('Block explorer error: Max rate limit reached'))
+      })
+
+      it('should list queued transactions as unavailable when the explorer does not find them', async () => {
+        const { args, respond } = setupExplorerState()
+        respond.mockImplementation(() => HttpResponse.json({ status: '0', message: 'No records found', result: [] }))
+
+        const recoveryState = await _getRecoveryStateItem(args)
+
+        expect(recoveryState.unavailableQueue.map((item) => item.args.queueNonce)).toEqual([2n, 3n, 4n])
+        expect(logError).not.toHaveBeenCalledWith(Errors._614, expect.anything())
       })
     })
 
