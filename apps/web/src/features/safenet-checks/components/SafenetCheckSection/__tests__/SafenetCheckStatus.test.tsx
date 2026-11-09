@@ -5,10 +5,8 @@ import { getStatusCopy } from '../../../statusCopy'
 
 const baseProps = {
   unavailableReason: undefined,
-  isLoading: false,
   isStale: false,
   explorerUrl: 'https://explorer.example/#/safeTx?chainId=1&safeTxHash=0x1',
-  onRefresh: jest.fn(),
 }
 
 describe('SafenetCheckStatus', () => {
@@ -46,12 +44,9 @@ describe('SafenetCheckStatus', () => {
     expect(screen.queryByRole('link')).not.toBeInTheDocument()
   })
 
-  it('shows the stale hint and calls refresh', () => {
-    const onRefresh = jest.fn()
-    render(<SafenetCheckStatus {...baseProps} status={CheckStatus.IN_PROGRESS} isStale onRefresh={onRefresh} />)
+  it('shows the stale hint', () => {
+    render(<SafenetCheckStatus {...baseProps} status={CheckStatus.IN_PROGRESS} isStale />)
     expect(screen.getByText(/Showing the last known status/)).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'Refresh' }))
-    expect(onRefresh).toHaveBeenCalledTimes(1)
   })
 
   it('offers to request a check only when unavailable and a handler is given', () => {
@@ -96,6 +91,21 @@ describe('SafenetCheckStatus', () => {
       />,
     )
     expect(screen.getByText(/The request failed/)).toBeInTheDocument()
+  })
+
+  it('explains an underfunded sponsor', () => {
+    render(
+      <SafenetCheckStatus
+        {...baseProps}
+        status={CheckStatus.UNAVAILABLE}
+        unavailableReason="NO_CHECK"
+        onRequestCheck={jest.fn()}
+        requestState="underfunded"
+      />,
+    )
+    expect(screen.getByText(/sponsor is out of funds/)).toBeInTheDocument()
+    expect(screen.queryByText(/The request failed/)).not.toBeInTheDocument()
+    expect(screen.getByTestId('safenet-request-check')).toBeEnabled()
   })
 
   it('hides the request button once a check was requested', () => {

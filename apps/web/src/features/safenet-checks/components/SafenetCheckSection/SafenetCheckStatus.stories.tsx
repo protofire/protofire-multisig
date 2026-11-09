@@ -16,9 +16,7 @@ const meta: Meta<typeof SafenetCheckStatus> = {
   ],
   args: {
     unavailableReason: undefined,
-    isLoading: false,
     isStale: false,
-    onRefresh: () => {},
   },
 }
 
@@ -44,6 +42,22 @@ export const Requested: Story = {
     unavailableReason: 'NO_CHECK',
     onRequestCheck: () => {},
     requestState: 'requested',
+  },
+}
+export const RequestFailed: Story = {
+  args: {
+    status: CheckStatus.UNAVAILABLE,
+    unavailableReason: 'NO_CHECK',
+    onRequestCheck: () => {},
+    requestState: 'failed',
+  },
+}
+export const RequestUnderfunded: Story = {
+  args: {
+    status: CheckStatus.UNAVAILABLE,
+    unavailableReason: 'NO_CHECK',
+    onRequestCheck: () => {},
+    requestState: 'underfunded',
   },
 }
 export const RequestedReadFailed: Story = {

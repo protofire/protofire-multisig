@@ -7,6 +7,8 @@ export type RequestSafenetCheckParams = {
   safeTxHash: string
 }
 
+export type RequestFailure = 'failed' | 'underfunded'
+
 const RETRY_OPTIONS = { numOfAttempts: 4, startingDelay: 1_000, timeMultiple: 2 }
 
 export class SafenetProxyError extends Error {
@@ -32,6 +34,9 @@ const propose = async ({ chainId, safeAddress, safeTxHash }: RequestSafenetCheck
   })
   if (!response.ok) throw new SafenetProxyError(response.status)
 }
+
+export const toRequestFailure = (error: unknown): RequestFailure =>
+  error instanceof SafenetProxyError && error.status === 402 ? 'underfunded' : 'failed'
 
 export const requestSafenetCheck = (params: RequestSafenetCheckParams): Promise<void> =>
   backOff(() => propose(params), { ...RETRY_OPTIONS, retry: isTransient })

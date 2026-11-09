@@ -2,10 +2,13 @@ import { act, renderHook, waitFor } from '@/tests/test-utils'
 import { checkKey, selectCheckRequestedAtMs } from '@safe-global/store/safenet/safenetCheckSlice'
 import { UNAVAILABLE_GRACE_MS } from '@safe-global/utils/features/safenet-checks/constants'
 import { getStoreInstance } from '@/store'
-import { requestSafenetCheck } from '../../services/requestSafenetCheck'
+import { requestSafenetCheck, SafenetProxyError } from '../../services/requestSafenetCheck'
 import { useRequestSafenetCheck } from '../useRequestSafenetCheck'
 
-jest.mock('../../services/requestSafenetCheck', () => ({ requestSafenetCheck: jest.fn() }))
+jest.mock('../../services/requestSafenetCheck', () => ({
+  ...jest.requireActual('../../services/requestSafenetCheck'),
+  requestSafenetCheck: jest.fn(),
+}))
 
 const identity = {
   chainId: '42161',
@@ -49,6 +52,17 @@ describe('useRequestSafenetCheck', () => {
     expect(result.current.state).toBe('failed')
     expect(recordedAtMs()).toBeUndefined()
     expect(window.localStorage.getItem(storageKey)).toBeNull()
+  })
+
+  it('reports an underfunded sponsor and recovers on the next attempt', async () => {
+    jest.mocked(requestSafenetCheck).mockRejectedValueOnce(new SafenetProxyError(402)).mockResolvedValue(undefined)
+    const { result } = renderHook(() => useRequestSafenetCheck(identity))
+
+    await act(() => result.current.request())
+    expect(result.current.state).toBe('underfunded')
+
+    await act(() => result.current.request())
+    expect(result.current.state).toBe('idle')
   })
 
   it('restores a request still inside the grace window from local storage after a reload', async () => {

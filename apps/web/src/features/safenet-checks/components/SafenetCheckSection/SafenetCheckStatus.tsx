@@ -1,17 +1,5 @@
 import type { ReactElement } from 'react'
-import {
-  Alert,
-  Box,
-  Button,
-  Chip,
-  CircularProgress,
-  IconButton,
-  Skeleton,
-  Stack,
-  Tooltip,
-  Typography,
-} from '@mui/material'
-import RefreshIcon from '@mui/icons-material/Refresh'
+import { Alert, Box, Button, Chip, CircularProgress, Skeleton, Stack, Typography } from '@mui/material'
 import ExternalLink from '@/components/common/ExternalLink'
 import {
   CheckStatus,
@@ -25,15 +13,19 @@ const REQUESTED_COPY = {
   description: 'The proxy is proposing it to Safenet. The status updates here once the proposal lands.',
 }
 
-export type RequestState = 'idle' | 'requesting' | 'requested' | 'failed'
+export type RequestState = 'idle' | 'requesting' | 'requested' | 'failed' | 'underfunded'
+
+const FAILURE_COPY: Partial<Record<RequestState, string>> = {
+  failed: 'The request failed. Check that the Safenet proxy is running and try again.',
+  underfunded:
+    "Safenet can't take this check right now because the sponsor is out of funds. Try again once it is topped up.",
+}
 
 export type SafenetCheckStatusProps = {
   status: PublicCheckStatus
   unavailableReason: UnavailableReason | undefined
-  isLoading: boolean
   isStale: boolean
   explorerUrl?: string
-  onRefresh: () => void
   onRequestCheck?: () => void
   requestState?: RequestState
 }
@@ -72,9 +64,9 @@ const RequestCheck = ({
     >
       {requestState === 'requesting' ? 'Requesting' : 'Request Safenet check'}
     </Button>
-    {requestState === 'failed' ? (
+    {FAILURE_COPY[requestState] ? (
       <Typography variant="caption" color="error">
-        The request failed. Check that the Safenet proxy is running and try again.
+        {FAILURE_COPY[requestState]}
       </Typography>
     ) : (
       <Typography variant="caption" color="text.secondary">
@@ -87,10 +79,8 @@ const RequestCheck = ({
 const SafenetCheckStatus = ({
   status,
   unavailableReason,
-  isLoading,
   isStale,
   explorerUrl,
-  onRefresh,
   onRequestCheck,
   requestState = 'idle',
 }: SafenetCheckStatusProps): ReactElement => {
@@ -124,24 +114,9 @@ const SafenetCheckStatus = ({
         sx={{ '& .MuiAlert-message': { width: '100%' } }}
       >
         <Stack gap={1}>
-          <Box display="flex" alignItems="flex-start" justifyContent="space-between" gap={1}>
-            <Typography variant="body2" fontWeight="bold">
-              {title}
-            </Typography>
-            <Tooltip title="Refresh status">
-              <span>
-                <IconButton
-                  size="small"
-                  aria-label="Refresh"
-                  onClick={onRefresh}
-                  disabled={isLoading}
-                  sx={{ mt: -0.5 }}
-                >
-                  <RefreshIcon fontSize="small" />
-                </IconButton>
-              </span>
-            </Tooltip>
-          </Box>
+          <Typography variant="body2" fontWeight="bold">
+            {title}
+          </Typography>
 
           <Typography variant="body2" color="text.secondary">
             {description}

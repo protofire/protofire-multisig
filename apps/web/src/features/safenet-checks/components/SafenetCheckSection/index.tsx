@@ -24,11 +24,7 @@ const SafenetCheckSection = ({
   canRequestCheck = true,
 }: SafenetCheckSectionProps): ReactElement | null => {
   const target = useMemo(() => ({ chainId, safeAddress }), [chainId, safeAddress])
-  const { publicStatus, unavailableReason, isLoading, isStale, isRequested, refetch } = useSafenetCheck(
-    safeTxHash,
-    submittedAt,
-    target,
-  )
+  const { publicStatus, unavailableReason, isStale, isRequested } = useSafenetCheck(safeTxHash, submittedAt, target)
   const { request, state } = useRequestSafenetCheck({ chainId, safeAddress, safeTxHash })
 
   const requestState: RequestState = isRequested ? 'requested' : state
@@ -41,10 +37,8 @@ const SafenetCheckSection = ({
       <SafenetCheckStatus
         status={publicStatus}
         unavailableReason={unavailableReason}
-        isLoading={isLoading}
         isStale={isStale}
         explorerUrl={isUnavailable ? undefined : safenetExplorerTxUrl(chainId, safeTxHash)}
-        onRefresh={refetch}
         onRequestCheck={SAFENET_PROXY_URL && canRequestCheck ? request : undefined}
         requestState={requestState}
       />

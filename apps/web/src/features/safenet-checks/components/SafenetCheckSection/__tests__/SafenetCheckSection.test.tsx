@@ -4,14 +4,17 @@ import { useSafenetCheck } from '@safe-global/utils/features/safenet-checks/hook
 import { buildCheckView } from '@safe-global/utils/features/safenet-checks/builders'
 import { selectCheckRequestedAtMs } from '@safe-global/store/safenet/safenetCheckSlice'
 import { getStoreInstance } from '@/store'
-import { requestSafenetCheck } from '../../../services/requestSafenetCheck'
+import { requestSafenetCheck, SafenetProxyError } from '../../../services/requestSafenetCheck'
 import SafenetCheckSection from '../index'
 
 jest.mock('@safe-global/utils/features/safenet-checks/constants', () => ({
   ...jest.requireActual('@safe-global/utils/features/safenet-checks/constants'),
   SAFENET_PROXY_URL: 'http://localhost:8787',
 }))
-jest.mock('../../../services/requestSafenetCheck', () => ({ requestSafenetCheck: jest.fn() }))
+jest.mock('../../../services/requestSafenetCheck', () => ({
+  ...jest.requireActual('../../../services/requestSafenetCheck'),
+  requestSafenetCheck: jest.fn(),
+}))
 jest.mock('@safe-global/utils/features/safenet-checks/hooks', () => ({ useSafenetCheck: jest.fn() }))
 
 const identity = {
@@ -88,6 +91,14 @@ describe('SafenetCheckSection', () => {
     render(<SafenetCheckSection {...identity} />)
     fireEvent.click(screen.getByTestId('safenet-request-check'))
     expect(await screen.findByText(/The request failed/)).toBeInTheDocument()
+    expect(selectCheckRequestedAtMs(getStoreInstance().getState(), identity)).toBeUndefined()
+  })
+
+  it('explains an underfunded sponsor when the proxy answers 402', async () => {
+    jest.mocked(requestSafenetCheck).mockRejectedValue(new SafenetProxyError(402))
+    render(<SafenetCheckSection {...identity} />)
+    fireEvent.click(screen.getByTestId('safenet-request-check'))
+    expect(await screen.findByText(/sponsor is out of funds/)).toBeInTheDocument()
     expect(selectCheckRequestedAtMs(getStoreInstance().getState(), identity)).toBeUndefined()
   })
 })

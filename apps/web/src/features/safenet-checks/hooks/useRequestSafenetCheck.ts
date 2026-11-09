@@ -8,9 +8,9 @@ import {
 import { isWithinGrace } from '@safe-global/utils/features/safenet-checks/utils/computePollingInterval'
 import { useAppDispatch, useAppSelector } from '@/store'
 import { localItem } from '@/services/local-storage/local'
-import { requestSafenetCheck } from '../services/requestSafenetCheck'
+import { requestSafenetCheck, toRequestFailure, type RequestFailure } from '../services/requestSafenetCheck'
 
-export type RequestCheckState = 'idle' | 'requesting' | 'failed'
+export type RequestCheckState = 'idle' | 'requesting' | RequestFailure
 
 const storedRequest = (identity: CheckIdentity) => localItem<number>(`safenetCheckRequested:${checkKey(identity)}`)
 
@@ -46,8 +46,8 @@ export const useRequestSafenetCheck = ({ chainId, safeAddress, safeTxHash }: Che
       storedRequest(identity).set(requestedAtMs)
       dispatch(recordCheckRequest({ ...identity, requestedAtMs }))
       setState('idle')
-    } catch {
-      setState('failed')
+    } catch (error) {
+      setState(toRequestFailure(error))
     }
   }, [identity, dispatch])
 

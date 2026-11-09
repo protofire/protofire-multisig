@@ -1,6 +1,6 @@
-import { http, HttpResponse } from 'msw'
+import { http, HttpResponse, type JsonBodyType } from 'msw'
 import { server } from '@/tests/server'
-import { requestSafenetCheck } from '../requestSafenetCheck'
+import { requestSafenetCheck, SafenetProxyError, toRequestFailure } from '../requestSafenetCheck'
 
 jest.mock('@safe-global/utils/features/safenet-checks/constants', () => ({
   ...jest.requireActual('@safe-global/utils/features/safenet-checks/constants'),
@@ -9,7 +9,7 @@ jest.mock('@safe-global/utils/features/safenet-checks/constants', () => ({
 
 const PROPOSE_URL = 'http://localhost:8787/propose'
 
-type Reply = number | 'network-error'
+type Reply = number | 'network-error' | { status: number; body: JsonBodyType }
 
 /** Serves the given replies in order and the last one thereafter; returns the received bodies. */
 const serveReplies = (...replies: Reply[]): unknown[] => {
@@ -18,7 +18,9 @@ const serveReplies = (...replies: Reply[]): unknown[] => {
     http.post(PROPOSE_URL, async ({ request }) => {
       bodies.push(await request.json())
       const reply = replies[Math.min(bodies.length, replies.length) - 1]
-      return reply === 'network-error' ? HttpResponse.error() : new HttpResponse(null, { status: reply })
+      if (reply === 'network-error') return HttpResponse.error()
+      if (typeof reply === 'number') return new HttpResponse(null, { status: reply })
+      return HttpResponse.json(reply.body, { status: reply.status })
     }),
   )
   return bodies
@@ -75,5 +77,19 @@ describe('requestSafenetCheck', () => {
     const bodies = serveReplies(403)
     await expectRejection('403')
     expect(bodies).toHaveLength(1)
+  })
+
+  it('does not retry a 402', async () => {
+    const bodies = serveReplies({ status: 402, body: { success: false, message: 'sponsor is short' } })
+    await expectRejection('402')
+    expect(bodies).toHaveLength(1)
+  })
+})
+
+describe('toRequestFailure', () => {
+  it('classifies only a 402 as underfunded', () => {
+    expect(toRequestFailure(new SafenetProxyError(402))).toBe('underfunded')
+    expect(toRequestFailure(new SafenetProxyError(500))).toBe('failed')
+    expect(toRequestFailure(new Error('offline'))).toBe('failed')
   })
 })
