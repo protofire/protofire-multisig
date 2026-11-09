@@ -283,7 +283,7 @@ export function generateMuiTheme(mode: PaletteMode): Theme {
       MuiToggleButton: { styleOverrides: { root: { textTransform: 'none' } } },
       MuiChip: {
         styleOverrides: {
-          colorSuccess: ({ theme }) => ({ backgroundColor: theme.palette.secondary.light, height: '24px' }),
+          colorSuccess: ({ theme }) => ({ backgroundColor: theme.palette.success.background, height: '24px' }),
           //@ts-ignore this is not detected even though it is declared in web app
           sizeTiny: {
             fontSize: '11px',
