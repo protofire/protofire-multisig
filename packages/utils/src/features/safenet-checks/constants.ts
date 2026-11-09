@@ -47,6 +47,15 @@ export const SAFENET_EXPLORER_URL = (
   'https://safenet-explorer.eth.limo'
 ).replace(/\/$/, '')
 
+export const SAFENET_PROXY_URL = (
+  process.env.NEXT_PUBLIC_SAFENET_PROXY_URL ||
+  process.env.EXPO_PUBLIC_SAFENET_PROXY_URL ||
+  ''
+).replace(/\/$/, '')
+
+/** Gnosis Chain RPC override for reading checks. Empty: use the gateway's chain config entry. */
+export const SAFENET_RPC_URL = process.env.NEXT_PUBLIC_SAFENET_RPC_URL || process.env.EXPO_PUBLIC_SAFENET_RPC_URL || ''
+
 // --- Lookback tuning ------------------------------------------------------
 
 /** Hard cap on how far back the reader scans for a check's first event. */

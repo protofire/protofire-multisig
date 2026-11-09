@@ -10,7 +10,7 @@ import { recordAim } from '@safe-global/store/safenet/safenetAimRegistry'
 import { POLL_INTERVAL_FAST_MS, POLL_INTERVAL_LATE_MS } from '../constants'
 import { CheckStatus, toPublicStatus, type PublicCheckStatus, type UnavailableReason } from '../types/status'
 import type { SafenetCheckSnapshot } from '../types/snapshot'
-import { computePollingInterval } from '../utils/computePollingInterval'
+import { computePollingInterval, isWithinGrace } from '../utils/computePollingInterval'
 import type { CheckTarget } from '../utils/attestations'
 import { mergeMonotonic } from '../utils/mergeMonotonic'
 
@@ -29,6 +29,7 @@ export type SafenetCheckView = {
   isFetching: boolean
   /** Showing a retained snapshot because the latest fetch failed. */
   isStale: boolean
+  isRequested: boolean
   refetch: () => void
 }
 
@@ -78,6 +79,7 @@ export const useSafenetCheck = (
   // The interval feeds back into the query below, so the (status → interval →
   // next poll) loop is reconfigured from the query's own output via an effect.
   const [pollingInterval, setPollingInterval] = useState(POLL_INTERVAL_FAST_MS)
+  const [isRequested, setIsRequested] = useState(false)
 
   const query = useGetSafenetCheckQuery(identity, {
     skip,
@@ -116,6 +118,8 @@ export const useSafenetCheck = (
   const fulfilledAt = query.fulfilledTimeStamp
 
   useEffect(() => {
+    const nowMs = Date.now()
+    setIsRequested(isWithinGrace(requestedAtMs, nowMs))
     // A failed fetch with nothing to show is a transient endpoint problem, not
     // "no check exists" — keep retrying at the slow cadence. This is the only
     // recovery path on mobile, which has no focus-refetch listeners.
@@ -131,7 +135,7 @@ export const useSafenetCheck = (
         submittedAtMs: aim,
         requestedAtMs,
         attestedAtMs: snapshot?.attestedAtMs ?? null,
-        nowMs: Date.now(),
+        nowMs,
       }),
     )
   }, [
@@ -168,6 +172,7 @@ export const useSafenetCheck = (
     isLoading: query.isFetching && !hasData,
     isFetching: query.isFetching,
     isStale,
+    isRequested,
     refetch,
   }
 }

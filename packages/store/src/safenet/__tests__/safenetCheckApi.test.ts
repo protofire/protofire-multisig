@@ -27,9 +27,13 @@ import {
   type SafenetCheckSliceState,
 } from '../safenetCheckSlice'
 
+let mockRpcUrl = ''
 jest.mock('@safe-global/utils/features/safenet-checks', () => ({
   ...jest.requireActual('@safe-global/utils/features/safenet-checks'),
   getSafenetReader: jest.fn(),
+  get SAFENET_RPC_URL() {
+    return mockRpcUrl
+  },
 }))
 
 const mockedGetReader = getSafenetReader as jest.MockedFunction<typeof getSafenetReader>
@@ -127,6 +131,17 @@ describe('safenetCheckApi.getSafenetCheck', () => {
       message: 'Safenet chain RPC configuration unavailable',
     })
     expect(mockedGetReader).not.toHaveBeenCalled()
+  })
+  it('reads from SAFENET_RPC_URL when it is set, without consulting the chain config', async () => {
+    mockRpcUrl = 'https://rpc.example/gnosis'
+    try {
+      fakeReader.fetchCheckState.mockResolvedValue(baseRead())
+      const store = makeTestStore(false)
+      expect((await runQuery(store)).data?.status).toBe(CheckStatus.UNAVAILABLE)
+      expect(mockedGetReader).toHaveBeenCalledWith('https://rpc.example/gnosis')
+    } finally {
+      mockRpcUrl = ''
+    }
   })
   it('verifies an attestation without a request log and derives BENIGN', async () => {
     const attested = attestedEvent({ safeTxHash: HASH, ...BOUND })

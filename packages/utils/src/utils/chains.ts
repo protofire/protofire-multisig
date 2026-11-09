@@ -68,6 +68,7 @@ export enum FEATURES {
   OASIS_SIGNED_ETH_CALL_GAS_ESTIMATION = 'OASIS_SIGNED_ETH_CALL_GAS_ESTIMATION', // Oasis Sapphire: validate transactions via signed eth_call
   HEDERA = 'HEDERA',
   ROOTSTOCK_SUPPORT = 'ROOTSTOCK_SUPPORT', // gates Rootstock-specific signing, address and derivation handling
+  SAFENET_CHECKS = 'SAFENET_CHECKS',
 }
 
 const MIN_SAFE_VERSION = '1.3.0'

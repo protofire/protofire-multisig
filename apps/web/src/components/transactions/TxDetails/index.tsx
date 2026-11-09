@@ -48,6 +48,7 @@ import DecodedData from './TxData/DecodedData'
 import { QueuedTxSimulation } from '../QueuedTxSimulation'
 import { ClearSigningLookupProvider, Erc7730Feature } from '@/features/erc7730'
 import { HypernativeFeature } from '@/features/hypernative'
+import { SafenetChecksFeature } from '@/features/safenet-checks'
 
 export const NOT_AVAILABLE = 'n/a'
 
@@ -59,6 +60,7 @@ type TxDetailsProps = {
 const TxDetailsBlock = ({ txSummary, txDetails }: TxDetailsProps): ReactElement => {
   const txNotes = useLoadFeature(TxNotesFeature)
   const hn = useLoadFeature(HypernativeFeature)
+  const safenet = useLoadFeature(SafenetChecksFeature)
   const { ClearSigningCheck, ClearSigningLookupButton } = useLoadFeature(Erc7730Feature)
   const isPending = useIsPending(txSummary.id)
   const hasDefaultTokenlist = useHasFeature(FEATURES.DEFAULT_TOKENLIST)
@@ -89,8 +91,10 @@ const TxDetailsBlock = ({ txSummary, txDetails }: TxDetailsProps): ReactElement 
   let proposer: string | undefined
   let safeTxHash: string | undefined
   let proposedByDelegate
+  let submittedAt: number | undefined
   if (isMultisigDetailedExecutionInfo(txDetails.detailedExecutionInfo)) {
     safeTxHash = txDetails.detailedExecutionInfo.safeTxHash
+    submittedAt = txDetails.detailedExecutionInfo.submittedAt
     proposedByDelegate = txDetails.detailedExecutionInfo.proposedByDelegate
     proposer = proposedByDelegate?.value ?? txDetails.detailedExecutionInfo.proposer?.value
   }
@@ -209,6 +213,16 @@ const TxDetailsBlock = ({ txSummary, txDetails }: TxDetailsProps): ReactElement 
           />
 
           {isQueue && <hn.HnSecuritySection txDetails={txDetails} safeTxHash={safeTxHash} chainId={safe.chainId} />}
+
+          {safeTxHash && (
+            <safenet.SafenetCheckSection
+              safeTxHash={safeTxHash}
+              chainId={safe.chainId}
+              safeAddress={safe.address.value}
+              submittedAt={submittedAt}
+              canRequestCheck={isQueue}
+            />
+          )}
 
           {txDetails.txHash && (
             <TxExplorerLink txHash={txDetails.txHash} hederaTransactionId={txDetails.hederaTransactionId} />

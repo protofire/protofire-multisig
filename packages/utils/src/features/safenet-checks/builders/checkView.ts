@@ -10,6 +10,7 @@ export const buildCheckView = (over: Partial<SafenetCheckView> = {}): SafenetChe
   isLoading: false,
   isFetching: false,
   isStale: false,
+  isRequested: false,
   refetch: () => {},
   ...over,
 })

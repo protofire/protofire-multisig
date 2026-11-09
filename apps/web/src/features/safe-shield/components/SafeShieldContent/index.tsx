@@ -25,6 +25,7 @@ import { HypernativeFeature, type HypernativeAuthStatus } from '@/features/hyper
 import { useLoadFeature } from '@/features/__core__'
 import { ThreatAnalysis } from '@/features/safe-shield/components/ThreatAnalysis'
 import { ClearSigningLookupCard } from '../ClearSigningLookupCard'
+import { SafenetCheckCard } from '../SafenetCheckCard'
 
 export const SafeShieldContent = ({
   recipient,
@@ -133,6 +134,7 @@ export const SafeShieldContent = ({
           )}
 
           <ClearSigningLookupCard delay={simulationAnalysisDelay} />
+          <SafenetCheckCard delay={simulationAnalysisDelay} />
         </Box>
       </Box>
     </Box>

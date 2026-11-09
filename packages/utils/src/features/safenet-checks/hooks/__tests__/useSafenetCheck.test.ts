@@ -402,6 +402,25 @@ describe('useSafenetCheck', () => {
 
         expect(lastOptions().pollingInterval).toBe(UNAVAILABLE_GRACE_POLL_MS)
       })
+
+      it('reports isRequested until the first landed poll after the grace window', () => {
+        const snapshot = noCheck()
+        mockSliceState({ requested: { [checkKey(IDENTITY)]: NOW - 60_000 } })
+        const { result, rerender } = renderHook(() => useSafenetCheck(HASH, SUBMITTED, TARGET))
+        expect(result.current.isRequested).toBe(true)
+
+        jest.setSystemTime(NOW - 60_000 + UNAVAILABLE_GRACE_MS)
+        mockQuery.mockReturnValue(queryResult({ currentData: snapshot, fulfilledTimeStamp: 2 }))
+        rerender()
+
+        expect(result.current.isRequested).toBe(false)
+        expect(lastOptions().pollingInterval).toBe(0)
+      })
+
+      it('does not report isRequested for a check this client never requested', () => {
+        const { result } = renderHook(() => useSafenetCheck(HASH, SUBMITTED, TARGET))
+        expect(result.current.isRequested).toBe(false)
+      })
     })
   })
 

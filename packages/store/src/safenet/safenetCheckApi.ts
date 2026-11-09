@@ -7,6 +7,7 @@ import {
   AttestationVerificationStatus,
   CheckStatus,
   SAFENET_CHAIN_ID,
+  SAFENET_RPC_URL,
   UNVERIFIED_ATTESTATION,
   bindAttestations,
   deriveCheckState,
@@ -85,6 +86,7 @@ const configuredRpcUrl = (rpcUri: RpcUri | undefined): string => {
 }
 
 const configuredReader = async ({ dispatch }: Pick<BaseQueryApi, 'dispatch' | 'getState'>) => {
+  if (SAFENET_RPC_URL) return getSafenetReader(SAFENET_RPC_URL)
   const chainQuery = dispatch(apiSliceWithChainsConfig.endpoints.getChainsConfig.initiate())
   try {
     const chainConfig = await chainQuery

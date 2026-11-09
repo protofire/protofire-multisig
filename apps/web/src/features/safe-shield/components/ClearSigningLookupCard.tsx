@@ -5,9 +5,11 @@ import {
   useClearSigningLookupSummary,
   type ClearSigningLookupSummary,
 } from '@/features/erc7730'
-import { Box, Collapse, IconButton, Stack, SvgIcon, Tooltip, Typography } from '@mui/material'
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
-import { type ReactElement, useEffect, useState } from 'react'
+import { Box, Collapse, Stack, SvgIcon, Tooltip, Typography } from '@mui/material'
+import { ExpandChevron } from './ExpandChevron'
+import { LookupButton } from './LookupButton'
+import { useDelayedVisibility } from '../hooks/useDelayedVisibility'
+import { type ReactElement, useState } from 'react'
 
 interface ClearSigningLookupCardProps {
   delay?: number
@@ -35,55 +37,11 @@ const getHeaderSubtitle = ({
   return `${doneCount}/${eligibleKeyedEntries.length} checked${foundSuffix}`
 }
 
-const LookupButton = ({
-  label,
-  disabled = false,
-  onClick,
-  testId,
-}: {
-  label: string
-  disabled?: boolean
-  onClick: () => void
-  testId: string
-}): ReactElement => (
-  <Box
-    component="button"
-    type="button"
-    data-testid={testId}
-    disabled={disabled}
-    onClick={(event) => {
-      event.stopPropagation()
-      onClick()
-    }}
-    sx={{
-      backgroundColor: 'background.lightGrey',
-      border: 'none',
-      borderRadius: '4px',
-      px: 1,
-      py: 0.25,
-      flexShrink: 0,
-      cursor: disabled ? 'default' : 'pointer',
-      '&:hover': {
-        backgroundColor: disabled ? 'background.lightGrey' : 'border.light',
-      },
-    }}
-  >
-    <Typography color="text.primary" sx={{ fontSize: '12px', lineHeight: '2.015', letterSpacing: '0.4px' }}>
-      {label}
-    </Typography>
-  </Box>
-)
-
 export const ClearSigningLookupCard = ({ delay = 0 }: ClearSigningLookupCardProps): ReactElement | null => {
   const summary = useClearSigningLookupSummary()
   const isMultiAction = summary?.isMultiAction ?? false
-  const [isVisible, setIsVisible] = useState(false)
+  const isVisible = useDelayedVisibility(delay)
   const [isExpanded, setIsExpanded] = useState(false)
-
-  useEffect(() => {
-    const timeout = setTimeout(() => setIsVisible(true), delay)
-    return () => clearTimeout(timeout)
-  }, [delay])
 
   if (!summary) {
     return null
@@ -154,20 +112,7 @@ export const ClearSigningLookupCard = ({ delay = 0 }: ClearSigningLookupCardProp
 
         <Stack direction="row" alignItems="center" gap={1} flexShrink={0}>
           {runButton}
-          {isMultiAction && (
-            <IconButton
-              size="small"
-              sx={{
-                width: 16,
-                height: 16,
-                padding: 0,
-                transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                transition: 'transform 0.2s',
-              }}
-            >
-              <KeyboardArrowDownIcon sx={{ width: 16, height: 16, color: 'text.secondary' }} />
-            </IconButton>
-          )}
+          {isMultiAction && <ExpandChevron isExpanded={isExpanded} />}
         </Stack>
       </Stack>
 

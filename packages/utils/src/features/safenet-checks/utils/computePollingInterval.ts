@@ -40,7 +40,7 @@ type PollingInput = {
 
 // A stamp in the future is clock skew, not a young check: without the lower
 // bound the window would stretch by the whole skew.
-const isWithinGrace = (anchorMs: number | null | undefined, nowMs: number): boolean => {
+export const isWithinGrace = (anchorMs: number | null | undefined, nowMs: number): boolean => {
   if (anchorMs == null) return false
   const age = nowMs - anchorMs
   return age >= 0 && age < UNAVAILABLE_GRACE_MS
