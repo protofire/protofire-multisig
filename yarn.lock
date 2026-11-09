@@ -13849,6 +13849,8 @@ __metadata:
   dependencies:
     "@cowprotocol/app-data": "npm:^3.1.0"
     "@faker-js/faker": "npm:^9.0.3"
+    "@noble/curves": "npm:^1.9.7"
+    "@noble/hashes": "npm:^1.8.0"
     "@testing-library/react": "npm:^16.3.0"
     "@types/jest": "npm:^29.5.14"
     date-fns: "npm:^4.1.0"
@@ -13865,6 +13867,7 @@ __metadata:
     "@safe-global/store": "*"
     "@safe-global/types-kit": ^1.x
     ethers: ^6.x
+    react-redux: ^9.1.2
   languageName: unknown
   linkType: soft
 

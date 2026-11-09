@@ -74,8 +74,8 @@ const makeTestStore = (includeSafenetChain = true) => {
   store.dispatch(
     apiSliceWithChainsConfig.util.upsertQueryEntries([
       {
-        endpointName: 'getChainsConfigV2',
-        arg: 'WALLET_WEB',
+        endpointName: 'getChainsConfig',
+        arg: undefined,
         value: chainsAdapter.setAll(
           initialState,
           includeSafenetChain ? [createMockChain({ chainId: '100', rpcUri: RPC_URL })] : [],
@@ -355,8 +355,8 @@ describe('safenetCheckApi.getSafenetCheck', () => {
     })
     await store.dispatch(
       apiSliceWithChainsConfig.util.upsertQueryData(
-        'getChainsConfigV2',
-        'WALLET_WEB',
+        'getChainsConfig',
+        undefined,
         chainsAdapter.setAll(initialState, [createMockChain({ chainId: '100', rpcUri: RPC_URL })]),
       ),
     )

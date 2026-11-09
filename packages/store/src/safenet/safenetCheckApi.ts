@@ -84,17 +84,8 @@ const configuredRpcUrl = (rpcUri: RpcUri | undefined): string => {
   return rpcUri.authentication === 'API_KEY_PATH' ? `${rpcUri.value}${INFURA_TOKEN}` : rpcUri.value
 }
 
-const configuredReader = async ({ dispatch, getState }: Pick<BaseQueryApi, 'dispatch' | 'getState'>) => {
-  // The key the app already queried chains with; env and the web default only before that.
-  const serviceKey =
-    apiSliceWithChainsConfig.util.selectCachedArgsForQuery(
-      getState() as Parameters<typeof apiSliceWithChainsConfig.util.selectCachedArgsForQuery>[0],
-      'getChainsConfigV2',
-    )[0] ||
-    process.env.NEXT_PUBLIC_CONFIG_SERVICE_KEY ||
-    process.env.EXPO_PUBLIC_CONFIG_SERVICE_KEY ||
-    'WALLET_WEB'
-  const chainQuery = dispatch(apiSliceWithChainsConfig.endpoints.getChainsConfigV2.initiate(serviceKey))
+const configuredReader = async ({ dispatch }: Pick<BaseQueryApi, 'dispatch' | 'getState'>) => {
+  const chainQuery = dispatch(apiSliceWithChainsConfig.endpoints.getChainsConfig.initiate())
   try {
     const chainConfig = await chainQuery
     return getSafenetReader(configuredRpcUrl(chainConfig.data?.entities[SAFENET_CHAIN_ID]?.rpcUri))

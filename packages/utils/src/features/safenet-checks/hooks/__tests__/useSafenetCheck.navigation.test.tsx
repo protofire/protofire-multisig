@@ -51,8 +51,8 @@ const makeStore = () => {
   store.dispatch(
     apiSliceWithChainsConfig.util.upsertQueryEntries([
       {
-        endpointName: 'getChainsConfigV2',
-        arg: 'WALLET_WEB',
+        endpointName: 'getChainsConfig',
+        arg: undefined,
         value: chainsAdapter.setAll(initialState, [chain]),
       },
     ]),
