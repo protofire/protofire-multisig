@@ -18,6 +18,10 @@ export const isRecoveryUnavailable = (state: RecoveryContextType['state'] = EMPT
   return error !== undefined || (Boolean(loading) && recovery === undefined) || hasUnavailableProposals
 }
 
+export function useRecoveryDelayModifiersError(): Error | undefined {
+  return store.useStore()?.delayModifiersError
+}
+
 export function useRecoveryUnavailable(): boolean {
   return isRecoveryUnavailable(useRecovery())
 }

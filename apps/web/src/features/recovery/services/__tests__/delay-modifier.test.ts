@@ -36,6 +36,16 @@ describe('delay-modifier', () => {
       expect(type).toBe(KnownContracts.DELAY)
     })
 
+    it('should return undefined on a chain Zodiac has no contracts for', async () => {
+      const chainId = '123456789'
+      const provider = {
+        getCode: () => Promise.resolve(faker.string.hexadecimal()),
+      } as unknown as JsonRpcProvider
+
+      const type = await _getZodiacContract(chainId, DELAY_MODULE['1.0.1'], provider)
+      expect(type).toBe(undefined)
+    })
+
     it('should otherwise return false', async () => {
       const chainId = '5'
       const moduleAddress = faker.finance.ethereumAddress()

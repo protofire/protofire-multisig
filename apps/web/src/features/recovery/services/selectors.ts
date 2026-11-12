@@ -23,13 +23,6 @@ export const selectUnavailableRecoveryQueues = createSelector([selectRecovery], 
   return recovery?.flatMap(({ unavailableQueue }) => unavailableQueue).sort((a, b) => Number(a.timestamp - b.timestamp))
 })
 
-export const selectDelayModifierByTxHash = createSelector(
-  [selectRecovery, (_: RecoveryState, txHash: string) => txHash],
-  (recovery, txHash) => {
-    return recovery?.find(({ queue }) => queue.some((item) => item.transactionHash === txHash))
-  },
-)
-
 export const selectDelayModifierByAddress = createSelector(
   [selectRecovery, (_: RecoveryState, moduleAddress: string) => moduleAddress],
   (recovery, moduleAddress) => {

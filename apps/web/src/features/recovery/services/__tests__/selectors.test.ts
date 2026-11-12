@@ -4,7 +4,6 @@ import {
   selectDelayModifierByRecoverer,
   selectRecoveryQueues,
   selectUnavailableRecoveryQueues,
-  selectDelayModifierByTxHash,
   selectDelayModifierByAddress,
 } from '../selectors'
 import type { RecoveryStateItem } from '@/features/recovery/services/recovery-state'
@@ -79,28 +78,6 @@ describe('selectors', () => {
         { timestamp: BigInt(2) },
         { timestamp: BigInt(4) },
       ])
-    })
-  })
-
-  describe('selectDelayModifierByTxHash', () => {
-    it('should return the Delay Modifier for the given txHash', () => {
-      const txHash = faker.string.hexadecimal()
-
-      const delayModifier1 = {
-        queue: [{ transactionHash: txHash }],
-      } as unknown as RecoveryStateItem
-
-      const delayModifier2 = {
-        queue: [{ transactionHash: faker.string.hexadecimal() }],
-      } as unknown as RecoveryStateItem
-
-      const delayModifier3 = {
-        queue: [{ transactionHash: faker.string.hexadecimal() }],
-      } as unknown as RecoveryStateItem
-
-      const data = [delayModifier1, delayModifier2, delayModifier3]
-
-      expect(selectDelayModifierByTxHash(data, txHash)).toStrictEqual(delayModifier1)
     })
   })
 

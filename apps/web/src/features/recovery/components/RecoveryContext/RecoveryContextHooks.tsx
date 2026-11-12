@@ -14,21 +14,24 @@ function RecoveryContextHooks(): null {
   useRecoverySuccessEvents(pending, recoveryState)
 
   const data = recoveryState
-  const error = delayModifiersError || recoveryStateError
+  // Most Safes with modules have no Delay Modifier, so failing to find them must not report missing proposals
+  const error = recoveryStateError
   const loading = delayModifiersLoading || recoveryStateLoading
 
   useEffect(() => {
-    if (error) {
-      logError(Errors._617, error)
+    const loadError = delayModifiersError || recoveryStateError
+    if (loadError) {
+      logError(Errors._617, loadError)
     }
-  }, [error])
+  }, [delayModifiersError, recoveryStateError])
 
   useEffect(() => {
     store.setStore({
       state: [data, error, loading],
       pending,
+      delayModifiersError,
     })
-  }, [data, error, loading, pending])
+  }, [data, error, loading, pending, delayModifiersError])
 
   return null
 }

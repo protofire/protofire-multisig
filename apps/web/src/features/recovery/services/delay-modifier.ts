@@ -28,6 +28,8 @@ export async function _getZodiacContract(
   }
 
   const zodiacChainContracts = ContractVersions[Number(chainId) as SupportedNetworks]
+  if (!zodiacChainContracts) return
+
   const zodiacContract = Object.entries(zodiacChainContracts).find(([, addresses]) => {
     return Object.values(addresses).some((address) => {
       return sameAddress(address, moduleAddress)

@@ -1,14 +1,31 @@
 import { render } from '@/tests/test-utils'
-import useRecovery from '@/features/recovery/hooks/useRecovery'
+import useRecovery, { useRecoveryDelayModifiersError } from '@/features/recovery/hooks/useRecovery'
 import RecoverySettings from '.'
 
 jest.mock('@/features/recovery/hooks/useRecovery')
 
 const mockUseRecovery = useRecovery as jest.MockedFunction<typeof useRecovery>
+const mockUseRecoveryDelayModifiersError = useRecoveryDelayModifiersError as jest.MockedFunction<
+  typeof useRecoveryDelayModifiersError
+>
 
 describe('RecoverySettings', () => {
+  beforeEach(() => {
+    mockUseRecoveryDelayModifiersError.mockReturnValue(undefined)
+  })
+
   it('should show an error instead of the setup button if recovery data cannot be loaded', () => {
     mockUseRecovery.mockReturnValue([undefined, new Error('Recovery transaction 0 not found'), false])
+
+    const { getByTestId, queryByTestId } = render(<RecoverySettings />)
+
+    expect(getByTestId('recovery-error')).toBeInTheDocument()
+    expect(queryByTestId('setup-recovery-btn')).not.toBeInTheDocument()
+  })
+
+  it('should show an error instead of the setup button if the Delay Modifiers cannot be found', () => {
+    mockUseRecovery.mockReturnValue([undefined, undefined, false])
+    mockUseRecoveryDelayModifiersError.mockReturnValue(new Error('could not detect network'))
 
     const { getByTestId, queryByTestId } = render(<RecoverySettings />)
 

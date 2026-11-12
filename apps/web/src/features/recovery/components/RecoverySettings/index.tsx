@@ -5,7 +5,7 @@ import { type ReactElement, useContext, useMemo } from 'react'
 
 import ExternalLink from '@/components/common/ExternalLink'
 import { DelayModifierRow } from './DelayModifierRow'
-import useRecovery from '@/features/recovery/hooks/useRecovery'
+import useRecovery, { useRecoveryDelayModifiersError } from '@/features/recovery/hooks/useRecovery'
 import { RecoveryLoadError } from '@/features/recovery/components/RecoveryLoadError'
 import EthHashInfo from '@/components/common/EthHashInfo'
 import EnhancedTable from '@/components/common/EnhancedTable'
@@ -70,7 +70,9 @@ const headCells = [
 ]
 
 function RecoverySettings(): ReactElement {
-  const [recovery, recoveryError, recoveryLoading] = useRecovery()
+  const [recovery, recoveryStateError, recoveryLoading] = useRecovery()
+  const delayModifiersError = useRecoveryDelayModifiersError()
+  const recoveryError = recoveryStateError || delayModifiersError
   const isPending = recoveryError === undefined && Boolean(recoveryLoading) && recovery === undefined
 
   const isRecoveryEnabled = recovery && recovery.length > 0

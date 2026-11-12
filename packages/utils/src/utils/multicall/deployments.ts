@@ -1456,4 +1456,29 @@ export const MULTICALL_DEPLOYMENTS: MulticallDeployment[] = [
     chainId: 8545,
     url: 'https://explorer.tangle.tools/address/0xcA11bde05977b3631167028862bE2a173976CA11?tab=contract',
   },
+  {
+    name: 'Unichain',
+    chainId: 130,
+    url: 'https://uniscan.xyz/address/0xcA11bde05977b3631167028862bE2a173976CA11#code',
+  },
+  {
+    name: 'Monad',
+    chainId: 143,
+    url: 'https://monadscan.com/address/0xcA11bde05977b3631167028862bE2a173976CA11#code',
+  },
+  {
+    name: 'MegaETH',
+    chainId: 4326,
+    url: 'https://megaeth.blockscout.com/address/0xcA11bde05977b3631167028862bE2a173976CA11?tab=contract',
+  },
+  {
+    name: 'Plasma',
+    chainId: 9745,
+    url: 'https://plasmascan.to/address/0xcA11bde05977b3631167028862bE2a173976CA11#code',
+  },
+  {
+    name: 'Katana',
+    chainId: 747474,
+    url: 'https://katanascan.com/address/0xcA11bde05977b3631167028862bE2a173976CA11#code',
+  },
 ]
