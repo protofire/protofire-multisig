@@ -5,7 +5,7 @@ import type { Chain } from '@safe-global/store/gateway/AUTO_GENERATED/chains'
 import { Controller, useFormContext, useWatch } from 'react-hook-form'
 import useWallet from '@/hooks/wallets/useWallet'
 import { isTronChain } from '@/utils/tron-chains'
-import { isTronWallet } from '@/utils/wallets'
+import { isWalletForChain } from '@/utils/wallets'
 import { useRouter } from 'next/router'
 import { getNetworkLink } from '@/components/common/NetworkSelector'
 import { SetNameStepFields } from '@/components/new-safe/create/steps/SetNameStep'
@@ -34,11 +34,8 @@ const SafeCreationNetworkInput = ({
     setValue,
   } = useFormContext()
 
-  // MetaMask & co. can't create on Tron and TronLink can't create on EVM chains
-  const isWalletFamily = useCallback(
-    (network: Chain) => !wallet || isTronChain(network.chainId) === isTronWallet(wallet),
-    [wallet],
-  )
+  // MetaMask & co. can't create on Tron, TronLink can't create on EVM chains and HashPack only on Hedera
+  const isWalletFamily = useCallback((network: Chain) => !wallet || isWalletForChain(wallet, network), [wallet])
   const getOptionNote = useCallback(
     (network: Chain) => {
       if (isWalletFamily(network)) return

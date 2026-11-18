@@ -9,7 +9,7 @@ import { ledgerModule } from '@/services/onboard/ledger-module'
 import tronlinkModule, { TRONLINK_MODULE_LABEL } from '@/services/onboard/tronlink-module'
 import { FEATURES, hasFeature } from '@safe-global/utils/utils/chains'
 import { getTronChains, isTronChain } from '@/utils/tron-chains'
-import hashpackModule from '@/services/onboard/hashpack-module'
+import hashpackModule, { HASHPACK_MODULE_LABEL } from '@/services/onboard/hashpack-module'
 import { isRootstockSupportEnabled } from '@safe-global/utils/utils/rsk-utils'
 
 import { CGW_NAMES, WALLET_KEYS } from './consts'
@@ -46,8 +46,10 @@ const walletConnectV2 = (chain: Chain) => {
 // connects an Ethereum account instead of the native module below. When TronLink is the only
 // EVM-shaped provider around, injected-wallets also falls back to a generic "Detected Wallet"
 // entry backed by that same window.ethereum — hide that one too.
+// HashPack likewise announces an ECDSA-only EVM provider via EIP-6963 under the same "HashPack"
+// label as the native module — connecting through it makes HashPack reject ED25519 accounts.
 const injected = () => {
-  const filter: Record<string, boolean> = { [TRONLINK_MODULE_LABEL]: false }
+  const filter: Record<string, boolean> = { [TRONLINK_MODULE_LABEL]: false, [HASHPACK_MODULE_LABEL]: false }
   if (typeof window !== 'undefined' && window.ethereum?.isTronLink) {
     filter[ProviderLabel.Detected] = false
   }
@@ -65,15 +67,26 @@ const WALLET_MODULES: Partial<{ [_key in WALLET_KEYS]: (chain: Chain, configs: C
   [WALLET_KEYS.HASHPACK]: (chain) => hashpackModule(chain) as WalletInit,
 }
 
+// HashPack connects to one Hedera ledger: mainnet unless only testnet is configured
+const getDefaultHederaChain = (configs: Chain[]): Chain | undefined => {
+  const hederaChains = configs.filter((config) => hasFeature(config, FEATURES.HEDERA))
+  return hederaChains.find((config) => !config.isTestnet) ?? hederaChains[0]
+}
+
 // Wallets of both chain families, each as its chain config allows, so the user can always pick a
 // wallet of the other family. ponytail: the first config of that family stands in for all of it.
+// HashPack is offered on every chain too — connecting it takes the app to Hedera (see useConnectWallet).
 export const getAllWallets = (chain: Chain, configs: Chain[]): WalletInits => {
   const otherFamilyChain = configs.find(
     (config) => isTronChain(config.chainId) !== isTronChain(chain.chainId) && !hasFeature(config, FEATURES.HEDERA),
   )
+  const hederaChain = hasFeature(chain, FEATURES.HEDERA) ? undefined : getDefaultHederaChain(configs)
+  const hashpack = hederaChain && WALLET_MODULES[WALLET_KEYS.HASHPACK]?.(hederaChain, configs)
+
   return [
     ...getSupportedWallets(chain, configs),
     ...(otherFamilyChain ? getSupportedWallets(otherFamilyChain, configs) : []),
+    ...(hashpack ? [hashpack] : []),
   ]
 }
 
@@ -98,9 +111,14 @@ export const getSupportedWallets = (chain: Chain, configs: Chain[]): WalletInits
   // which would otherwise get auto-detected as a second, ECDSA-only "HashPack" entry alongside
   // the real module above. MetaMask still gets picked up via its legacy
   // `window.ethereum.isMetaMask` flag, which injected-wallets checks regardless of EIP-6963.
+  // The filter is still needed: injected-wallets keeps EIP-6963 announcements in a module-wide
+  // list, so any earlier 6963-enabled instance (e.g. created on a non-Hedera chain) leaks them here.
   if (hasFeature(chain, FEATURES.HEDERA)) {
     const hashpack = WALLET_MODULES[WALLET_KEYS.HASHPACK]?.(chain, configs)
-    const hederaInjected = injectedWalletModule({ disable6963Support: true }) as WalletInit
+    const hederaInjected = injectedWalletModule({
+      disable6963Support: true,
+      filter: { [HASHPACK_MODULE_LABEL]: false },
+    }) as WalletInit
     return hashpack ? [hashpack, hederaInjected] : [hederaInjected]
   }
 

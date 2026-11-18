@@ -13,7 +13,7 @@ export const PROPOSE_OFF_CHAIN_SIGNATURES_UNSUPPORTED =
  */
 const useSupportsOffChainSignatures = (): boolean => {
   const wallet = useWallet()
-  return !wallet || !isHashPackWallet(wallet.label)
+  return !wallet || !isHashPackWallet(wallet)
 }
 
 export default useSupportsOffChainSignatures

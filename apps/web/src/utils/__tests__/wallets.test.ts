@@ -10,7 +10,10 @@ import {
   isWalletUnlocked,
   EIP_7702_DELEGATED_ACCOUNT_PREFIX,
   isHashPackWallet,
+  isWalletForChain,
 } from '@/utils/wallets'
+import type { Chain } from '@safe-global/store/gateway/AUTO_GENERATED/chains'
+import { FEATURES } from '@safe-global/utils/utils/chains'
 
 describe('wallets', () => {
   const getCodeMock = jest.fn()
@@ -219,12 +222,34 @@ describe('wallets', () => {
 
 describe('isHashPackWallet', () => {
   it('should match the HashPack module label case-insensitively', () => {
-    expect(isHashPackWallet('HashPack')).toBe(true)
-    expect(isHashPackWallet('hashpack')).toBe(true)
+    expect(isHashPackWallet({ label: 'HashPack' })).toBe(true)
+    expect(isHashPackWallet({ label: 'hashpack' })).toBe(true)
   })
 
   it('should not match other wallets', () => {
-    expect(isHashPackWallet('MetaMask')).toBe(false)
-    expect(isHashPackWallet('WalletConnect')).toBe(false)
+    expect(isHashPackWallet({ label: 'MetaMask' })).toBe(false)
+    expect(isHashPackWallet({ label: 'WalletConnect' })).toBe(false)
+  })
+})
+
+describe('isWalletForChain', () => {
+  const chains: Record<string, Chain> = {
+    EVM: { chainId: '1', features: [] } as unknown as Chain,
+    Tron: { chainId: '728126428', features: [FEATURES.TRON] } as unknown as Chain,
+    Hedera: { chainId: '295', features: [FEATURES.HEDERA] } as unknown as Chain,
+  }
+
+  it.each([
+    ['MetaMask', 'EVM', true],
+    ['MetaMask', 'Hedera', true],
+    ['MetaMask', 'Tron', false],
+    ['TronLink', 'Tron', true],
+    ['TronLink', 'EVM', false],
+    ['TronLink', 'Hedera', false],
+    ['HashPack', 'Hedera', true],
+    ['HashPack', 'EVM', false],
+    ['HashPack', 'Tron', false],
+  ])('%s on a %s chain: %s', (label, chain, expected) => {
+    expect(isWalletForChain({ label }, chains[chain])).toBe(expected)
   })
 })

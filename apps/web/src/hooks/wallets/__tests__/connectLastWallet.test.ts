@@ -55,7 +55,7 @@ describe('connectLastWallet', () => {
     expect(onboard.connectWallet).not.toHaveBeenCalled()
   })
 
-  it('should not reconnect a stale HashPack session on a non-Hedera chain', async () => {
+  it('should not reconnect HashPack on a link to a non-Hedera chain', async () => {
     lastWalletStorage.set('HashPack')
     const onboard = mockOnboard()
 
@@ -71,5 +71,32 @@ describe('connectLastWallet', () => {
     await connectLastWallet(onboard, mainnetChain, mainnetChain.chainId, [])
 
     expect(onboard.connectWallet).toHaveBeenCalled()
+  })
+
+  it('should not silently reconnect HashPack on a non-Hedera chain without a chain in the URL', async () => {
+    lastWalletStorage.set('HashPack')
+    const onboard = mockOnboard()
+
+    await connectLastWallet(onboard, mainnetChain, undefined, [])
+
+    expect(onboard.connectWallet).not.toHaveBeenCalled()
+  })
+
+  it('should reconnect HashPack on a Hedera chain without a chain in the URL', async () => {
+    lastWalletStorage.set('HashPack')
+    const onboard = mockOnboard()
+
+    await connectLastWallet(onboard, hederaChain, undefined, [])
+
+    expect(onboard.connectWallet).toHaveBeenCalled()
+  })
+
+  it('should not reconnect a Hedera-only-excluded wallet on a Hedera chain without a chain in the URL', async () => {
+    lastWalletStorage.set('Ledger')
+    const onboard = mockOnboard()
+
+    await connectLastWallet(onboard, hederaChain, undefined, [])
+
+    expect(onboard.connectWallet).not.toHaveBeenCalled()
   })
 })

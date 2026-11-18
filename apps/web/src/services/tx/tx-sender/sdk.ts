@@ -7,9 +7,9 @@ import {
   sameString,
 } from '@safe-global/protocol-kit/dist/src/utils'
 import type { Eip1193Provider, JsonRpcSigner } from 'ethers'
-import { isHardwareWallet, isTronWallet, isWalletConnect } from '@/utils/wallets'
+import { isHardwareWallet, isHashPackWallet, isTronWallet, isWalletConnect, isWalletForChain } from '@/utils/wallets'
 import { OperationType, type SafeTransaction } from '@safe-global/types-kit'
-import { getChainConfig } from '@/utils/chains'
+import { getCachedChainConfig, getChainConfig } from '@/utils/chains'
 import { createWeb3, getWeb3ReadOnly } from '@/hooks/wallets/web3'
 import { toQuantity } from 'ethers'
 import { connectWallet, getConnectedWallet } from '@/hooks/wallets/useOnboard'
@@ -89,15 +89,20 @@ export const switchWalletChain = async (onboard: OnboardAPI, chainId: string): P
     return currentWallet
   }
 
-  // MetaMask & co. can't sign on Tron and TronLink can't leave it: let the user pick another wallet
-  if (isTronChain(chainId) !== isTronWallet(currentWallet)) {
+  // MetaMask & co. can't sign on Tron, TronLink can't leave it and HashPack can't leave Hedera:
+  // let the user pick another wallet
+  const chain = getCachedChainConfig(chainId)
+  const canUseChain = chain
+    ? isWalletForChain(currentWallet, chain)
+    : isTronChain(chainId) === isTronWallet(currentWallet)
+  if (!canUseChain) {
     await onboard.disconnectWallet({ label: currentWallet.label })
     const wallets = await connectWallet(onboard)
     return wallets ? getConnectedWallet(wallets) : null
   }
 
-  // Hardware wallets cannot switch chains
-  if (isHardwareWallet(currentWallet)) {
+  // Hardware wallets cannot switch chains, and a HashPack session is bound to one Hedera ledger
+  if (isHardwareWallet(currentWallet) || isHashPackWallet(currentWallet)) {
     await onboard.disconnectWallet({ label: currentWallet.label })
     const wallets = await connectWallet(onboard, { autoSelect: currentWallet.label })
     return wallets ? getConnectedWallet(wallets) : null

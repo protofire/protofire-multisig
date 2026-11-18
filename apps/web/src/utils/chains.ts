@@ -4,6 +4,7 @@ import { cgwApi } from '@safe-global/store/gateway/AUTO_GENERATED/chains'
 import { getExplorerLink } from '@safe-global/utils/utils/gateway'
 import { FEATURES, hasFeature } from '@safe-global/utils/utils/chains'
 import { getStoreInstance } from '@/store'
+import { apiSliceWithChainsConfig, chainsAdapter } from '@safe-global/store/gateway/chains'
 
 export const FeatureRoutes = {
   [AppRoutes.apps.index]: FEATURES.SAFE_APPS,
@@ -26,6 +27,12 @@ export const isRouteEnabled = (route: string, chain?: Chain) => {
   if (!chain) return false
   const featureRoute = FeatureRoutes[route]
   return !featureRoute || hasFeature(chain, featureRoute)
+}
+
+/** The chain's config from the already loaded chains list, without fetching anything */
+export const getCachedChainConfig = (chainId: string): Chain | undefined => {
+  const { data } = apiSliceWithChainsConfig.endpoints.getChainsConfig.select()(getStoreInstance().getState())
+  return data ? chainsAdapter.getSelectors().selectById(data, chainId) : undefined
 }
 
 /**

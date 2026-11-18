@@ -33,6 +33,7 @@ jest.mock('@/services/onboard/tronlink-module', () => ({
 
 jest.mock('@/services/onboard/hashpack-module', () => ({
   __esModule: true,
+  HASHPACK_MODULE_LABEL: 'HashPack',
   default: (chain: Chain) => ({ label: 'HASHPACK', chainId: chain.chainId }),
 }))
 
@@ -52,6 +53,12 @@ const evmChainNoTronlink = {
 } as unknown as Chain
 
 const hederaChain = { chainId: '295', disabledWallets: [], features: [FEATURES.HEDERA] } as unknown as Chain
+const hederaTestnetChain = {
+  chainId: '296',
+  isTestnet: true,
+  disabledWallets: [],
+  features: [FEATURES.HEDERA],
+} as unknown as Chain
 
 const configs = [tronChain, evmChain]
 
@@ -112,10 +119,10 @@ describe('getSupportedWallets', () => {
     expect(mockLedgerModule).toHaveBeenCalledWith(['31'])
   })
 
-  it('passes the TronLink duplicate filter to the injected wallet module', () => {
+  it('passes the TronLink and HashPack duplicate filters to the injected wallet module', () => {
     getSupportedWallets(evmChain, configs)
 
-    expect(mockInjectedWalletModule).toHaveBeenCalledWith({ filter: { TronLink: false } })
+    expect(mockInjectedWalletModule).toHaveBeenCalledWith({ filter: { TronLink: false, HashPack: false } })
   })
 
   describe('when window.ethereum is TronLink', () => {
@@ -129,7 +136,7 @@ describe('getSupportedWallets', () => {
       getSupportedWallets(evmChain, configs)
 
       expect(mockInjectedWalletModule).toHaveBeenCalledWith({
-        filter: { TronLink: false, 'Detected Wallet': false },
+        filter: { TronLink: false, HashPack: false, 'Detected Wallet': false },
       })
     })
 
@@ -138,7 +145,7 @@ describe('getSupportedWallets', () => {
 
       getSupportedWallets(evmChain, configs)
 
-      expect(mockInjectedWalletModule).toHaveBeenCalledWith({ filter: { TronLink: false } })
+      expect(mockInjectedWalletModule).toHaveBeenCalledWith({ filter: { TronLink: false, HashPack: false } })
     })
   })
 })
@@ -176,7 +183,7 @@ describe('Hedera wallets', () => {
     const wallets = getSupportedWallets(hederaChain, [hederaChain])
 
     expect(wallets).toEqual([{ label: 'HASHPACK', chainId: '295' }, expect.objectContaining({ label: 'INJECTED' })])
-    expect(mockInjectedWalletModule).toHaveBeenCalledWith({ disable6963Support: true })
+    expect(mockInjectedWalletModule).toHaveBeenCalledWith({ disable6963Support: true, filter: { HashPack: false } })
   })
 
   it('never offers HashPack on a non-Hedera chain', () => {
@@ -185,10 +192,37 @@ describe('Hedera wallets', () => {
     expect(wallets).not.toContainEqual(expect.objectContaining({ label: 'HASHPACK' }))
   })
 
-  it('offers the regular EVM wallets, not the Hedera ones, alongside TronLink on a Tron chain', () => {
+  it('offers the regular EVM wallets alongside TronLink and HashPack on a Tron chain', () => {
     const wallets = getAllWallets(tronChain, [tronChain, hederaChain, evmChain])
 
-    expect(wallets).not.toContainEqual(expect.objectContaining({ label: 'HASHPACK' }))
     expect(wallets).toContainEqual({ label: 'LEDGER' })
+    expect(wallets).toContainEqual({ label: 'HASHPACK', chainId: '295' })
+  })
+
+  it('offers HashPack for Hedera mainnet on a non-Hedera chain, so it can be connected from anywhere', () => {
+    const wallets = getAllWallets(evmChain, [evmChain, hederaTestnetChain, hederaChain])
+
+    expect(wallets.filter((w) => (w as unknown as { label: string }).label === 'HASHPACK')).toEqual([
+      { label: 'HASHPACK', chainId: '295' },
+    ])
+  })
+
+  it('offers HashPack for Hedera testnet when it is the only Hedera chain', () => {
+    expect(getAllWallets(evmChain, [evmChain, hederaTestnetChain])).toContainEqual({
+      label: 'HASHPACK',
+      chainId: '296',
+    })
+  })
+
+  it('offers no HashPack when no Hedera chain is configured', () => {
+    expect(getAllWallets(evmChain, [evmChain])).not.toContainEqual(expect.objectContaining({ label: 'HASHPACK' }))
+  })
+
+  it('offers HashPack only once on a Hedera chain, for that chain', () => {
+    const wallets = getAllWallets(hederaTestnetChain, [hederaChain, hederaTestnetChain, evmChain])
+
+    expect(wallets.filter((w) => (w as unknown as { label: string }).label === 'HASHPACK')).toEqual([
+      { label: 'HASHPACK', chainId: '296' },
+    ])
   })
 })

@@ -6,6 +6,8 @@ import { WALLET_KEYS } from '@/hooks/wallets/consts'
 const EMPTY_DATA = '0x'
 import memoize from 'lodash/memoize'
 import { isTronChain } from '@/utils/tron-chains'
+import { isHederaChain } from '@/utils/hedera'
+import type { Chain } from '@safe-global/store/gateway/AUTO_GENERATED/chains'
 import { PRIVATE_KEY_MODULE_LABEL } from '@/services/private-key-module/constants'
 import { type JsonRpcProvider } from 'ethers'
 
@@ -25,7 +27,9 @@ export const isWalletRejection = (err: EthersError | Error): boolean => {
   return isEthersRejection(err as EthersError) || isWCRejection(err)
 }
 
-export const isHashPackWallet = (walletLabel: string): boolean => walletLabel.toUpperCase() === WALLET_KEYS.HASHPACK
+export const isHashPackWallet = (wallet: Pick<ConnectedWallet, 'label'>): boolean => {
+  return wallet.label.toUpperCase() === WALLET_KEYS.HASHPACK
+}
 
 export const isEthSignWallet = (wallet: ConnectedWallet): boolean => {
   return [WALLET_KEYS.TREZOR, WALLET_KEYS.KEYSTONE].includes(wallet.label.toUpperCase() as WALLET_KEYS)
@@ -51,6 +55,13 @@ export const isHardwareWallet = (wallet: ConnectedWallet): boolean => {
 
 export const isTronWallet = (wallet: Pick<ConnectedWallet, 'label'>): boolean => {
   return wallet.label.toUpperCase() === WALLET_KEYS.TRONLINK
+}
+
+// TronLink only works on Tron and HashPack only on Hedera; every other wallet works on any EVM chain
+export const isWalletForChain = (wallet: Pick<ConnectedWallet, 'label'>, chain: Chain): boolean => {
+  if (isTronWallet(wallet)) return isTronChain(chain.chainId)
+  if (isHashPackWallet(wallet)) return isHederaChain(chain)
+  return !isTronChain(chain.chainId)
 }
 
 export const isPKWallet = (wallet: ConnectedWallet): boolean => {
@@ -135,7 +146,8 @@ export const getSmartContractWalletStatus = async (
 export const isWalletUnlocked = async (walletName: string): Promise<boolean | undefined> => {
   // HashPack is a WalletConnect-based module — "unlocked" isn't meaningful for it a persisted
   // session either exists or it doesn't.
-  if ([PRIVATE_KEY_MODULE_LABEL, WALLETCONNECT].includes(walletName) || isHashPackWallet(walletName)) return true
+  if ([PRIVATE_KEY_MODULE_LABEL, WALLETCONNECT].includes(walletName) || isHashPackWallet({ label: walletName }))
+    return true
 
   // TronLink: check if the extension is available and has a connected address
   if (walletName === 'TronLink') {

@@ -429,4 +429,33 @@ describe('NetworkMultiSelector', () => {
       })
     })
   })
+
+  it('only offers Hedera networks to HashPack', async () => {
+    const hederaChain = chainBuilder()
+      .with({ chainId: '295' })
+      .with({ chainName: 'Hedera' })
+      .with({ shortName: 'hedera' })
+      .with({ features: [FEATURES.HEDERA] as any })
+      .build()
+    const configs = [mockChains[0], hederaChain]
+    jest.spyOn(useChains, 'useCurrentChain').mockReturnValue(hederaChain)
+    jest.spyOn(useChains, 'default').mockReturnValue({ configs, loading: false })
+    jest.spyOn(useChains, 'useChain').mockImplementation((chainId) => configs.find((c) => c.chainId === chainId))
+    jest.spyOn(useWallet, 'default').mockReturnValue({ label: 'HashPack', chainId: '295' } as ConnectedWallet)
+
+    const { getByRole, getAllByRole } = render(<TestForm />)
+
+    act(() => {
+      userEvent.click(getByRole('combobox'))
+    })
+
+    await waitFor(() => {
+      const [ethereum, hedera] = getAllByRole('option')
+      expect(ethereum).toHaveTextContent('Needs an EVM wallet')
+      expect(ethereum).toHaveAttribute('aria-disabled', 'true')
+      expect(hedera).toHaveTextContent('Hedera')
+      expect(hedera).not.toHaveTextContent('Needs')
+      expect(hedera).toHaveAttribute('aria-disabled', 'false')
+    })
+  })
 })
