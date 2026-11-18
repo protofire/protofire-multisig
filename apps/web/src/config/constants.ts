@@ -154,7 +154,7 @@ export const OFFICIAL_HOSTS = /app\.safe\.global|.+\.5afe\.dev|localhost:3000|lo
 export const IPFS_HOSTS = /app\.safe\.eth\.limo|app\.5afedev\.eth\.limo/
 // Hosts allowed to serve the Superchain migration landing page (Protofire shared UI only)
 export const PROTOFIRE_HOSTS =
-  /^app\.safe\.protofire\.io$|^app\.stage\.safe\.protofire\.io$|^app\.dev\.safe\.protofire\.io$|^localhost:3000$|^localhost:4000$|^localhost:6006$/
+  /^app\.safe\.protofire\.io$|^app\.stage\.safe\.protofire\.io$|^app\.dev\.safe\.protofire\.io$|^localhost:3000$|^localhost:4000$|^localhost:6006$|^pr-\d+\.dymjfhmmrghtb\.amplifyapp\.com$/
 export const BRAND_NAME = process.env.NEXT_PUBLIC_BRAND_NAME || (IS_OFFICIAL_HOST ? 'Safe{Wallet}' : 'Wallet fork')
 export const BRAND_LOGO = process.env.NEXT_PUBLIC_BRAND_LOGO || ''
 

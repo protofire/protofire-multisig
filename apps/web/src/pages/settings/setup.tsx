@@ -10,6 +10,7 @@ import SettingsHeader from '@/components/settings/SettingsHeader'
 import ProposersList from 'src/components/settings/ProposersList'
 import { SpendingLimitsFeature } from '@/features/spending-limits'
 import { useLoadFeature } from '@/features/__core__'
+import { SafeHealthFeature } from '@/features/safe-health'
 import { BRAND_NAME } from '@/config/constants'
 import { NestedSafesList } from '@/components/settings/NestedSafesList'
 import { FeeTokenPreference } from '@/components/settings/FeeTokenPreference'
@@ -18,6 +19,7 @@ import { TokenAssociation } from '@/components/settings/TokenAssociation'
 const Setup: NextPage = () => {
   const { safe, safeLoaded } = useSafeInfo()
   const { SpendingLimitsSettings } = useLoadFeature(SpendingLimitsFeature)
+  const { SafeHealthChecklist } = useLoadFeature(SafeHealthFeature)
   const nonce = safe.nonce
   const ownerLength = safe.owners.length
   const threshold = safe.threshold
@@ -31,6 +33,8 @@ const Setup: NextPage = () => {
       <SettingsHeader />
 
       <main>
+        <SafeHealthChecklist variant="settings" />
+
         <Paper data-testid="setup-section" sx={{ p: 4, mb: 2 }}>
           <Grid container spacing={3}>
             <Grid item lg={4} xs={12}>

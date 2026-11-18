@@ -69,9 +69,10 @@ export enum FEATURES {
   HEDERA = 'HEDERA',
   ROOTSTOCK_SUPPORT = 'ROOTSTOCK_SUPPORT', // gates Rootstock-specific signing, address and derivation handling
   SAFENET_CHECKS = 'SAFENET_CHECKS',
+  SAFE_HEALTH = 'SAFE_HEALTH',
 }
 
-const MIN_SAFE_VERSION = '1.3.0'
+export const MIN_SAFE_VERSION = '1.3.0'
 
 export const hasFeature = (chain: Pick<Chain, 'features'>, feature: FEATURES): boolean => {
   return (chain.features as string[]).includes(feature)

@@ -10,9 +10,7 @@ export type RecoveryContextType = {
   delayModifiersError?: Error
 }
 
-const recoveryStore = new ExternalStore<RecoveryContextType>({
-  state: [undefined, undefined, false],
-  pending: {},
-})
+// Empty until RecoveryContextHooks writes it, so readers can tell "not loaded yet" from "no recovery"
+const recoveryStore = new ExternalStore<RecoveryContextType>()
 
 export default recoveryStore

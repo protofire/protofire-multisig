@@ -41,6 +41,7 @@ import {
   HypernativeFeature,
 } from '@/features/hypernative'
 import { useLoadFeature } from '@/features/__core__'
+import { SafeHealthFeature } from '@/features/safe-health'
 import { EurcvBoostBanner, eurcvBoostBannerID } from '@/components/dashboard/NewsCarousel/banners/EurcvBoostBanner'
 
 const RecoveryHeader = dynamic(() => import('@/features/recovery/components/RecoveryHeader'))
@@ -51,6 +52,7 @@ const Dashboard = (): ReactElement => {
   const hn = useLoadFeature(HypernativeFeature)
   const { NoFeeCampaignBanner, noFeeCampaignBannerID } = useLoadFeature(NoFeeCampaignFeature)
   const { NonPinnedWarning } = useLoadFeature(MyAccountsFeature)
+  const { SafeHealthChecklist } = useLoadFeature(SafeHealthFeature)
   const showSafeApps = useHasFeature(FEATURES.SAFE_APPS)
   const supportsRecovery = useIsRecoverySupported()
 
@@ -134,6 +136,8 @@ const Dashboard = (): ReactElement => {
           </ActionRequiredPanel>
 
           {safe.deployed && <PendingTxsList />}
+
+          <SafeHealthChecklist variant="home" />
 
           <hn.HnPendingBanner />
         </div>

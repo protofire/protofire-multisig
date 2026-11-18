@@ -13,6 +13,13 @@ describe('isAllowedProtofireHost', () => {
     expect(isAllowedProtofireHost('localhost:6006')).toBe(true)
   })
 
+  it('allows shared-UI pull request previews only', () => {
+    expect(isAllowedProtofireHost('pr-225.dymjfhmmrghtb.amplifyapp.com')).toBe(true)
+    expect(isAllowedProtofireHost('pr-x.dymjfhmmrghtb.amplifyapp.com')).toBe(false)
+    expect(isAllowedProtofireHost('pr-225.otherapp.amplifyapp.com')).toBe(false)
+    expect(isAllowedProtofireHost('pr-225.dymjfhmmrghtb.amplifyapp.com.evil.com')).toBe(false)
+  })
+
   it('rejects the redirected-from host and other Safe hosts', () => {
     expect(isAllowedProtofireHost('safe.optimism.io')).toBe(false)
     expect(isAllowedProtofireHost('app.safe.global')).toBe(false)

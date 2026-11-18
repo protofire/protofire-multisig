@@ -22,6 +22,10 @@ export function useRecoveryDelayModifiersError(): Error | undefined {
   return store.useStore()?.delayModifiersError
 }
 
+export function useIsRecoveryLoaded(): boolean {
+  return store.useStore() !== undefined
+}
+
 export function useRecoveryUnavailable(): boolean {
   return isRecoveryUnavailable(useRecovery())
 }

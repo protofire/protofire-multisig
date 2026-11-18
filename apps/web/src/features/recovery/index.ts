@@ -51,7 +51,12 @@ export type { RecoveryContract } from './contract'
 // Keep hooks lightweight - minimal imports, heavy logic in services if needed
 export { useIsRecoverer } from './hooks/useIsRecoverer'
 export { useIsRecoverySupported } from './hooks/useIsRecoverySupported'
-export { default as useRecovery, useRecoveryUnavailable } from './hooks/useRecovery'
+export {
+  default as useRecovery,
+  useIsRecoveryLoaded,
+  useRecoveryDelayModifiersError,
+  useRecoveryUnavailable,
+} from './hooks/useRecovery'
 export { RECOVERY_LOAD_ERROR_MESSAGE } from './recoveryLoadError'
 export { useRecoveryQueue, useUnavailableRecoveryQueue } from './hooks/useRecoveryQueue'
 // NOTE: useIsValidRecoveryExecTransactionFromModule is NOT exported here because it
