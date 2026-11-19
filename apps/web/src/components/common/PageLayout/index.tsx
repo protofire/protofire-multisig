@@ -12,6 +12,7 @@ import BatchSidebar from '@/components/batch/BatchSidebar'
 import Breadcrumbs from '@/components/common/Breadcrumbs'
 import { AppRoutes } from '@/config/routes'
 import SunsetBanner from '@/components/common/SunsetBanner'
+import DataMigrationBanner from '@/components/common/DataMigrationBanner'
 
 const PageLayout = ({ pathname, children }: { pathname: string; children: ReactElement }): ReactElement => {
   const [isSidebarRoute, isAnimated] = useIsSidebarRoute(pathname)
@@ -48,6 +49,7 @@ const PageLayout = ({ pathname, children }: { pathname: string; children: ReactE
       >
         <div className={css.content}>
           <SunsetBanner />
+          {!isWelcomePage && <DataMigrationBanner />}
           <SafeLoadingError>
             {!hideHeader && <Breadcrumbs />}
             {children}
